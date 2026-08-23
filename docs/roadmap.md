@@ -41,17 +41,19 @@ Details: [networking](architecture/networking.md) · [storage](architecture/stor
 - [ ] Firewall: admin → lab; deny lab → sensitive VLANs by default  
 - [ ] Tailscale on Mac Mini / always-on path  
 - [ ] Buy Unraid license + USB; install on PC #2  
-- [ ] 24TB data disk, no parity; SSD `appdata`  
-- [ ] Shares; copy media; Jellyfin → Unraid NFS/SMB  
-- [ ] NFS exports for CSI  
+- [ ] SSD pool for `appdata` (small array disk only if Unraid requires one — **not** the 24TB)  
+- [ ] Mount **24TB with Unassigned Devices** — do **not** format into the array  
+- [ ] NFS/SMB export UD media; Jellyfin → Unraid; validate playback  
 - [ ] iSCSI target plugin + SSD/pool LUNs (for later block PVCs)  
-- [ ] Move/retire PC #1 guests; wipe PC #1 → gaming  
+- [ ] Move/retire PC #1 guests; wipe PC #1 → gaming (24TB already in PC #2)  
 
 **Exit:** Media on Unraid; PC #1 gaming-only; lab on VLAN.
 
-### Phase 1b — Parity
+### Phase 1b — Array / parity (when you can)
 
-- [ ] Buy/assign parity ≥24TB; wait for sync  
+- [ ] Free space or second large disk → copy library off UD into array share  
+- [ ] Optionally add old 24TB to array or as parity (**≥ largest data disk** for parity)  
+- [ ] Wait for parity sync if enabled  
 
 ### Phase 1c — Backups
 
@@ -75,7 +77,7 @@ Details: [networking](architecture/networking.md) · [storage](architecture/stor
 ## Phase 3 — Migrate apps
 
 1. Pi-hole  
-2. *arr + qBittorrent  
+2. *arr + qBittorrent (Mullvad peers; UI at `qbittorrent.lab.jacobdrury.com`)  
 3. Jellyfin  
 4. Homepage  
 5. Home Assistant (after media; downtime OK)  

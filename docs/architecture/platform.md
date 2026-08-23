@@ -28,7 +28,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | Workload | Where | Notes |
 |----------|--------|--------|
 | Jellyfin | k8s | NFS `media/`; GPU worker — [gpu](gpu.md) |
-| Sonarr ×2, Prowlarr, qBittorrent | k8s | downloads on Unraid NFS |
+| Sonarr ×2, Prowlarr, qBittorrent | k8s | NFS downloads; **peers via Mullvad WG**, **UI/API off-VPN** — [media](media.md) |
 | Pi-hole | k8s | keep Pi-hole |
 | Homepage | k8s | [gethomepage.dev](https://gethomepage.dev) |
 | Home Assistant | k8s | **After** Jellyfin/*arr; downtime OK; USB passthrough if radio needs it |
@@ -52,7 +52,7 @@ homelab/
   apps/
     system/                        # cilium, nfs-csi, iscsi, cert-manager, tailscale,
                                    # 1password-connect, external-secrets, envoy-gateway
-    media/                         # jellyfin, *arr, qbittorrent
+    media/                         # jellyfin, *arr, qbittorrent (+ Mullvad WG for peers)
     home/                          # homeassistant, homepage
     network/                       # pihole
   clusters/

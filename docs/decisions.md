@@ -7,7 +7,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Compute (steady) | Talos on mini PCs; interim Talos VMs on **Mac Mini** Proxmox |
 | Compute (exit) | **Gaming PC #1** → personal gaming (after media/VMs leave) |
 | NAS | **Unraid bare metal on Gaming PC #2**; buy license + USB |
-| Array start | **24TB data only**, no parity; parity disk **≥24TB** later |
+| Array start | **24TB via Unassigned Devices first** (keep filesystem); array/parity when a second large disk or free space exists |
 | 2TB HDD | **Out of Unraid plan** for now |
 | Appdata | Existing **NVMe/SATA SSDs** on PC #2 |
 | k8s storage | **NFS + iSCSI → Unraid** (NFS for media/shared; iSCSI for block/RWO). Not Longhorn/Ceph primary |
@@ -25,7 +25,8 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` (UI OK to unblock) |
 | DNS app | Keep **Pi-hole** |
 | Media GPU | Pattern B: Jellyfin in k8s; prefer **Mac Mini iGPU** worker first |
-| Apps | Jellyfin, *arr, qBit, Prowlarr, Pi-hole, **Homepage**, HA **after media**; monitoring Prometheus/Grafana/Uptime Kuma → Discord |
+| Apps | Jellyfin, *arr, qBit, Prowlarr, Pi-hole, **Homepage**, HA after media; monitoring → Discord |
+| qBittorrent VPN | Peers via **Mullvad WG**; UI at **`qbittorrent.lab.jacobdrury.com`** (normal Envoy lab exposure) |
 | Backups | **Decide after Unraid is up** (parity ≠ backup) |
 | Tooling | **proto + moon** ([moonrepo](https://moonrepo.dev/)) |
 | Dep updates | **Renovate later**; no Dependabot version updates |

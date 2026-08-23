@@ -10,6 +10,7 @@ Planning docs for the GitOps homelab. Implementation code will live under `infra
 | [Storage (Unraid)](architecture/storage.md) | Disks, NFS + iSCSI, shares |
 | [Networking](architecture/networking.md) | UniFi VLAN, DNS/TLS, Tailscale, domains |
 | [GPU](architecture/gpu.md) | Jellyfin hardware encode |
+| [Media / VPN](architecture/media.md) | *arr + qBittorrent; Mullvad for peers, UI off-VPN |
 | [Secrets](architecture/secrets.md) | 1Password → cluster |
 | [Agent access](architecture/agents.md) | Cursor / AI operators on the tailnet |
 | [Roadmap](roadmap.md) | Phased migration checklists |

@@ -37,7 +37,7 @@ One laptop has an **NVIDIA Quadro** (note which below) — optional NVENC worker
 | Jellyfin | Media | TBD | 24TB libraries |
 | Sonarr (anime) | Acquisition | TBD | |
 | Sonarr (TV) | Acquisition | TBD | |
-| qBittorrent | Downloads | TBD | |
+| qBittorrent | Downloads | TBD | Mullvad today (Gluetun); k8s target = peers on VPN, UI off-VPN |
 | Prowlarr | Indexers | TBD | Both Sonarrs |
 
 **Still need:** exact guest placement, ports / how you reach things today, HA USB radio yes/no.
