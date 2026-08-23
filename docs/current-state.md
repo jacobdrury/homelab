@@ -52,8 +52,9 @@ One laptop has an **NVIDIA Quadro** (note which in the inventory table when know
 |---------|------------------|
 | Remote access | Tailscale account exists (free); not fully wired into lab yet |
 | LAN DNS | Pi-hole (keep) |
-| Ingress / TLS | Target: Envoy + LE via DNS API (see architecture — not Squarespace DNS) |
-| Backups | TBD |
+| LAN / VLAN | UniFi; **homelab VLAN planned** (isolate + selective crossover) |
+| Ingress / TLS | Target: Envoy + LE via Cloudflare DNS-01 |
+| Backups | Decide after Unraid is up |
 
 ## Pain points / constraints
 

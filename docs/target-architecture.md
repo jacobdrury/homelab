@@ -11,8 +11,57 @@ Ideal end state. Bootstrap may use Proxmox VMs; production nodes are dedicated m
 - **Declarative** machine + cluster config; minimize snowflake hosts
 - **Return Gaming PC #1 to gaming** — no lab role once media and VMs are off it
 - **Gaming PC #2 stays in the lab** — Unraid host; optional Talos **worker VM** with GPU passthrough for in-cluster Jellyfin
+- **Agent-operable** — AI coding agents (e.g. Cursor) can observe and operate the lab as a first-class client, not a bolt-on
 
-## Hardware end state
+## Agent access (first-class)
+
+Goal: from a Cursor (or similar) session you can **run commands against the lab** and **talk to services** (kubectl, logs, Unraid, HA, Argo, Grafana) without SSH hop folklore — with GitOps still the source of truth.
+
+```mermaid
+flowchart LR
+  Agent[AI_agent_Cursor]
+  TS[Tailscale]
+  Kube[kubectl_helm_talosctl]
+  HTTP[lab_HTTPS_APIs]
+  Git[This_Git_repo_Argo]
+  OP[1Password_CLI]
+  Agent --> TS
+  Agent --> Kube
+  Agent --> HTTP
+  Agent --> Git
+  Agent --> OP
+  TS --> Envoy[Envoy_lab_VLAN]
+  TS --> Unraid[Unraid]
+  Kube --> API[K8s_API]
+```
+
+### How agents reach the lab
+
+| Path | Role |
+|------|------|
+| **Tailscale on the agent host** | Primary. Same mesh as you: lab VLAN routes and/or Tailscale operator endpoints. Cloud-hosted agents need Tailscale on that runtime or a bridge (MCP/jump) — prefer local Cursor + Tailscale first |
+| **kubeconfig / talosconfig** | Checked out or generated to a well-known local path; proto-pinned `kubectl` / `talosctl` / `helm` via moon |
+| **HTTPS `*.lab.jacobdrury.com`** | Same URLs you use — Argo, Grafana, Homepage, HA REST, Unraid API |
+| **1Password CLI (`op`)** | Secrets for agents: API tokens, kubeconfig fragments — **not** plaintext in Git |
+| **MCP servers (optional)** | Kubernetes / HA / browser MCP so the agent can use structured tools, not only shell |
+
+### Operating model (keep GitOps honest)
+
+1. **Prefer Git** — agent edits this repo → PR → Argo syncs (matches how you want the lab managed).  
+2. **Break-glass shell** — `kubectl` / `talosctl` / Unraid for diagnose, restart, one-off; avoid permanent snowflake applies.  
+3. **Document for agents** — Cursor rules/skills in-repo: how to kubecontext, which hostnames, VLAN assumptions, “do not commit secrets.”  
+4. **Least privilege later** — optional dedicated Tailscale identity + RBAC-limited ServiceAccount for agents vs your admin kubeconfig.
+
+### Make it real in the buildout
+
+| When | What |
+|------|------|
+| Phase 1–2 | Tailscale on your Mac (agent host) + Unraid + cluster; moon tools installed |
+| Phase 2 | Stable `kubectl` access over Tailscale; Argo UI on `*.lab` |
+| Phase 3+ | Service tokens in 1Password for HA / Unraid API; Homepage links agents can follow |
+| Hardening | Agent RBAC, optional MCP, Cursor rule pack under `.cursor/` or skills |
+
+**Non-goal:** exposing the kube API or Unraid to the public internet for agents. Agents join the **tailnet** (or run where the tailnet already is).
 
 | Machine | Target role |
 |---------|-------------|
@@ -239,27 +288,44 @@ No rush on the transfer for lab TLS — DNS move is what unblocks cert-manager. 
 
 Cloudflare API token stays in **1Password**; Tofu runs from your machine or CI with that secret. No need to click DNS in the Cloudflare UI long-term.
 
-**Access model:** no public inbound ports for apps. Reachability is **LAN and/or Tailscale**. HTTPS still applies — “Tailscale-only” is about who can connect, not about skipping TLS.
+**Access model:** no public inbound ports for apps. Reachability is **LAN (homelab VLAN) and/or Tailscale**. HTTPS still applies — “Tailscale-only” is about who can connect from the internet, not about skipping TLS.
+
+### UniFi network (homelab VLAN)
+
+You already run **UniFi**. Plan a dedicated **homelab VLAN**, isolated from trusted LAN / IoT / etc., with **selective allow rules** for crossover (e.g. admin clients → lab, lab → DNS if needed, block lab → IoT by default).
+
+**Unraid IP (recommend):**
+
+| Approach | Verdict |
+|----------|---------|
+| **Static on Unraid** at a low address **outside** the VLAN DHCP pool (e.g. `10.x.y.10`) | **Preferred for NAS** — still boots with a known IP if the controller is down; NFS/CSI clients need stability |
+| UniFi “fixed IP” / DHCP reservation only | Fine for clients; weaker if DHCP/controller is unavailable at Unraid boot |
+| Both | Optional: static on Unraid **and** a UniFi client reservation for the same IP (inventory + UI niceness) |
+
+Pick a dedicated subnet (example only — choose what fits your UniFi scheme), e.g. `10.40.0.0/24`, DHCP `.100–.199`, Unraid `.10`, future LB/VIP `.20`, Mac Mini / nodes `.11+`.
+
+**IaC for UniFi:** **yes, with caveats.** Community OpenTofu/Terraform providers can manage networks/VLANs and firewall policy (legacy `firewall_rule` vs newer zone-based `firewall_policy` depending on UniFi Network version). Lean:
+
+- Put UniFi under `infrastructure/unifi/` (OpenTofu), API key in 1Password  
+- Start with: homelab VLAN/network + DHCP range + a few allow/deny policies  
+- Expect provider churn on UniFi OS 9/10 zone firewall — pin provider version; don’t IaC every Wi‑Fi tweak on day one  
+
+Cloudflare DNS + UniFi can both be Tofu; keep them as separate roots (`infrastructure/dns`, `infrastructure/unifi`).
 
 ### Environment → domain
 
-`stg` and `prd` are **different clusters** and must not share the same hostnames (DNS, certs, and “which Jellyfin?” would collide).
+Repo layout keeps `stg` + `prd` paths for future flexibility. **Bootstrap lean: `prd` only.**
 
-| Env | Cluster root | Hostname pattern | Examples |
-|-----|--------------|------------------|----------|
-| **prd** | `clusters/prd` | `*.lab.jacobdrury.com` (**no env prefix**) | `jellyfin.lab.jacobdrury.com` |
-| **stg** | `clusters/stg` | `*.stg.lab.jacobdrury.com` | `jellyfin.stg.lab.jacobdrury.com` |
+Solo lab, nothing critical, one consumer → a second cluster is mostly double Argo/Talos/certs/ops. Virtual `stg` on the Mac Mini is easy *later*; starting with only `prd` is less to maintain.
 
-Only non-`prd` envs put the env name in the hostname. `prd` uses the bare lab zone.
+| Env | When | Hostnames |
+|-----|------|-----------|
+| **prd** | **Now** (Mac Mini VMs → mini PCs) | `*.lab.jacobdrury.com` |
+| **stg** | **Later** if you want a scratch cluster | `*.stg.lab.jacobdrury.com` |
 
-**Where env shows up in Git:**
+Don’t delete `clusters/stg` from the mental model — just don’t stand it up until you feel the pain of testing on `prd`.
 
-- `clusters/<env>/` — which apps that cluster runs (`stg` / `prd`)  
-- Kustomize / Helm **values per env** — especially `hostname` / certificate DNS names  
-- Optional: 1Password item prefixes per env  
-- Talos under `infrastructure/<env>/`
-
-Shared charts stay in `apps/`; env-specific hostnames are **overlays**. Each env gets its own cert-manager certs (e.g. LE DNS-01 for `*.lab.jacobdrury.com` and `*.stg.lab.jacobdrury.com`).
+When `stg` exists: separate Argo root, overlays for hostnames, optional 1Password prefixes, Talos under `infrastructure/stg/`.
 
 ### How HTTPS works
 
@@ -289,7 +355,7 @@ Use the hostname for that env, not a raw IP.
 
 ### Local network (at home)
 
-**Yes — HTTPS on the LAN** if LAN DNS resolves the **env’s** names → that cluster’s Envoy LAN IP, e.g. `https://jellyfin.lab.jacobdrury.com` (`prd`) or `https://jellyfin.stg.lab.jacobdrury.com` (`stg`).
+**Yes — HTTPS on the LAN** if Pi-hole (or UniFi DNS) in/resolving for the homelab VLAN points `*.lab.jacobdrury.com` at Envoy’s lab IP, e.g. `https://jellyfin.lab.jacobdrury.com`.
 
 ### Remote (Tailscale)
 
@@ -333,9 +399,10 @@ Cloudflare Tunnel or Tailscale Funnel on selected routes; keep private apps Tail
 | Jellyfin | k8s | NFS `media/`; schedule on a **GPU worker** (prefer Mac Mini iGPU passthrough; else PC #2 dGPU → Talos VM on Unraid). See [GPU section](#gpu-for-jellyfin-in-cluster) |
 | Sonarr ×2, Prowlarr, qBittorrent | k8s | *arr stack; downloads on Unraid NFS |
 | Pi-hole / DNS | k8s (keep **Pi-hole**) | Stick with Pi-hole; no need to switch to AdGuard |
-| Home Assistant | k8s **or** VM/LXC | No Mac Mini USB dependency; migrate when convenient |
+| Home Assistant | k8s **or** VM/LXC | **In-cluster after Jellyfin/*arr**; downtime OK; USB passthrough only if a radio requires it |
 | Argo CD | k8s (system) | Bootstrapped once, then manages everything else |
 | Monitoring | k8s | **Prometheus + Grafana + Uptime Kuma**; alerts to **Discord** |
+| Homepage | k8s | [gethomepage.dev](https://gethomepage.dev) dashboard over `*.lab` / `*.stg.lab` |
 
 ## GitOps repo shape (proposed)
 
@@ -351,12 +418,13 @@ homelab/
     stg/                     # Talos machine configs for stg
     prd/                     # Talos machine configs for prd
     dns/                     # OpenTofu Cloudflare DNS (soon)
+    unifi/                   # OpenTofu UniFi VLAN / firewall (soon)
   bootstrap/                 # how to install Argo CD on a new cluster
   apps/
     system/                  # cilium, nfs-csi, cert-manager, tailscale
                              # 1password-connect, external-secrets, envoy-gateway
     media/                   # jellyfin, *arr, qbittorrent
-    home/                    # homeassistant (if in-cluster)
+    home/                    # homeassistant (if in-cluster), homepage
     network/                 # pihole
   clusters/
     stg/                     # Argo app-of-apps (or ApplicationSet) for stg
@@ -371,12 +439,13 @@ homelab/
 | `clusters/prd` | Prd Argo root — apps + **bare lab hostnames** (`*.lab.jacobdrury.com`) |
 | `infrastructure/<cluster>` | Talos configs / cluster-specific bootstrap notes |
 | `infrastructure/dns` | OpenTofu for Cloudflare zone (GitHub Pages + lab records) |
+| `infrastructure/unifi` | OpenTofu for homelab VLAN / DHCP / firewall allows (UniFi) |
 
 **How Argo sees it:** each cluster runs its own Argo CD (or one management cluster later). That Argo’s root Application points at `clusters/<name>/` only — so `stg` never auto-applies `prd`’s root.
 
 **Contract:** merge to `main` → each cluster’s Argo reconciles **its** `clusters/<name>/` tree. `stg` is for trying charts/values; promote to `prd` by updating `clusters/prd` (and shared `apps/` when safe).
 
-Early on: stand up **both** `stg` and `prd` (e.g. `stg` as smaller Talos VMs on the Mac Mini; `prd` toward mini PCs + Unraid NFS as hardware allows).
+Early on: stand up **`prd` only** (Talos VMs on Mac Mini → mini PCs). Keep `stg` paths in the repo for later; don’t run a second cluster until you want one.
 ## Explicit non-goals (for now)
 
 - Public internet exposure of the media stack

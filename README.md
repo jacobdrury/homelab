@@ -10,8 +10,8 @@ GitOps-managed home Kubernetes lab: **Talos** nodes, **Unraid** storage, **Tails
 | Storage | 24TB in Gaming PC #1 | Unraid on **PC #2**: 24TB data + SSD appdata; **parity ≥24TB later** |
 | Gaming PC #1 | Lab Proxmox + media disk | **Personal gaming PC** (out of lab) |
 | Gaming PC #2 | Idle | Unraid NAS; GPU available for lab if needed |
-| Apps | Pi-hole, HA, Jellyfin, *arr, qBittorrent | Same workloads on k8s (HA maybe stays VM) |
-| Access | TBD | Tailscale; HTTPS via Cloudflare DNS (`*.lab` / `*.stg.lab`); domain → Cloudflare entirely later |
+| Apps | Pi-hole, HA, Jellyfin, *arr, qBittorrent | Same on k8s + **Homepage**; HA after media stack |
+| Access | UniFi + Tailscale TBD | Homelab **VLAN**; Tailscale; HTTPS `*.lab`; **AI agents on the tailnet** |
 | Delivery | Manual / snowflake guests | Argo CD reconciles this repo |
 | Secrets | Ad hoc / in guests | **1Password** → Connect → External Secrets |
 | Ingress | TBD | **Envoy Gateway** (Gateway API) |

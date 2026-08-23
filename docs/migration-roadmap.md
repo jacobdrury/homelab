@@ -8,7 +8,9 @@ Move from today's Proxmox + local HDD setup toward Talos + Unraid + Tailscale + 
 2. **Free Gaming PC #1** — nothing lab-critical may remain on it after Phase 1 (+ any VM moves)
 3. **GitOps early** — once a cluster exists, new work goes through Git + Argo CD
 4. **Proxmox is a bridge** — Talos VMs on **Mac Mini** first; mini PCs replace VMs later
-5. **Tailscale first** — reachability via tailnet (and LAN); HTTPS via `lab.jacobdrury.com`, not public inbound by default
+5. **Tailscale first** — reachability via tailnet (and homelab VLAN); HTTPS via `lab.jacobdrury.com`
+6. **`prd` first** — keep `stg` in the repo layout; don’t run a second cluster until you want one
+7. **Agent-operable** — Cursor/AI agents on the tailnet can operate the lab (kubectl, APIs, GitOps); see [Agent access](./target-architecture.md#agent-access-first-class)
 
 ## Phase 0 — Inventory & docs (now)
 
@@ -17,95 +19,94 @@ Move from today's Proxmox + local HDD setup toward Talos + Unraid + Tailscale + 
 - [ ] Fill hardware specs and which VM/LXC runs each service in current-state
 - [x] Unraid hardware lean: **Gaming PC #2** (bare metal); PC #1 exits lab
 - [x] Tailscale: account exists (free Personal OK)
-- [x] Domain: Squarespace registrar → **Cloudflare DNS** for LE (needed)
+- [x] Domain: Squarespace → **Cloudflare DNS** early (least rework for LE); registrar transfer later
 - [x] DNS app: keep **Pi-hole**
 - [x] Monitoring lean: Prometheus, Grafana, Uptime Kuma, Discord
+- [x] Homepage on k8s (planned)
+- [x] Clusters: **`prd` first**; `stg` optional later
+- [x] Network: **UniFi homelab VLAN** + selective firewall; Unraid static IP
 - [ ] List everything still pinned to Gaming PC #1 (VMs, the 24TB)
 
 **Exit:** Accurate inventory; PC #1 evacuation checklist known.
 
-## Phase 1 — Unraid on PC #2 + evacuate PC #1 storage
+## Phase 1 — Network + Unraid + evacuate PC #1
 
-Disk layout detail: [Unraid disk plan](./target-architecture.md#unraid-disk-plan-initial--protected).
+Disk layout: [Unraid disk plan](./target-architecture.md#unraid-disk-plan-initial--protected).  
+VLAN/IP: [UniFi network](./target-architecture.md#unifi-network-homelab-vlan).
 
+- [ ] Create **homelab VLAN** in UniFi (IaC later under `infrastructure/unifi/` is fine; UI-first OK to unblock)
+- [ ] Choose subnet; set **Unraid static IP** outside DHCP pool (e.g. `.10`)
+- [ ] Selective firewall: admin → lab; deny lab → sensitive VLANs by default
 - [ ] Put Tailscale on Mac Mini / always-on admin path
 - [x] SSD/NVMe for Unraid `appdata` — available on PC #2
-- [ ] Install **Unraid bare metal on Gaming PC #2** (USB license stick)
+- [ ] Buy **Unraid license** + USB stick
+- [ ] Install **Unraid bare metal on Gaming PC #2** on the homelab VLAN
 - [ ] Assign **24TB as sole array data disk** — **no parity yet**; SSD pool for `appdata`
 - [ ] Create shares: `media/`, `downloads/`, `appdata/`, `backups/`
 - [ ] Copy **24TB** libraries from PC #1 → Unraid `media/`
 - [ ] Point existing Jellyfin at Unraid NFS/SMB — validate playback
-- [ ] Export NFS for future CSI (`apps/` or `appdata/`, `media/`, `downloads/`)
+- [ ] Export NFS for future CSI
 - [ ] Migrate any Proxmox guests still on PC #1 → Mac Mini (or retire them)
 - [ ] Wipe / reinstall Gaming PC #1 as a **gaming PC** (out of lab)
 
-**Exit:** Media on Unraid (PC #2); Gaming PC #1 returned to gaming; lab no longer depends on PC #1.
+**Exit:** Media on Unraid (PC #2); PC #1 gaming-only; lab on dedicated VLAN.
 
-### Phase 1b — parity when ready (can be anytime after Phase 1)
+### Phase 1b — parity when ready
 
-- [ ] Buy parity disk **≥ 24TB**
-- [ ] Assign as Parity; wait for parity sync to complete
-- [ ] Optional: add more mixed-size data disks over time; keep parity ≥ largest data disk
+- [ ] Buy parity disk **≥ 24TB**; assign; wait for sync
+- [ ] Optional: more mixed-size data disks over time
 
-## Phase 2 — Talos clusters (stg + prd)
+### Phase 1c — backups (after Unraid is stable)
 
-- [ ] Move **DNS** for `jacobdrury.com` to Cloudflare; keep Squarespace as registrar until transfer
-- [ ] Recreate **GitHub Pages** apex/`www` records in Cloudflare so `jacobdrury.com` still serves the site
-- [ ] Add OpenTofu Cloudflare DNS config in-repo (e.g. `infrastructure/dns/`)
-- [ ] (**Later**) Transfer domain registration Squarespace → **Cloudflare Registrar**
-- [ ] Create Talos VMs — aim for **both** `stg` and `prd` (start small on Mac Mini as needed)
-- [ ] Store Talos machine configs in `infrastructure/stg` and `infrastructure/prd`
+- [ ] Choose backup approach (parity ≠ backup) — options to evaluate: Unraid native / app dumps / restic-kopia / Velero later
+- [ ] Document restore drill
+
+## Phase 2 — Cloudflare DNS + Talos `prd`
+
+- [ ] Move **DNS** for `jacobdrury.com` to Cloudflare; preserve **GitHub Pages** apex/`www`
+- [ ] OpenTofu Cloudflare config in `infrastructure/dns/`
+- [ ] (**Later**) Transfer registration → Cloudflare Registrar
+- [ ] Create Talos VMs on Mac Mini for **`prd` only** (small CP + workers)
+- [ ] Store configs in `infrastructure/prd/`; Argo root → `clusters/prd`
 - [ ] Install Cilium, NFS CSI, **Tailscale operator**, Envoy Gateway, cert-manager
-- [ ] Install Argo CD; roots → `clusters/stg` and `clusters/prd`
-- [ ] Deploy 1Password Connect + External Secrets Operator; seed Connect credentials once
-- [ ] Issue LE certs for `*.lab.jacobdrury.com` and `*.stg.lab.jacobdrury.com` via Cloudflare DNS-01
+- [ ] 1Password Connect + External Secrets; seed once
+- [ ] LE certs for `*.lab.jacobdrury.com` via Cloudflare DNS-01
+- [ ] (**Later**) Optional `stg` cluster + `*.stg.lab.jacobdrury.com` if desired
 
-**Exit:** Both clusters GitOps-reachable over Tailscale; `kubectl` and Argo UI work from the tailnet.
+**Exit:** `prd` GitOps-reachable on Tailscale + lab VLAN; `kubectl` / Argo UI work.
 
 ## Phase 3 — Migrate apps (one stack at a time)
 
-Order that usually hurts least:
+1. **DNS (Pi-hole)** — plan LAN/VLAN cutover carefully  
+2. ***arr + qBittorrent***  
+3. **Jellyfin**  
+4. **Homepage**  
+5. **Home Assistant** — after Jellyfin / *arr; downtime OK; prefer in-cluster (USB radio passthrough if needed)  
 
-1. **DNS (Pi-hole)** — plan LAN cutover carefully
-2. ***arr + qBittorrent*** — config on Unraid NFS; verify downloads
-3. **Jellyfin** — cut libraries already on Unraid; update clients
-4. **Home Assistant** — when convenient (no hard cutover dependency)
-
-For each app:
-
-- [ ] Helm/Kustomize manifest in `apps/`
-- [ ] Argo Application; sync
-- [ ] Validate on Tailscale hostname
-- [ ] Decommission old Proxmox guest
-
-**Exit:** Current service list runs on k8s (or HA explicitly left on VM); old guests removed.
+For each: manifests in `apps/` → Argo → validate on `*.lab.jacobdrury.com` → retire old guest.
 
 ## Phase 4 — Bare-metal Talos (mini PCs)
 
-- [ ] Buy / place mini PCs; image Talos
-- [ ] Join as new nodes (or rebuild control plane onto bare metal)
-- [ ] Drain and remove Proxmox-hosted Talos VMs on Mac Mini when bare metal is ready
-- [ ] Mac Mini leftover role: optional (no HA USB requirement)
+- [ ] Buy / place mini PCs; image Talos; join/replace Mac Mini VMs
+- [ ] Mac Mini leftover role: optional
 
-**Exit:** Cluster(s) on intended hardware; Gaming PC #2 remains Unraid; PC #1 still gaming-only.
+## Phase 5 — Hardening & ops
 
-## Phase 5 — Hardening & ops (ongoing)
-
-- [ ] Monitoring: **Prometheus, Grafana, Uptime Kuma**; notifications to **Discord**
-- [ ] Backups (tooling TBD — Unraid array + cluster/app backups)
-- [ ] **Renovate** for dependency PRs (`.prototools`, Actions, OpenTofu) — config when ready
-- [ ] Documentation for restore / node replace
-- [ ] Only if needed: public HTTPS via Cloudflare Tunnel or Tailscale Funnel
+- [ ] Monitoring: Prometheus, Grafana, Uptime Kuma → Discord  
+- [ ] Tailscale on **agent workstation** (Mac running Cursor) so agents share lab access
+- [ ] Document agent kubecontext + moon tool PATH in-repo (Cursor rule/skill)
+- [ ] 1Password items for any agent-needed API tokens (HA, Unraid) — not in Git
+- [ ] Optional: Kubernetes / HA MCP servers when shell-only gets painful
 
 ## Dependency sketch
 
 ```mermaid
 flowchart LR
   P0[Phase0 Docs]
-  P1[Phase1 Unraid plus Tailscale]
-  P2[Phase2 Talos on Proxmox]
+  P1[Phase1 VLAN Unraid]
+  P2[Phase2 Cloudflare plus prd]
   P3[Phase3 Migrate apps]
-  P4[Phase4 Mini PC bare metal]
+  P4[Phase4 Mini PCs]
   P5[Phase5 Hardening]
   P0 --> P1 --> P2 --> P3 --> P4 --> P5
 ```
@@ -115,27 +116,23 @@ flowchart LR
 | Decision | Options | Current lean |
 |----------|---------|--------------|
 | Unraid hardware | Gaming PC #2 bare metal | **PC #2 bare metal** |
-| Unraid vs TrueNAS | Mixed drives vs ZFS-first | **Unraid** |
-| Initial array | Parity now vs data-only first | **24TB data only**; parity (≥24TB) later |
-| 2TB HDD | In Unraid plan or not | **Out of plan** for now (may stay on PC #1) |
-| Appdata disks | Buy SSD vs existing | **Existing NVMe/SATA SSDs on PC #2** |
-| Gaming PC #1 | Stay in lab vs gaming | **Exit lab → gaming** |
-| Lab GPU | Pattern B Talos worker passthrough | **Locked**; prefer Mac Mini iGPU first |
-| Control plane size | 1 vs 3 | 1 while learning; 3 on mini PCs for `prd` later |
-| Clusters | stg only vs both | **Both `stg` and `prd`** |
-| DNS app | Pi-hole vs AdGuard | **Pi-hole** (keep) |
-| Domain DNS | Squarespace → Cloudflare | **Cloudflare DNS + OpenTofu now**; **full registrar transfer to Cloudflare later** |
-| TLS | cert-manager + LE DNS-01 | **Locked** (via Cloudflare) |
-| App DNS path | Always Tailscale vs split-horizon | Start **always Tailscale** |
-| Tailscale | Operator vs subnet router | **Operator** + Unraid on tailnet; subnet router only if needed |
-| Home Assistant | Rush vs whenever | **Whenever** — no special USB on Mac Mini |
-| Secrets | 1Password Connect + ESO | **Locked** |
-| Ingress | Envoy Gateway | **Locked** |
-| Monitoring | Stack choice | **Prometheus, Grafana, Uptime Kuma → Discord** |
-| Backups | Tooling | **TBD** |
-| Repo toolchain | Manual CLIs vs moonrepo | **proto + moon** ([moonrepo.dev](https://moonrepo.dev/)) |
-| Dependency bots | Dependabot / Renovate | **Renovate later** (proto + Actions + tofu); no Dependabot version updates |
+| Unraid license | Own vs buy | **Buy** with USB stick |
+| Initial array | Parity now vs later | **24TB data only**; parity later |
+| 2TB HDD | In plan or not | **Out of plan** for now |
+| Clusters | stg+prd vs prd first | **`prd` first**; `stg` later if needed |
+| DNS cutover timing | With Phase 2 vs earlier | **With Phase 2** (Cloudflare before cert-manager) — one cutover |
+| Domain DNS | Squarespace → Cloudflare | **Cloudflare DNS + OpenTofu**; registrar transfer later |
+| UniFi | Flat LAN vs lab VLAN | **Homelab VLAN** + selective allows |
+| Unraid IP | DHCP reservation vs static | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
+| UniFi IaC | UI only vs OpenTofu | **OpenTofu later** (`infrastructure/unifi/`); UI OK to unblock |
+| Tailscale | Operator vs subnet router | **Operator** + Unraid on tailnet |
+| Backups | Tooling | **Decide after Unraid is up** (Phase 1c) |
+| Monitoring | Stack | **Prometheus, Grafana, Uptime Kuma → Discord** |
+| Homepage | In k8s or not | **In k8s** |
+| Repo toolchain | moonrepo | **proto + moon** |
+| Dependency bots | Renovate | **Later** (no Dependabot version updates) |
+| Agent access | Ad hoc vs first-class | **First-class** — Tailscale + kubeconfig + lab HTTPS + `op`; GitOps preferred |
 
 ## Public HTTPS later?
 
-Safe to stay Tailscale-only through Phases 1–4. Adding public access is an **edge** change (tunnel/Funnel + HTTPRoute), not a storage or node redesign. See [target-architecture.md](./target-architecture.md#adding-public-https-later).
+Safe to stay private through Phases 1–4. Adding public access is an edge change. See [target-architecture.md](./target-architecture.md#adding-public-https-later).
