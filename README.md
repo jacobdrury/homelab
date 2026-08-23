@@ -38,7 +38,7 @@ moon run root:check
 
 Pinned tools live in [`.prototools`](.prototools) (moon, OpenTofu, kubectl, helm). More tasks will land as `infrastructure/dns` and clusters appear.
 
-**Dependency updates:** [Dependabot](.github/dependabot.yml) keeps **GitHub Actions** current (weekly). OpenTofu provider updates will be enabled when `infrastructure/dns` exists. Dependabot does **not** update `.prototools` — add [Renovate](https://moonrepo.dev/docs/guides/renovate) later if you want proto/moon version PRs.
+**Dependency updates (planned):** [Renovate](https://moonrepo.dev/docs/guides/renovate) later — covers `.prototools`, GitHub Actions, and OpenTofu when present. No Dependabot version updates; optional GitHub security alerts only.
 
 ## Status
 

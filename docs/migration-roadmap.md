@@ -93,6 +93,7 @@ For each app:
 
 - [ ] Monitoring: **Prometheus, Grafana, Uptime Kuma**; notifications to **Discord**
 - [ ] Backups (tooling TBD — Unraid array + cluster/app backups)
+- [ ] **Renovate** for dependency PRs (`.prototools`, Actions, OpenTofu) — config when ready
 - [ ] Documentation for restore / node replace
 - [ ] Only if needed: public HTTPS via Cloudflare Tunnel or Tailscale Funnel
 
@@ -133,7 +134,7 @@ flowchart LR
 | Monitoring | Stack choice | **Prometheus, Grafana, Uptime Kuma → Discord** |
 | Backups | Tooling | **TBD** |
 | Repo toolchain | Manual CLIs vs moonrepo | **proto + moon** ([moonrepo.dev](https://moonrepo.dev/)) |
-| Dependency bots | Dependabot / Renovate | **Dependabot** for Actions + OpenTofu; Renovate later if we want `.prototools` PRs |
+| Dependency bots | Dependabot / Renovate | **Renovate later** (proto + Actions + tofu); no Dependabot version updates |
 
 ## Public HTTPS later?
 
