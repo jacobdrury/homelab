@@ -1,0 +1,3 @@
+# moon local state
+.moon/cache/
+.moon/docker/

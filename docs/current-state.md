@@ -14,7 +14,7 @@ Snapshot of what exists today. Update this as things change.
 
 One laptop has an **NVIDIA Quadro** (note which in the inventory table when known) — optional NVENC worker if docked 24/7.
 
-**Storage today:** no dedicated NAS. Media lives on the **24TB HDD** in Gaming PC #1. Also own an unused **2TB HDD**. Both move toward Unraid on PC #2 before PC #1 retires.
+**Storage today:** no dedicated NAS. Media lives on the **24TB HDD** in Gaming PC #1 (must move to Unraid on PC #2 before PC #1 retires).
 
 **Compute pattern today:** Proxmox VMs/LXCs (exact guests TBD — fill in as we inventory them).
 
@@ -24,7 +24,7 @@ One laptop has an **NVIDIA Quadro** (note which in the inventory table when know
 |------|-----------|-----------|------------|-----|-------|
 | Mac Mini | | | | | |
 | Gaming PC #1 | | | **24TB HDD** (media) | gaming GPU | Exit lab → personal gaming |
-| Gaming PC #2 | | | (receives disks from PC #1 + **2TB HDD**) | gaming GPU | Keep in lab; Unraid + optional GPU |
+| Gaming PC #2 | | | (receives **24TB** from PC #1); has NVMe/SATA SSDs | gaming GPU | Keep in lab; Unraid + optional GPU |
 | Laptop #1 | | | | Quadro? / iGPU? | Mark which laptop has Quadro |
 | Laptop #2 | | | | | |
 
@@ -50,9 +50,9 @@ One laptop has an **NVIDIA Quadro** (note which in the inventory table when know
 
 | Concern | Current approach |
 |---------|------------------|
-| Remote access | TBD (VPN / port forward / none?) |
-| LAN DNS | Pi-hole |
-| Ingress / TLS | TBD |
+| Remote access | Tailscale account exists (free); not fully wired into lab yet |
+| LAN DNS | Pi-hole (keep) |
+| Ingress / TLS | Target: Envoy + LE via DNS API (see architecture — not Squarespace DNS) |
 | Backups | TBD |
 
 ## Pain points / constraints

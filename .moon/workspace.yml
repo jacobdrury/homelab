@@ -1,0 +1,9 @@
+projects:
+  sources:
+    root: '.'
+  globs:
+    - 'infrastructure/*/moon.yml'
+
+vcs:
+  defaultBranch: 'main'
+  provider: 'github'

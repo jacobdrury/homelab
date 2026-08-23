@@ -1,0 +1,9 @@
+id: 'root'
+layer: 'tool'
+stack: 'infrastructure'
+tags:
+  - 'homelab'
+
+project:
+  name: 'homelab'
+  description: 'GitOps homelab — Talos, Unraid, Tailscale, Argo CD'

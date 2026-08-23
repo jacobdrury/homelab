@@ -1,0 +1,22 @@
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+
+  # Add when infrastructure/dns has OpenTofu configs:
+  # - package-ecosystem: opentofu
+  #   directory: /infrastructure/dns
+  #   schedule:
+  #     interval: weekly
+  #     day: monday
+  #   labels:
+  #     - dependencies
+  #     - opentofu

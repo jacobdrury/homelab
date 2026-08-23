@@ -67,19 +67,19 @@ Unraid chosen over TrueNAS mainly for **mixed drive sizes** over time. Parity ru
 | Disk | Initial Unraid role | Notes |
 |------|---------------------|-------|
 | 24TB HDD | **Array data** (only data disk at first) | Holds `media/` (Jellyfin libraries) |
-| 2TB HDD | **Not parity** | Do not assign as parity (would waste the 24TB). Prefer downloads/scratch via Unassigned Devices or a second data disk later |
-| SSD/NVMe (buy if missing) | **Cache / pool** for `appdata` | Strongly recommended; array HDDs are painful for app config |
+| NVMe / SATA SSD(s) on PC #2 | **Cache / pool** for `appdata` | Confirmed available — use for appdata / Docker / fast shares |
 | USB flash | Unraid boot + license | Required |
+
+**Out of scope for now:** any 2TB HDD (may stay in Gaming PC #1 for games — not part of the Unraid plan until decided).
 
 **Phase A — stand up (no parity)**
 
 1. Install Unraid bare metal on Gaming PC #2.
 2. Assign **24TB as sole array data disk**; leave parity slots empty.
-3. Create shares: `media`, `downloads`, `appdata` (appdata on SSD pool if present), `backups`.
+3. Put SSD/NVMe in a cache/pool; create shares: `media`, `downloads`, `appdata` (on SSD pool), `backups`.
 4. Copy libraries from PC #1 → `media`; point Jellyfin at Unraid.
-5. Optional: use **2TB** for download scratch or extra data — still unprotected until parity exists.
 
-**Usable space initially:** ~24TB (plus 2TB if added as data). **Protection:** none yet — same class of risk as a single disk today.
+**Usable space initially:** ~24TB. **Protection:** none yet — same class of risk as a single disk today.
 
 **Phase B — add parity later (easy, first-class Unraid flow)**
 
@@ -89,8 +89,6 @@ Unraid chosen over TrueNAS mainly for **mixed drive sizes** over time. Parity ru
 4. After the build completes, single-disk failure of a data disk is recoverable.
 
 Adding a second parity disk later is the same pattern. Extra data disks (8TB, 12TB, …) can be mixed sizes; only parity must stay ≥ the largest data disk.
-
-**Why not 24TB parity + 2TB data?** That only yields ~2TB usable protected space. Never do that with this pair.
 
 **k8s storage:** still **NFS CSI → Unraid exports** (not iSCSI as primary; not Longhorn/Ceph).
 
@@ -169,7 +167,7 @@ flowchart TB
 | Secrets | **1Password** + Connect + External Secrets Operator | Vault in 1Password; Git only has `ExternalSecret` refs |
 | Storage | NFS CSI → Unraid exports | Unraid is the storage plane; cluster does not run Longhorn/Ceph as primary |
 | Ingress (internal) | **Envoy Gateway** (Gateway API) | HTTPRoutes; Envoy dataplane (matches work familiarity) |
-| Mesh access | Tailscale Kubernetes operator **or** subnet router + MagicDNS | Expose kube API + HTTP services on the tailnet |
+| Mesh access | **Tailscale Kubernetes operator** (+ Unraid on tailnet) | Subnet router only if whole-LAN access needed |
 
 ### Suggested node layout (steady state)
 
@@ -220,6 +218,27 @@ SOPS is **not** required if 1Password is the vault; keep SOPS off the critical p
 
 **Base zone:** `lab.jacobdrury.com` under owned `jacobdrury.com`.
 
+**Registrar / DNS:** Squarespace today. Move **DNS to Cloudflare first** (required for LE + OpenTofu). **Transfer the domain into Cloudflare Registrar later** so everything is one account — optional for TLS, desired for simplicity.
+
+**Preserve on DNS cutover:** apex GitHub Pages for `jacobdrury.com` (recreate the same GitHub Pages A/`www` CNAME records in Cloudflare; prefer DNS-only / grey-cloud for those). Lab records (`*.lab`, ACME TXT) live alongside without touching the marketing site.
+
+**Domain ownership path**
+
+1. **Soon:** Point Squarespace nameservers → Cloudflare; IaC DNS with OpenTofu (keep GitHub Pages).  
+2. **Later:** **Transfer registration** of `jacobdrury.com` into Cloudflare Registrar so registrar + DNS are one account.  
+
+No rush on the transfer for lab TLS — DNS move is what unblocks cert-manager. Transfer is the “one place” end state.
+
+**IaC for Cloudflare DNS**
+
+| Layer | Tool | Owns |
+|-------|------|------|
+| Static / rare records | **OpenTofu** via proto (`moon run` tasks later) in `infrastructure/dns/` | Apex GitHub Pages, `www`, zone settings |
+| App hostnames (optional later) | **external-dns** in each cluster | `HTTPRoute`/Service → A/AAAA/CNAME for `*.lab` / `*.stg.lab` as apps appear |
+| ACME TXT | **cert-manager** Cloudflare solver | `_acme-challenge.*` (ephemeral; don’t manage those in Terraform) |
+
+Cloudflare API token stays in **1Password**; Tofu runs from your machine or CI with that secret. No need to click DNS in the Cloudflare UI long-term.
+
 **Access model:** no public inbound ports for apps. Reachability is **LAN and/or Tailscale**. HTTPS still applies — “Tailscale-only” is about who can connect, not about skipping TLS.
 
 ### Environment → domain
@@ -262,9 +281,9 @@ flowchart LR
 | Prd names | `*.lab.jacobdrury.com` (no `prd` label) |
 | Stg names | `*.stg.lab.jacobdrury.com` |
 | Edge | Envoy Gateway terminates TLS per cluster |
-| Certificates | **cert-manager + Let’s Encrypt DNS-01** against `jacobdrury.com` |
-| Why DNS-01 | Public DNS API; services stay private; browsers still trust the certs |
-| Secrets | DNS API token in **1Password** → External Secrets → cert-manager |
+| Certificates | **cert-manager + Let’s Encrypt DNS-01** via **Cloudflare** (domain stays registered at Squarespace) |
+| Why DNS-01 | Services stay private; browsers still trust the certs; Squarespace DNS cannot automate ACME |
+| Secrets | Cloudflare API token in **1Password** → External Secrets → cert-manager |
 
 Use the hostname for that env, not a raw IP.
 
@@ -285,6 +304,18 @@ Use the hostname for that env, not a raw IP.
 
 **Lean:** start **always Tailscale**; add split-horizon later if needed.
 
+### Tailscale: operator vs subnet router
+
+| Approach | Best for |
+|----------|----------|
+| **Tailscale Kubernetes operator** | kube API, Envoy/HTTPRoutes on the tailnet, GitOps-friendly — **primary lean** |
+| **Tailscale on Unraid** (normal node) | Admin UI + NFS host on the same tailnet |
+| **Subnet router** | Reaching arbitrary LAN IPs that are *not* on Tailscale |
+
+**Recommend:** operator on each cluster (`stg` / `prd`) + Tailscale client on Unraid (and Mac Mini while it’s a Proxmox host). Add a subnet router only if you need whole-LAN access without installing Tailscale on every device.
+
+Free Tailscale Personal is enough for this lab; upgrade only if you hit device/ACL limits.
+
 ### What you will not have (by default)
 
 - Public internet access to lab hostnames  
@@ -301,28 +332,32 @@ Cloudflare Tunnel or Tailscale Funnel on selected routes; keep private apps Tail
 |----------|-------------|-------|
 | Jellyfin | k8s | NFS `media/`; schedule on a **GPU worker** (prefer Mac Mini iGPU passthrough; else PC #2 dGPU → Talos VM on Unraid). See [GPU section](#gpu-for-jellyfin-in-cluster) |
 | Sonarr ×2, Prowlarr, qBittorrent | k8s | *arr stack; downloads on Unraid NFS |
-| Pi-hole / DNS | k8s **or** Unraid Docker | Often AdGuard Home or Pi-hole; keep LAN DNS highly available |
-| Home Assistant | k8s **or** dedicated VM/LXC | Prefer bare metal/VM if USB radio must stay stable; can still GitOps config |
+| Pi-hole / DNS | k8s (keep **Pi-hole**) | Stick with Pi-hole; no need to switch to AdGuard |
+| Home Assistant | k8s **or** VM/LXC | No Mac Mini USB dependency; migrate when convenient |
 | Argo CD | k8s (system) | Bootstrapped once, then manages everything else |
-| Monitoring | k8s | kube-prometheus-stack or similar (phase 2+) |
+| Monitoring | k8s | **Prometheus + Grafana + Uptime Kuma**; alerts to **Discord** |
 
 ## GitOps repo shape (proposed)
 
-Multi-cluster from day one: shared app definitions under `apps/`, per-cluster roots under `clusters/`.
+Multi-cluster from day one: shared app definitions under `apps/`, per-cluster roots under `clusters/`. Developer toolchain via [moonrepo](https://moonrepo.dev/) (proto + moon).
 
 ```text
 homelab/
+  .prototools                # proto-pinned CLIs (moon, tofu, kubectl, helm, …)
+  .moon/                     # moon workspace + toolchains
+  moon.yml                   # root tasks (tools-install, check, …)
   docs/                      # architecture & inventory (this)
   infrastructure/
     stg/                     # Talos machine configs for stg
     prd/                     # Talos machine configs for prd
+    dns/                     # OpenTofu Cloudflare DNS (soon)
   bootstrap/                 # how to install Argo CD on a new cluster
   apps/
     system/                  # cilium, nfs-csi, cert-manager, tailscale
                              # 1password-connect, external-secrets, envoy-gateway
     media/                   # jellyfin, *arr, qbittorrent
     home/                    # homeassistant (if in-cluster)
-    network/                 # dns / pihole-or-adguard
+    network/                 # pihole
   clusters/
     stg/                     # Argo app-of-apps (or ApplicationSet) for stg
     prd/                     # same pattern for prd
@@ -330,16 +365,18 @@ homelab/
 
 | Path | Role |
 |------|------|
+| `.prototools` / moon | Pinned CLIs + runnable tasks |
 | `apps/*` | Shared desired state (Helm/Kustomize bases). Prefer overlays or helm values per cluster rather than duplicating whole apps |
 | `clusters/stg` | Stg Argo root — apps + **stg hostnames** (`*.stg.lab.jacobdrury.com`) |
 | `clusters/prd` | Prd Argo root — apps + **bare lab hostnames** (`*.lab.jacobdrury.com`) |
 | `infrastructure/<cluster>` | Talos configs / cluster-specific bootstrap notes |
+| `infrastructure/dns` | OpenTofu for Cloudflare zone (GitHub Pages + lab records) |
 
 **How Argo sees it:** each cluster runs its own Argo CD (or one management cluster later). That Argo’s root Application points at `clusters/<name>/` only — so `stg` never auto-applies `prd`’s root.
 
 **Contract:** merge to `main` → each cluster’s Argo reconciles **its** `clusters/<name>/` tree. `stg` is for trying charts/values; promote to `prd` by updating `clusters/prd` (and shared `apps/` when safe).
 
-Early on, `stg` can be a small Talos VM cluster on the Mac Mini while `prd` grows toward mini PCs + Unraid NFS.
+Early on: stand up **both** `stg` and `prd` (e.g. `stg` as smaller Talos VMs on the Mac Mini; `prd` toward mini PCs + Unraid NFS as hardware allows).
 ## Explicit non-goals (for now)
 
 - Public internet exposure of the media stack
