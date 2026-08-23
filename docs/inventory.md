@@ -1,60 +1,263 @@
 # Inventory (current state)
 
-What exists **today**. Fill gaps as you inventory Proxmox guests and hardware. Target design: [architecture](architecture/overview.md) · [decisions](decisions.md).
+What exists **today**. Target design: [architecture](architecture/overview.md) · [decisions](decisions.md).
 
-## Hardware
+## Hosts
 
-| Host | Role today | Notes |
-|------|------------|-------|
-| Intel Mac Mini | Proxmox host | Primary active host |
-| Gaming PC #1 | Proxmox host | Active; **24TB HDD** (Jellyfin libs); **leaving the lab** |
-| Gaming PC #2 | Idle | Target **Unraid** + optional lab GPU |
-| Laptop #1 | Idle | |
-| Laptop #2 | Idle | |
+| Host | Node / name | Role today | IP | Notes |
+|------|-------------|------------|-----|-------|
+| **Mac Mini** | `homelab03` | Proxmox | `192.168.1.15` | Pi-hole + discord bots; interim Talos target |
+| **pc (black)** | `homelab02` | Proxmox | `192.168.1.12` | Media + HA; **leaving lab** → personal gaming |
+| **pc (white)** | `homelab` | Proxmox | `192.168.1.10` | Fresh install · **Unraid target** (receives 24TB) |
+| **Laptop (Precision)** | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional NVENC if docked 24/7 |
+| **Laptop (Inspiron)** | — | Idle / reinstalling | — | Light use only |
 
-One laptop has an **NVIDIA Quadro** (note which below) — optional NVENC worker if docked 24/7.
+**Proxmox cluster:** `homelab` · `homelab02` · `homelab03`.
 
-**Storage:** no NAS yet. Media on the 24TB in Gaming PC #1 → must move to Unraid on PC #2 before PC #1 is wiped.
+**Storage today:** no NAS. Media (~7.9 TB used) on the **24TB** in pc (black) → move to Unraid on **pc (white)** before wiping pc (black).
 
-**Compute:** Proxmox VMs/LXCs (guest map TBD).
+### Specs
 
-### Specs (fill in)
+| Host | CPU / RAM | Boot / system disks | Other disks | GPU |
+|------|-----------|---------------------|-------------|-----|
+| **Mac Mini** | i3-8100B (4c) / 16 GB | Apple 128 GB NVMe | — | UHD 630 |
+| **pc (black)** | i7-8700K (6c/12t) / 32 GB | 970 EVO 250 GB NVMe (LVM) | **24TB** XFS media; 970 EVO 500 GB (unused in guest) | GTX 1080 Ti |
+| **pc (white)** | i7-4770K (4c/8t) / 32 GB | ZFS rpool: 240 GB + 500 GB SATA SSDs | 970 EVO 500 GB NVMe (NTFS leftover) | GTX 780 |
+| **Laptop (Precision)** | i7-7820HQ (4c/8t) / 16 GB | SM961 512 GB NVMe | — | Quadro M1200 + HD 630 |
+| **Laptop (Inspiron)** | Pentium N5000 (4c) / 4 GB | Toshiba 500 GB HDD | — | UHD 605 |
 
-| Host | CPU / RAM | Boot disk | Data disks | GPU | Notes |
-|------|-----------|-----------|------------|-----|-------|
-| Mac Mini | | | | Intel iGPU | Interim Talos VMs |
-| Gaming PC #1 | | | **24TB** (media) | gaming GPU | → personal gaming |
-| Gaming PC #2 | | NVMe/SATA SSDs | receives **24TB** | gaming GPU | Unraid |
-| Laptop #1 | | | | Quadro? / iGPU? | Mark Quadro here |
-| Laptop #2 | | | | | |
+---
+
+## Mac Mini (`homelab03`)
+
+| Item | Value |
+|------|-------|
+| Model | Apple Mac mini 2018 (`Macmini8,1`) · serial `C07Y30G3JYVY` |
+| Proxmox | 8.4.0 · kernel 6.8.12-9-pve |
+| Boot | Apple `AP0128M` 128 GB · `local` + `local-lvm` (~70% thin used) |
+| GPU | UHD 630 · `/dev/dri/renderD128` (Quick Sync candidate) |
+| LAN | USB Ethernet `enx6c1ff721c616` → Pro Max 16 **Port 15** · onboard `enp4s0` down |
+
+### Guests
+
+| ID | Type | Name | IP | Specs | Notes |
+|----|------|------|-----|-------|-------|
+| 106 | LXC | `Pi-Hole` | `192.168.1.11` | 1 GB / 8 GB | Debian 12 · FTL on `:53`/`:80`/`:443` · Core v6.0.6 (behind latest) |
+| 103 | VM | `discord-bots` | `192.168.1.18` | 1 GB / 32 GB | Docker: `frankbot`, `math-boi-original` under `/home/mathboi/` |
+
+Stale LVM volumes for VM 105 remain on this host (HA now on pc black).
+
+---
+
+## pc (black) (`homelab02`)
+
+| Item | Value |
+|------|-------|
+| Board | MSI Z370 Gaming Pro Carbon (MS-7B45) |
+| Proxmox | 8.4.0 · kernel 6.8.12-9-pve |
+| Boot | Samsung 970 EVO 250 GB (`S465NB0K579621D`) · `local` + `local-lvm` |
+| Media | Seagate 24TB `ST24000NM000C` (`ZXA0VZBA`) · XFS UUID `0a63c59e-eb76-4c76-b559-ce379e340311` |
+| Extra NVMe | 970 EVO 500 GB (`S466NX0KA18171W`) · passed to VM 101 as `virtio3`; unused in guest |
+| GPU | GTX 1080 Ti (`10de:1b06`) |
+| LAN | 10G → Aggregation **SFP+ 1** (`98:b7:85:21:cd:70`); onboard also on Pro Max **Port 6** |
+| Tailscale | `tailscale0` on host |
+
+### Guests
+
+| VMID | Name | IP | VLAN | RAM | Notes |
+|------|------|-----|------|-----|-------|
+| 101 | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | Full media stack · 24TB passthrough |
+| 105 | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · no USB radios |
+
+**Must migrate or retire both VMs before wipe → personal gaming.**
+
+### VM 101 `arr` — media stack
+
+Compose: `/home/arr/docker/docker-compose.yml` · config `/home/arr/docker/arr-stack/`.
+
+| Container | Image | Network | Ports (on `192.168.1.9`) |
+|-----------|-------|---------|--------------------------|
+| `jellyfin` | `jellyfin/jellyfin:10.11.11` | default | `8096`, `8920`, `1900/udp`, `7359/udp` |
+| `gluetun` | `qmcgaw/gluetun:v3.41.1` | default | `8085`, `8989–8990`, `9696`, `6767`, `6881` |
+| `sonarr-tv` | `linuxserver/sonarr:4.0.19` | `service:gluetun` | via Gluetun (`:8989`) |
+| `sonarr-anime` | `linuxserver/sonarr:4.0.19` | `service:gluetun` | via Gluetun (`:8990`) |
+| `prowlarr` | `linuxserver/prowlarr:2.4.0` | `service:gluetun` | via Gluetun (`:9696`) |
+| `qbittorrent` | `linuxserver/qbittorrent:5.2.3` | `service:gluetun` | via Gluetun (`:8085`) |
+
+Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
+
+| Path | Size | Used by |
+|------|------|---------|
+| `/mnt/data/media/anime` | 6.9 TB | Jellyfin, Sonarr |
+| `/mnt/data/media/tv` | 608 GB | Jellyfin, Sonarr |
+| `/mnt/data/media/downloads` | 24 GB | qBittorrent |
+| `/home/arr/docker/arr-stack/*` | on 32 GB root | app config |
+
+---
+
+## pc (white) (`homelab`)
+
+| Item | Value |
+|------|-------|
+| Board | MSI Z87-GD65 Gaming (MS-7845) |
+| Proxmox | 8.4.1 · kernel 6.8.12-10-pve · fresh install |
+| Boot (ZFS rpool) | Seagate 240 GB SSD (`Z4N015SP`) + WD Blue 500 GB SSD (`200521806171`) → `local-zfs` |
+| Extra NVMe | 970 EVO 500 GB (`S5H7NS0N575129M`) · NTFS “D:” leftover |
+| GPU | GTX 780 (`10de:1004`) |
+| LAN (mgmt) | `enp5s0` Killer E220x → Pro Max **Port 4** · `vmbr0` |
+| LAN (10G) | `enp2s0` Intel 82599 → Aggregation **SFP+ 2** · linked, not in bridge |
+| Guests | None |
+| Plan | Wipe → **Unraid** · SSDs for `appdata` · receives **24TB** from pc (black) |
+
+---
+
+## Laptop (Precision)
+
+| Item | Value |
+|------|-------|
+| Model | Dell Precision 5520 |
+| OS | Windows 11 Pro (build 22631) |
+| CPU / RAM | i7-7820HQ / 16 GB |
+| Disk | Samsung SM961 512 GB NVMe |
+| GPU | Quadro M1200 (4 GB, driver 528.79, CUDA 12.0) + HD 630 |
+| LAN | `192.168.1.175` |
+
+## Laptop (Inspiron)
+
+| Item | Value |
+|------|-------|
+| Model | Dell Inspiron 3582 (15 3000) · serial `G2CWCX2` |
+| CPU / RAM | Pentium Silver N5000 / 4 GB |
+| Disk | Toshiba MQ01ABF050 500 GB HDD |
+| GPU | UHD 605 (no discrete) |
+| Wi‑Fi | QCA9377 |
+| Status | Fresh OS reinstall in progress (was Zorin) |
+
+---
 
 ## Services
 
-| Service | Purpose | Host / VM / LXC | Data / deps |
-|---------|---------|-----------------|-------------|
-| Pi-hole | DNS / ad blocking | TBD | LAN DNS |
-| Home Assistant | Home automation | TBD | USB radio? |
-| Jellyfin | Media | TBD | 24TB libraries |
-| Sonarr (anime) | Acquisition | TBD | |
-| Sonarr (TV) | Acquisition | TBD | |
-| qBittorrent | Downloads | TBD | Mullvad today (Gluetun); k8s target = peers on VPN, UI off-VPN |
-| Prowlarr | Indexers | TBD | Both Sonarrs |
+| Service | Where | Reach | Data / notes |
+|---------|-------|-------|--------------|
+| Pi-hole | Mac Mini LXC 106 | `192.168.1.11` · `:53`/admin UI | LAN DNS |
+| Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
+| Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` |
+| Sonarr (TV / anime) | VM 101 via Gluetun | `:8989` / `:8990` | `/mnt/data/media` |
+| qBittorrent | VM 101 via Gluetun | `:8085` | downloads · Mullvad WG |
+| Prowlarr | VM 101 via Gluetun | `:9696` | config on VM root |
+| Discord bots | Mac Mini VM 103 | outbound only | `/home/mathboi/{frankbot,math-boi-original}/` |
 
-**Still need:** exact guest placement, ports / how you reach things today, HA USB radio yes/no.
+---
 
-## Networking & access (today)
+## Networking
 
 | Concern | Today |
 |---------|--------|
-| Remote access | Tailscale account (free); not fully wired |
-| LAN DNS | Pi-hole (keeping) |
-| LAN | UniFi; homelab VLAN **planned** |
-| Ingress / TLS | Not the target stack yet |
+| Gateway | UDM Pro · `192.168.1.1` · AT&T |
+| LAN DNS | Pi-hole · `192.168.1.11` |
+| Networks | `192.168.1.0/24` (LAN) · `192.168.2.0/24` (IoT + HA) · dedicated homelab VLAN **planned** |
+| Remote | Tailscale (free); host client on pc (black) |
+| Ingress / TLS | Not yet (target: Envoy + `lab.jacobdrury.com`) |
 | Backups | None formal — decide after Unraid |
+
+### IP map
+
+| IP | Device |
+|----|--------|
+| `.1` | UDM Pro |
+| `.9` | `arr` VM (pc black) |
+| `.10` | pc (white) / `homelab` |
+| `.11` | Pi-hole |
+| `.12` | pc (black) / `homelab02` |
+| `.13` | USW Aggregation |
+| `.15` | Mac Mini / `homelab03` |
+| `.18` | discord-bots VM |
+| `.70` | USP PDU Pro |
+| `.82` | U6 Pro (Hallway) |
+| `.107` | Bedroom client |
+| `.109` | USW Flex 2.5G 8 PoE |
+| `.143` | U6 LR (Living Room) |
+| `.175` | Laptop (Precision) |
+| `.197` | USW Pro Max 16 PoE |
+| `.225` | USW Flex Mini |
+| `.2.8` | Home Assistant (VLAN 2) |
+| `.2.171` | Lutron bridge (IoT) |
+| `.2.211` | IoT device |
+
+### Topology
+
+```
+AT&T → UDM Pro (.1)
+         └─ 10G ─ USW Aggregation (.13)
+                    ├─ SFP+ 1 ─ pc black (.12) 10G
+                    ├─ SFP+ 2 ─ pc white 10G (not mgmt)
+                    ├─ SFP+ 3 ─ Flex 2.5G (.109) ─ APs, Bedroom, Flex Mini
+                    ├─ SFP+ 5 ─ Pro Max 16 (.197)
+                    │              ├─ Port 4 ─ pc white mgmt (.10)
+                    │              ├─ Port 13 ─ Pi-hole (.11)
+                    │              ├─ Port 15 ─ Mac Mini (.15)
+                    │              └─ Ports 1–3, … ─ PDU, IoT, clients
+                    └─ SFP+ 7 ─ UDM Pro
+```
+
+### UniFi gear
+
+| Device | IP | Status | Notes |
+|--------|-----|--------|-------|
+| UDM Pro | `.1` | Online | Gateway |
+| USW Aggregation | `.13` | Online | 10G core |
+| USW Flex 2.5G 8 PoE | `.109` | Online | APs + Flex Mini |
+| USW Pro Max 16 PoE | `.197` | Online | Homelab GbE + IoT |
+| USP PDU Pro | `.70` | Online | Pro Max Port 1 |
+| U6 LR / U6 Pro | `.143` / `.82` | Online | Living room / hallway |
+| USW Flex Mini | `.225` | Online | Flex 2.5G Port 8 |
+| USW Flex 1 / Flex 2 / Pro 24 PoE | `.235` / `.118` / `.211` | Offline | Spare / retired |
+
+#### Aggregation SFP+
+
+| Port | Connected |
+|------|-----------|
+| 1 | pc (black) 10G · `.12` |
+| 2 | pc (white) 10G · not in bridge |
+| 3 | Flex 2.5G · `.109` |
+| 4, 6 | Empty |
+| 5 | Pro Max 16 · `.197` |
+| 7 | UDM Pro · `.1` |
+| 8 | Unknown MAC `0c:ee:99:98:c9:90` · no traffic |
+
+#### Pro Max 16 PoE
+
+| Port | Connected |
+|------|-----------|
+| 1 | PDU Pro · `.70` |
+| 2–3 | IoT (`.2.211`, Lutron `.2.171`) |
+| 4 | pc (white) mgmt · `.10` |
+| 5 | `mathboi` (MAC matches discord-bots — TBD) |
+| 6 | pc (black) onboard GbE |
+| 7, 10, 11 | Unknown · same MAC `04:92:26:c1:6c:51` |
+| 8–9 | Empty |
+| 12 | Living-Room client |
+| 13 | Pi-hole · `.11` (2.5G) |
+| 14, 16 | Pulsar-MBP |
+| 15 | Mac Mini · `.15` |
+| SFP+ 1 | Unknown MAC `70:a7:41:7c:9c:69` |
+| SFP+ 2 | Aggregation uplink |
+
+#### Flex 2.5G 8 PoE
+
+| Port | Connected |
+|------|-----------|
+| 1–2 | U6 LR · U6 Pro |
+| 3–6, 9 | Empty |
+| 7 | Bedroom · `.107` |
+| 8 | Flex Mini · `.225` |
+| 10 | Aggregation uplink |
+
+---
 
 ## Why change
 
-- No dedicated NAS; storage stuck on Gaming PC #1  
-- PC #1 must return to gaming  
-- Want Talos k8s + GitOps instead of snowflake Proxmox guests  
-- Tailscale + agent-operable lab; UniFi VLAN isolation  
+- No dedicated NAS — media stuck on **pc (black)**
+- **pc (black)** returns to personal gaming
+- Prefer Talos + GitOps over snowflake Proxmox guests
+- Tailscale + agent-operable lab; UniFi VLAN isolation
