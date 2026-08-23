@@ -8,9 +8,9 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 |------|-------------|------------|-----|-------|
 | **Mac Mini** | `homelab03` | Proxmox | `192.168.1.15` | Pi-hole + discord bots; interim Talos target |
 | **pc (black)** | `homelab02` | Proxmox | `192.168.1.12` | Media + HA; **leaving lab** → personal gaming |
-| **pc (white)** | `homelab` | Proxmox | `192.168.1.10` | Fresh install · **Unraid target** (receives 24TB) |
-| **Laptop (Precision)** | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional NVENC if docked 24/7 |
-| **Laptop (Inspiron)** | — | Idle / reinstalling | — | Light use only |
+| **pc (white)** | `homelab` | Proxmox | `192.168.1.10` | Fresh install · **Unraid target** (receives 24TB; **remove GTX 780**) |
+| **Laptop (Precision)** | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
+| **Laptop (Inspiron)** | — | Idle / reinstalling | — | **Out of lab plan** |
 
 **Proxmox cluster:** `homelab` · `homelab02` · `homelab03`.
 
@@ -107,7 +107,7 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 | LAN (mgmt) | `enp5s0` Killer E220x → Pro Max **Port 4** · `vmbr0` |
 | LAN (10G) | `enp2s0` Intel 82599 → Aggregation **SFP+ 2** · linked, not in bridge |
 | Guests | None |
-| Plan | Wipe → **Unraid** · SSDs for `appdata` · receives **24TB** from pc (black) |
+| Plan | Wipe → **Unraid** (USB ordered) · SSDs for `appdata` · **24TB via Unassigned Devices** · pull GTX 780 |
 
 ---
 
@@ -257,7 +257,7 @@ AT&T → UDM Pro (.1)
 
 ## Why change
 
-- No dedicated NAS — media stuck on **pc (black)**
-- **pc (black)** returns to personal gaming
-- Prefer Talos + GitOps over snowflake Proxmox guests
+- No dedicated NAS — media stuck on **pc (black)** → Unraid on **pc (white)** owns the 24TB first
+- Prefer Talos + GitOps — Mini VM `prd` → **3 bare-metal CPs** (Mini + 2 mini PCs); migrate apps **once**
+- **pc (black)** retained until cutover, then personal gaming
 - Tailscale + agent-operable lab; UniFi VLAN isolation

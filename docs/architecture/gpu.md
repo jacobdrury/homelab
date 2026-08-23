@@ -1,35 +1,29 @@
 # GPU (Jellyfin)
 
-Jellyfin stays **in-cluster**. Give it a GPU via **passthrough into one Talos worker** (not the whole cluster on Unraid).
+Jellyfin stays **in-cluster**. **GPU is optional** — typical 720/1080 anime direct play needs no hardware encode. Add a GPU later only if clients start forcing transcodes.
 
-## Sources
+If needed: pass a GPU into **one Talos worker** (not the whole cluster on Unraid).
+
+## Sources (when you care)
 
 | Source | How | Notes |
 |--------|-----|--------|
-| **Mac Mini iGPU** | Proxmox passthrough → Talos worker VM | **Try first** — Quick Sync, efficient |
-| **PC #2 dGPU** | Unraid VM passthrough → Talos worker | If Mini isn’t enough |
-| **Quadro laptop** | Same idea if docked 24/7 | NVENC; heavier NVIDIA+Talos story |
+| **Mac Mini iGPU** | Talos worker/CP with `i915` (BM) or Proxmox passthrough (interim VM) | Quick Sync (QSV); only if transcodes appear |
+| **pc (white) dGPU** | — | **Removed / unused** for Unraid power; GTX 780 not worth it |
+| **Quadro laptop** | Docked 24/7 | NVENC; only if Mini isn’t enough |
 
 ```mermaid
 flowchart TB
-  subgraph mini [Mac_Mini]
+  subgraph mini [Mac_Mini_optional]
     iGPU[Intel_iGPU]
     W1[Talos_worker_VM]
     iGPU -->|passthrough| W1
   end
 
-  subgraph unraid [PC2_Unraid]
-    Disks[NFS]
-    dGPU[dGPU]
-    W2[Talos_worker_VM]
-    dGPU -->|passthrough| W2
-  end
-
   CP[Control_plane]
+  Unraid[Unraid_NFS]
   W1 --> CP
-  W2 --> CP
-  W1 -->|NFS| Disks
-  W2 -->|NFS| Disks
+  W1 -->|NFS| Unraid
 ```
 
 ## Talos / Jellyfin bits (Intel)

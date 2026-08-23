@@ -19,9 +19,16 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 
 ### Node layout
 
-- **Learning / interim:** 1 CP + 1–2 workers as VMs on Mac Mini  
-- **Steady state:** odd CP count (1 or 3) on mini PCs; workers as needed  
-- Same machine configs should move from Proxmox VMs → bare metal with little rewrite  
+| Stage | Nodes | Notes |
+|-------|-------|--------|
+| **Interim** | 1× Talos VM on Mac Mini Proxmox | Single-node CP; **`allowSchedulingOnControlPlanes: true`** |
+| **Steady** | **3× bare-metal control planes** — Mac Mini + 2 mini PCs | All CPs; all schedule workloads; no dedicated workers |
+
+**Scale-out (Phase 4):** when the two mini PCs arrive, prefer a **fresh 3-CP bootstrap** + Argo resync over expanding the interim VM cluster’s etcd live. Unraid holds data; Git holds desired apps — short cutover, less etcd risk.
+
+**Joining mental model:** boot Talos → apply `controlplane` machine config (shared cluster secrets + API endpoint) → node Ready. New pods can land on new nodes; existing pods stay until roll/drain. Use a stable API endpoint (DNS or VIP) before going multi-CP.
+
+Machine configs live under `infrastructure/prd/`; keep CP patches consistent across the three nodes.
 
 ## App placement
 

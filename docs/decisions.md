@@ -4,12 +4,16 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 
 | Area | Decision |
 |------|----------|
-| Compute (steady) | Talos on mini PCs; interim Talos VMs on **Mac Mini** Proxmox |
-| Compute (exit) | **Gaming PC #1** → personal gaming (after media/VMs leave) |
-| NAS | **Unraid bare metal on Gaming PC #2**; buy license + USB |
-| Array start | **24TB via Unassigned Devices first** (keep filesystem); array/parity when a second large disk or free space exists |
+| Sequence | **1)** Unraid owns 24TB → **2)** Talos `prd` on Mini VMs → **3)** migrate apps once stable → **4)** 3-node BM cluster + free pc (black) |
+| Compute (interim) | Talos **VM(s) on Mac Mini Proxmox** — single-node `prd` OK (`allowSchedulingOnControlPlanes`) |
+| Compute (steady) | **3 bare-metal Talos control planes**: Mac Mini + **2 mini PCs**; all schedule workloads |
+| Cluster scale-out | Prefer **GitOps rebuild** (fresh 3-CP + Argo sync) over live 1→3 etcd expansion when mini PCs arrive |
+| Compute (exit) | **pc (black)** → personal gaming **after** workloads leave; **retain during transition** |
+| NAS | **Unraid bare metal on pc (white)**; USB boot (ordered) + license; **remove GTX 780** |
+| Apps vs NAS | Unraid is **storage only**; apps go to k8s/GitOps (no Unraid Docker as intermediate) |
+| Array start | **24TB via Unassigned Devices** (keep filesystem; **no new large drive**); array/parity only when a second large disk or free space exists |
 | 2TB HDD | **Out of Unraid plan** for now |
-| Appdata | Existing **NVMe/SATA SSDs** on PC #2 |
+| Appdata | Existing **NVMe/SATA SSDs** on pc (white) |
 | k8s storage | **NFS + iSCSI → Unraid** (NFS for media/shared; iSCSI for block/RWO). Not Longhorn/Ceph primary |
 | Clusters | **`prd` first**; keep `stg` paths for later; hostnames `*.lab` vs `*.stg.lab` |
 | CNI | **Cilium** |
@@ -24,10 +28,12 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` (UI OK to unblock) |
 | DNS app | Keep **Pi-hole** |
-| Media GPU | Pattern B: Jellyfin in k8s; prefer **Mac Mini iGPU** worker first |
+| Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
 | Apps | Jellyfin, *arr, qBit, Prowlarr, Pi-hole, **Homepage**, HA after media; monitoring → Discord |
 | qBittorrent VPN | Peers via **Mullvad WG**; UI at **`qbittorrent.lab.jacobdrury.com`** (normal Envoy lab exposure) |
-| Backups | **Decide after Unraid is up** (parity ≠ backup) |
+| Power | Prefer fewer always-on watts when cheap (strip white GPU; black off when gaming-only); **not** a reason to defer k8s/GitOps |
+| Laptops | Precision optional NVENC/burst; Inspiron **out of lab plan** |
+| Backups | **Decide after Unraid is up** (parity ≠ backup; UD has no parity) |
 | Tooling | **proto + moon** ([moonrepo](https://moonrepo.dev/)) |
 | Dep updates | **Renovate later**; no Dependabot version updates |
 | CI | None until there’s something meaningful to check |

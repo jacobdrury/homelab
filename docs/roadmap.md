@@ -2,54 +2,70 @@
 
 Phased path from [inventory](inventory.md) → target. Principles and checklists only; leans live in [decisions](decisions.md).
 
-## Principles
+## Sequence (locked)
 
-1. Keep media available while moving storage  
-2. Free Gaming PC #1 after media/VMs leave  
-3. GitOps early once a cluster exists  
-4. Proxmox on Mac Mini is a bridge to bare-metal Talos  
-5. Tailscale + homelab VLAN; HTTPS via `lab.jacobdrury.com`  
-6. **`prd` first**; `stg` later if wanted  
-7. **Agent-operable** — [agents](architecture/agents.md)  
+1. **NAS first** — Unraid on pc (white); 24TB exposed via Unassigned Devices (no new large drive)  
+2. **Cluster next** — Talos VMs on Mac Mini → `prd`  
+3. **Migrate once** — apps to GitOps on `prd` when stable (not via Unraid Docker)  
+4. **Expand later** — **3 bare-metal CPs** (Mini + 2 mini PCs); free pc (black) → gaming
+
+pc (black) **stays in lab during transition** as the live media/HA host until cutover is proven.
 
 ```mermaid
 flowchart LR
   P0[P0_Docs]
-  P1[P1_VLAN_Unraid]
-  P2[P2_DNS_prd]
-  P3[P3_Apps]
-  P4[P4_MiniPCs]
+  P1[P1_Unraid_NAS]
+  P2[P2_Talos_prd]
+  P3[P3_Migrate_apps]
+  P4[P4_3CP_bare_metal]
   P5[P5_Hardening]
   P0 --> P1 --> P2 --> P3 --> P4 --> P5
 ```
 
-## Phase 0 — Docs & inventory (now)
+## Principles
+
+1. **Unraid = storage only** — NFS/iSCSI to the cluster; apps land on k8s once (minimize redo)  
+2. Keep media available on pc (black) until `prd` cutover  
+3. GitOps as soon as `prd` exists  
+4. Mac Mini Proxmox hosts interim Talos VMs; steady state is **bare-metal Talos on Mini + 2 mini PCs**  
+5. Single-node `prd` OK interim; steady = **3 control planes**, all schedule workloads  
+6. Prefer **GitOps rebuild** to 3-CP over live etcd expansion when hardware arrives  
+7. Tailscale + homelab VLAN; HTTPS via `lab.jacobdrury.com`  
+8. **Agent-operable** — [agents](architecture/agents.md)  
+
+## Phase 0 — Docs & inventory
 
 - [x] Architecture / decisions / this roadmap  
 - [x] proto + moon in repo  
-- [ ] Fill [inventory](inventory.md) specs + VM/LXC map  
-- [ ] List everything still on Gaming PC #1  
+- [x] [Inventory](inventory.md) specs + VM/LXC map  
+- [x] Evacuation checklist known (VM 101 `arr`, VM 105 HA on pc black)  
 
-**Exit:** PC #1 evacuation checklist known.
+**Exit:** Plan and inventory current.
 
-## Phase 1 — VLAN + Unraid + evacuate PC #1
+## Phase 1 — Unraid owns the HDD
 
-Details: [networking](architecture/networking.md) · [storage](architecture/storage.md).
+Details: [storage](architecture/storage.md) · [networking](architecture/networking.md).
 
+**Goal:** NAS up; 24TB reachable over the network. pc (black) can keep serving media until Phase 3.
+
+- [ ] USB boot stick ready (ordered); Unraid license  
+- [ ] Wipe / install Unraid bare metal on **pc (white)**  
+- [ ] Remove GTX 780 (unused; saves idle power)  
+- [ ] Unraid **static IP** outside DHCP pool (e.g. `.10`)  
 - [ ] Homelab VLAN in UniFi (UI OK; Tofu later)  
-- [ ] Unraid **static IP** outside DHCP pool  
 - [ ] Firewall: admin → lab; deny lab → sensitive VLANs by default  
-- [ ] Tailscale on Mac Mini / always-on path  
-- [ ] Buy Unraid license + USB; install on PC #2  
 - [ ] SSD pool for `appdata` (small array disk only if Unraid requires one — **not** the 24TB)  
-- [ ] Mount **24TB with Unassigned Devices** — do **not** format into the array  
-- [ ] NFS/SMB export UD media; Jellyfin → Unraid; validate playback  
-- [ ] iSCSI target plugin + SSD/pool LUNs (for later block PVCs)  
-- [ ] Move/retire PC #1 guests; wipe PC #1 → gaming (24TB already in PC #2)  
+- [ ] Move **24TB** from pc (black) into pc (white) **or** attach and mount — **Unassigned Devices**, keep filesystem, **do not** format into the array  
+- [ ] NFS/SMB export UD media paths  
+- [ ] Smoke-test: mount from another host; confirm library readable  
+- [ ] iSCSI target plugin + SSD/pool LUNs (can wait until cluster needs block PVCs)  
+- [ ] Tailscale on Unraid (and Mac Mini always-on path)  
 
-**Exit:** Media on Unraid; PC #1 gaming-only; lab on VLAN.
+**Exit:** Unraid is the NAS; 24TB exported. Black may still run Jellyfin against local disk **or** start pointing at NFS — either is OK if media stays available.
 
 ### Phase 1b — Array / parity (when you can)
+
+No second large drive planned soon.
 
 - [ ] Free space or second large disk → copy library off UD into array share  
 - [ ] Optionally add old 24TB to array or as parity (**≥ largest data disk** for parity)  
@@ -60,34 +76,50 @@ Details: [networking](architecture/networking.md) · [storage](architecture/stor
 - [ ] Choose approach after Unraid is stable  
 - [ ] Document a restore drill  
 
-## Phase 2 — Cloudflare DNS + Talos `prd`
+## Phase 2 — Talos `prd` on Mac Mini
+
+Build the cluster toward the end goal **before** migrating production apps.
 
 - [ ] Cloudflare DNS for `jacobdrury.com`; keep GitHub Pages  
-- [ ] OpenTofu `infrastructure/dns/`  
-- [ ] Later: registrar → Cloudflare  
-- [ ] Talos VMs on Mac Mini (**prd only**)  
+- [ ] OpenTofu `infrastructure/dns/` (can overlap)  
+- [ ] Talos **VM(s)** on Mac Mini Proxmox — single-node `prd` OK; **`allowSchedulingOnControlPlanes`**  
 - [ ] `infrastructure/prd` + Argo → `clusters/prd`  
-- [ ] Cilium, NFS CSI, **iSCSI CSI** (or initiator path), Tailscale operator, Envoy, cert-manager  
+- [ ] Cilium, NFS CSI (→ Unraid), iSCSI CSI when needed, Tailscale operator, Envoy, cert-manager  
 - [ ] 1Password Connect + ESO; seed once  
 - [ ] LE for `*.lab.jacobdrury.com`  
-- [ ] Later: optional `stg`  
+- [ ] Deploy a throwaway app; confirm GitOps + NFS path  
 
-**Exit:** `prd` GitOps-reachable on Tailscale + VLAN.
+**Exit:** `prd` GitOps-reachable on Tailscale + VLAN; storage CSI talks to Unraid.
 
-## Phase 3 — Migrate apps
+## Phase 3 — Migrate workloads (once stable)
+
+Cut over from Proxmox guests → GitOps. **One landing** on k8s (not Unraid Docker first).
 
 1. Pi-hole  
 2. *arr + qBittorrent (Mullvad peers; UI at `qbittorrent.lab.jacobdrury.com`)  
-3. Jellyfin  
+3. Jellyfin (library on Unraid NFS; GPU/QSV **optional** — not needed for typical 720/1080 direct play)  
 4. Homepage  
 5. Home Assistant (after media; downtime OK)  
 
 Each: `apps/` → Argo → `*.lab.jacobdrury.com` → retire old guest.
 
-## Phase 4 — Bare-metal Talos
+pc (black) retained until these are validated; then idle.
 
-- [ ] Mini PCs; replace Mac Mini VMs  
-- [ ] Mac Mini role: optional  
+**Exit:** All listed apps on `prd`; old guests retired.
+
+## Phase 4 — 3-node bare-metal cluster + free pc (black)
+
+Target: **Mac Mini + 2 mini PCs**, all Talos **control planes**, all schedule pods. Details: [platform](architecture/platform.md#node-layout).
+
+- [ ] Two mini PCs on hand; homelab VLAN + static/DHCP reservations  
+- [ ] Prefer **fresh 3-CP bootstrap** (not live expand of Mini VM etcd); stable API DNS/VIP  
+- [ ] `allowSchedulingOnControlPlanes: true` on all three  
+- [ ] Talos machine configs in `infrastructure/prd/` for all three nodes  
+- [ ] Argo points at new cluster; sync `clusters/prd` — validate apps  
+- [ ] Retire Mac Mini Proxmox / old Talos VMs  
+- [ ] Wipe pc (black) → personal gaming  
+
+**Exit:** 3 Ready CPs; apps on GitOps; black out of lab.
 
 ## Phase 5 — Hardening
 
