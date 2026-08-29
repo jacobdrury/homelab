@@ -1,6 +1,6 @@
 # Storage (Unraid)
 
-Unraid on **Gaming PC #2** (bare metal) is the storage plane. The cluster talks to it with **two protocols**:
+Unraid on **scarif** (pc white, bare metal) is the storage plane. The cluster talks to it with **two protocols**:
 
 | Protocol | Best for | Access mode |
 |----------|----------|-------------|

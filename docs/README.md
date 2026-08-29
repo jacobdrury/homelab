@@ -6,6 +6,7 @@ Planning docs for the GitOps homelab. Implementation code will live under `infra
 |-----|------------|
 | [Inventory](inventory.md) | What exists **today** |
 | [Architecture overview](architecture/overview.md) | Goals, topology, hardware end state, non-goals |
+| [Naming (Star Wars planets)](architecture/naming.md) | Host codenames (`scarif`, `yavin`, …) for agents and operators |
 | [Kubernetes platform](architecture/platform.md) | Talos stack, apps, repo layout |
 | [Storage (Unraid)](architecture/storage.md) | Disks, NFS + iSCSI, shares |
 | [Networking](architecture/networking.md) | UniFi VLAN, DNS/TLS, Tailscale, domains |

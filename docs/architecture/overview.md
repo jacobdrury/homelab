@@ -41,13 +41,15 @@ flowchart TB
 
 ## Hardware end state
 
-| Machine | Role |
-|---------|------|
-| pc (black) | **Out of lab** — personal gaming (after Phase 3–4) |
-| pc (white) | **Unraid** bare metal; **no dGPU**; 24TB via UD → NFS/iSCSI |
-| Mac Mini | Interim: Proxmox + Talos VM(s). Steady: **bare-metal Talos CP** (#1 of 3) |
-| Mini PCs (×2) | Bare-metal Talos **control planes** (#2 and #3) |
-| Laptops | Precision optional; Inspiron out of lab plan |
+| Codename | Machine | Role |
+|----------|---------|------|
+| — | pc (black) | **Out of lab** — personal gaming (after Phase 3–4) |
+| **scarif** | pc (white) | **Unraid** bare metal; **no dGPU**; 24TB via UD → NFS/iSCSI |
+| **yavin** | Mac Mini | Interim: Proxmox + Talos VM(s). Steady: **bare-metal Talos CP** (#1 of 3) |
+| **dantooine** · **lothal** | Mini PCs (×2) | Bare-metal Talos **control planes** (#2 and #3) |
+| — | Laptops | Precision optional; Inspiron out of lab plan |
+
+Host naming: [naming](naming.md).
 
 ## Non-goals (for now)
 

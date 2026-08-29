@@ -49,7 +49,7 @@ Details: [storage](architecture/storage.md) · [networking](architecture/network
 **Goal:** NAS up; 24TB reachable over the network. pc (black) can keep serving media until Phase 3.
 
 - [ ] USB boot stick ready (ordered); Unraid license  
-- [ ] Wipe / install Unraid bare metal on **pc (white)**  
+- [ ] Wipe / install Unraid bare metal on **pc (white)**; hostname **`scarif`** ([naming](architecture/naming.md))  
 - [ ] Remove GTX 780 (unused; saves idle power)  
 - [ ] Unraid **static IP** outside DHCP pool (e.g. `.10`)  
 - [ ] Homelab VLAN in UniFi (UI OK; Tofu later)  

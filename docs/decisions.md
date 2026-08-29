@@ -38,3 +38,4 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Dep updates | **Renovate later**; no Dependabot version updates |
 | CI | None until there’s something meaningful to check |
 | Agents | **First-class**: Tailscale + kubeconfig + lab HTTPS + `op`; GitOps preferred |
+| Host naming | **Star Wars planets** for physical hosts + Talos nodes; Unraid NAS = **`scarif`** — [naming](architecture/naming.md) |

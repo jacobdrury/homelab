@@ -1,18 +1,20 @@
 # Inventory (current state)
 
-What exists **today**. Target design: [architecture](architecture/overview.md) · [decisions](decisions.md).
+What exists **today**. Target design: [architecture](architecture/overview.md) · [decisions](decisions.md) · [naming](architecture/naming.md) (Star Wars planet hostnames).
 
 ## Hosts
 
-| Host | Node / name | Role today | IP | Notes |
-|------|-------------|------------|-----|-------|
-| **Mac Mini** | `homelab03` | Proxmox | `192.168.1.15` | Pi-hole + discord bots; interim Talos target |
-| **pc (black)** | `homelab02` | Proxmox | `192.168.1.12` | Media + HA; **leaving lab** → personal gaming |
-| **pc (white)** | `homelab` | Proxmox | `192.168.1.10` | Fresh install · **Unraid target** (receives 24TB; **remove GTX 780**) |
-| **Laptop (Precision)** | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
-| **Laptop (Inspiron)** | — | Idle / reinstalling | — | **Out of lab plan** |
+| Host | Codename (target) | Node / name (today) | Role today | IP | Notes |
+|------|-------------------|---------------------|------------|-----|-------|
+| **Mac Mini** | **yavin** | `homelab03` | Proxmox | `192.168.1.15` | Pi-hole + discord bots; interim Talos target |
+| **pc (black)** | — | `homelab02` | Proxmox | `192.168.1.12` | Media + HA; **leaving lab** → personal gaming |
+| **pc (white)** | **scarif** | `homelab` | Proxmox → **Unraid** | `192.168.1.10` | Fresh install · **Unraid target** (receives 24TB; **remove GTX 780**) |
+| **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
+| **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
+| **Mini PC #1** | **dantooine** | — | — | TBD | Talos CP #2 (Phase 4) |
+| **Mini PC #2** | **lothal** | — | — | TBD | Talos CP #3 (Phase 4) |
 
-**Proxmox cluster:** `homelab` · `homelab02` · `homelab03`.
+**Proxmox cluster (legacy):** `homelab` · `homelab02` · `homelab03` — retires as hosts move to Unraid/Talos bare metal.
 
 **Storage today:** no NAS. Media (~7.9 TB used) on the **24TB** in pc (black) → move to Unraid on **pc (white)** before wiping pc (black).
 
@@ -28,7 +30,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 
 ---
 
-## Mac Mini (`homelab03`)
+## Mac Mini — **yavin** (today: `homelab03`)
 
 | Item | Value |
 |------|-------|
@@ -95,7 +97,7 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 
 ---
 
-## pc (white) (`homelab`)
+## pc (white) — **scarif** (today: `homelab`)
 
 | Item | Value |
 |------|-------|
@@ -166,11 +168,11 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 |----|--------|
 | `.1` | UDM Pro |
 | `.9` | `arr` VM (pc black) |
-| `.10` | pc (white) / `homelab` |
+| `.10` | **scarif** (pc white) · today `homelab` |
 | `.11` | Pi-hole |
 | `.12` | pc (black) / `homelab02` |
 | `.13` | USW Aggregation |
-| `.15` | Mac Mini / `homelab03` |
+| `.15` | **yavin** (Mac Mini) · today `homelab03` |
 | `.18` | discord-bots VM |
 | `.70` | USP PDU Pro |
 | `.82` | U6 Pro (Hallway) |

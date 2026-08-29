@@ -22,6 +22,7 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 Full index: **[docs/README.md](docs/README.md)**
 
 - [Decisions](docs/decisions.md) — locked leans  
+- [Naming](docs/architecture/naming.md) — Star Wars planet hostnames (`scarif`, `yavin`, …)  
 - [Inventory](docs/inventory.md) — fill in hosts / VMs  
 - [Architecture](docs/architecture/overview.md) — target design  
 - [Roadmap](docs/roadmap.md) — phased checklist  

@@ -35,7 +35,7 @@ flowchart LR
 
 1. **Prefer Git** — edit this repo → PR → Argo  
 2. **Break-glass shell** — diagnose / restart; avoid permanent snowflake applies  
-3. **In-repo agent docs** — Cursor rules/skills: context, hostnames, “no secrets in Git”  
+3. **In-repo agent docs** — Cursor rules/skills: context, hostnames ([naming](naming.md)), “no secrets in Git”  
 4. **Least privilege later** — optional agent Tailscale identity + limited RBAC  
 
 ## Buildout
