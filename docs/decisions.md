@@ -9,7 +9,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Compute (steady) | **3 bare-metal Talos control planes**: Mac Mini + **2 mini PCs**; all schedule workloads |
 | Cluster scale-out | Prefer **GitOps rebuild** (fresh 3-CP + Argo sync) over live 1→3 etcd expansion when mini PCs arrive |
 | Compute (exit) | **pc (black)** → personal gaming **after** workloads leave; **retain during transition** |
-| NAS | **Unraid bare metal on pc (white)**; USB boot (ordered) + license; **remove GTX 780** |
+| NAS | **Unraid bare metal on pc (white)**; USB boot + license; GTX 780 **removed** |
 | Apps vs NAS | Unraid is **storage only**; apps go to k8s/GitOps (no Unraid Docker as intermediate) |
 | Array start | **24TB via Unassigned Devices** (keep filesystem; **no new large drive**); array/parity only when a second large disk or free space exists |
 | 2TB HDD | **Out of Unraid plan** for now |

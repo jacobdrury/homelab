@@ -7,24 +7,24 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Host | Codename (target) | Node / name (today) | Role today | IP | Notes |
 |------|-------------------|---------------------|------------|-----|-------|
 | **Mac Mini** | **yavin** | `homelab03` | Proxmox | `192.168.1.15` | Pi-hole + discord bots; interim Talos target |
-| **pc (black)** | — | `homelab02` | Proxmox | `192.168.1.12` | Media + HA; **leaving lab** → personal gaming |
-| **pc (white)** | **scarif** | `homelab` | Proxmox → **Unraid** | `192.168.1.10` | Fresh install · **Unraid target** (receives 24TB; **remove GTX 780**) |
+| **pc (black)** | — | `homelab02` | Proxmox | `192.168.1.12` | arr + HA; media via **NFS → scarif**; **leaving lab** → gaming |
+| **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.1.10` | NAS · 24TB UD + NFS · 10G DAC |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
 | **Mini PC #1** | **dantooine** | — | — | TBD | Talos CP #2 (Phase 4) |
 | **Mini PC #2** | **lothal** | — | — | TBD | Talos CP #3 (Phase 4) |
 
-**Proxmox cluster (legacy):** `homelab` · `homelab02` · `homelab03` — retires as hosts move to Unraid/Talos bare metal.
+**Proxmox cluster (legacy):** `homelab02` · `homelab03` — `homelab` (pc white) retired; scarif is bare-metal Unraid.
 
-**Storage today:** no NAS. Media (~7.9 TB used) on the **24TB** in pc (black) → move to Unraid on **pc (white)** before wiping pc (black).
+**Storage today:** **scarif** owns the **24TB** (~**8.7 TB** used) via **Unassigned Devices**; exported **NFSv4** at `/mnt/disks/ZXA0VZBA`. pc (black) **arr** VM mounts it at `/mnt/data`. Array empty (no data/parity disks yet).
 
 ### Specs
 
 | Host | CPU / RAM | Boot / system disks | Other disks | GPU |
 |------|-----------|---------------------|-------------|-----|
 | **Mac Mini** | i3-8100B (4c) / 16 GB | Apple 128 GB NVMe | — | UHD 630 |
-| **pc (black)** | i7-8700K (6c/12t) / 32 GB | 970 EVO 250 GB NVMe (LVM) | **24TB** XFS media; 970 EVO 500 GB (unused in guest) | GTX 1080 Ti |
-| **pc (white)** | i7-4770K (4c/8t) / 32 GB | ZFS rpool: 240 GB + 500 GB SATA SSDs | 970 EVO 500 GB NVMe (NTFS leftover) | GTX 780 |
+| **pc (black)** | i7-8700K (6c/12t) / 32 GB | 970 EVO 250 GB NVMe (LVM) | 970 EVO 500 GB (passthrough → VM 101 `virtio3`; unused in guest) | GTX 1080 Ti |
+| **pc (white)** | i7-4770K (4c/8t) / 32 GB | USB flash (Unraid boot) | **24TB** UD; 970 EVO 500 GB NVMe (NTFS UD); 240 GB + 500 GB SATA SSDs (unused) | — (GTX 780 removed) |
 | **Laptop (Precision)** | i7-7820HQ (4c/8t) / 16 GB | SM961 512 GB NVMe | — | Quadro M1200 + HD 630 |
 | **Laptop (Inspiron)** | Pentium N5000 (4c) / 4 GB | Toshiba 500 GB HDD | — | UHD 605 |
 
@@ -58,7 +58,6 @@ Stale LVM volumes for VM 105 remain on this host (HA now on pc black).
 | Board | MSI Z370 Gaming Pro Carbon (MS-7B45) |
 | Proxmox | 8.4.0 · kernel 6.8.12-9-pve |
 | Boot | Samsung 970 EVO 250 GB (`S465NB0K579621D`) · `local` + `local-lvm` |
-| Media | Seagate 24TB `ST24000NM000C` (`ZXA0VZBA`) · XFS UUID `0a63c59e-eb76-4c76-b559-ce379e340311` |
 | Extra NVMe | 970 EVO 500 GB (`S466NX0KA18171W`) · passed to VM 101 as `virtio3`; unused in guest |
 | GPU | GTX 1080 Ti (`10de:1b06`) |
 | LAN | 10G → Aggregation **SFP+ 1** (`98:b7:85:21:cd:70`); onboard also on Pro Max **Port 6** |
@@ -68,7 +67,7 @@ Stale LVM volumes for VM 105 remain on this host (HA now on pc black).
 
 | VMID | Name | IP | VLAN | RAM | Notes |
 |------|------|-----|------|-----|-------|
-| 101 | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | Full media stack · 24TB passthrough |
+| 101 | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | Full media stack · library via **NFS → scarif** |
 | 105 | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · no USB radios |
 
 **Must migrate or retire both VMs before wipe → personal gaming.**
@@ -90,26 +89,51 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 
 | Path | Size | Used by |
 |------|------|---------|
+| `/mnt/data` | NFSv4 | `192.168.1.10:/mnt/disks/ZXA0VZBA` (fstab · `_netdev` · `nofail`) |
 | `/mnt/data/media/anime` | 6.9 TB | Jellyfin, Sonarr |
 | `/mnt/data/media/tv` | 608 GB | Jellyfin, Sonarr |
-| `/mnt/data/media/downloads` | 24 GB | qBittorrent |
+| `/mnt/data/media/downloads` | ~27 GB | qBittorrent |
 | `/home/arr/docker/arr-stack/*` | on 32 GB root | app config |
+
+**VM notes:** `scsi1` (24TB passthrough) removed Aug 2025. Old XFS UUID fstab entry commented out; NFS mount in `/etc/fstab`. Needs `nfs-common` in guest.
 
 ---
 
-## pc (white) — **scarif** (today: `homelab`)
+## pc (white) — **scarif**
 
 | Item | Value |
 |------|-------|
 | Board | MSI Z87-GD65 Gaming (MS-7845) |
-| Proxmox | 8.4.1 · kernel 6.8.12-10-pve · fresh install |
-| Boot (ZFS rpool) | Seagate 240 GB SSD (`Z4N015SP`) + WD Blue 500 GB SSD (`200521806171`) → `local-zfs` |
-| Extra NVMe | 970 EVO 500 GB (`S5H7NS0N575129M`) · NTFS “D:” leftover |
-| GPU | GTX 780 (`10de:1004`) |
-| LAN (mgmt) | `enp5s0` Killer E220x → Pro Max **Port 4** · `vmbr0` |
-| LAN (10G) | `enp2s0` Intel 82599 → Aggregation **SFP+ 2** · linked, not in bridge |
-| Guests | None |
-| Plan | Wipe → **Unraid** (USB ordered) · SSDs for `appdata` · **24TB via Unassigned Devices** · pull GTX 780 |
+| OS | **Unraid** · hostname **`scarif`** |
+| Boot | Samsung USB flash 128 GB (`sda`) |
+| GPU | — (GTX 780 removed Aug 2025) |
+| LAN | Intel 82599 **10G DAC** → Aggregation **SFP+ 2** · `192.168.1.10` static · DNS `192.168.1.11` |
+| Array | **Started** · no data or parity disks assigned |
+| Plugins | **Unassigned Devices** (mount + NFS share) |
+
+### Disks
+
+| Device | ID | Role today | Notes |
+|--------|-----|------------|-------|
+| Seagate 24TB | `sdb` / `ZXA0VZBA` | **UD** · media | XFS UUID `0a63c59e-eb76-4c76-b559-ce379e340311` · **8.7 TB** used · Automount + Share |
+| Samsung 970 EVO 500 GB | `nvme0n1` | UD · idle | NTFS leftover · candidate **cache pool** |
+| Seagate 240 GB + WD 500 GB SATA | — | unused | optional array member or pool expand |
+| USB flash | `sda` | Unraid boot | |
+
+### NFS export
+
+| Export | Clients | Path in share |
+|--------|---------|---------------|
+| `/mnt/disks/ZXA0VZBA` | `*` (LAN) | `media/{anime,tv,downloads}` |
+
+Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk. Linux clients: `mount -t nfs4 192.168.1.10:/mnt/disks/ZXA0VZBA /mnt/data`.
+
+### Not yet
+
+- Cache pool / `appdata` share (500 GB NVMe available anytime — no array required)
+- Tailscale on Unraid
+- iSCSI target
+- Phase 1b: buy **~12 TB** data drive → copy library → repurpose 24TB as **parity** ([storage](architecture/storage.md#phase-1b--array--parity))
 
 ---
 
@@ -143,8 +167,9 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 |---------|-------|-------|--------------|
 | Pi-hole | Mac Mini LXC 106 | `192.168.1.11` · `:53`/admin UI | LAN DNS |
 | Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
-| Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` |
-| Sonarr (TV / anime) | VM 101 via Gluetun | `:8989` / `:8990` | `/mnt/data/media` |
+| **NFS (media)** | **scarif** | `192.168.1.10:/mnt/disks/ZXA0VZBA` | ~8.7 TB library |
+| Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` via NFS |
+| Sonarr (TV / anime) | VM 101 via Gluetun | `:8989` / `:8990` | `/mnt/data/media` via NFS |
 | qBittorrent | VM 101 via Gluetun | `:8085` | downloads · Mullvad WG |
 | Prowlarr | VM 101 via Gluetun | `:9696` | config on VM root |
 | Discord bots | Mac Mini VM 103 | outbound only | `/home/mathboi/{frankbot,math-boi-original}/` |
@@ -168,7 +193,7 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 |----|--------|
 | `.1` | UDM Pro |
 | `.9` | `arr` VM (pc black) |
-| `.10` | **scarif** (pc white) · today `homelab` |
+| `.10` | **scarif** (pc white) · Unraid NAS |
 | `.11` | Pi-hole |
 | `.12` | pc (black) / `homelab02` |
 | `.13` | USW Aggregation |
@@ -192,10 +217,9 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 AT&T → UDM Pro (.1)
          └─ 10G ─ USW Aggregation (.13)
                     ├─ SFP+ 1 ─ pc black (.12) 10G
-                    ├─ SFP+ 2 ─ pc white 10G (not mgmt)
+                    ├─ SFP+ 2 ─ pc white / **scarif** (.10) 10G NAS
                     ├─ SFP+ 3 ─ Flex 2.5G (.109) ─ APs, Bedroom, Flex Mini
                     ├─ SFP+ 5 ─ Pro Max 16 (.197)
-                    │              ├─ Port 4 ─ pc white mgmt (.10)
                     │              ├─ Port 13 ─ Pi-hole (.11)
                     │              ├─ Port 15 ─ Mac Mini (.15)
                     │              └─ Ports 1–3, … ─ PDU, IoT, clients
@@ -220,7 +244,7 @@ AT&T → UDM Pro (.1)
 | Port | Connected |
 |------|-----------|
 | 1 | pc (black) 10G · `.12` |
-| 2 | pc (white) 10G · not in bridge |
+| 2 | pc (white) / **scarif** 10G · `.10` |
 | 3 | Flex 2.5G · `.109` |
 | 4, 6 | Empty |
 | 5 | Pro Max 16 · `.197` |
@@ -233,7 +257,7 @@ AT&T → UDM Pro (.1)
 |------|-----------|
 | 1 | PDU Pro · `.70` |
 | 2–3 | IoT (`.2.211`, Lutron `.2.171`) |
-| 4 | pc (white) mgmt · `.10` |
+| 4 | Empty (was pc white 1G mgmt) |
 | 5 | `mathboi` (MAC matches discord-bots — TBD) |
 | 6 | pc (black) onboard GbE |
 | 7, 10, 11 | Unknown · same MAC `04:92:26:c1:6c:51` |
@@ -259,7 +283,7 @@ AT&T → UDM Pro (.1)
 
 ## Why change
 
-- No dedicated NAS — media stuck on **pc (black)** → Unraid on **pc (white)** owns the 24TB first
+- ~~No dedicated NAS~~ → **scarif** live; media on NFS; Phase 1 storage **done**
 - Prefer Talos + GitOps — Mini VM `prd` → **3 bare-metal CPs** (Mini + 2 mini PCs); migrate apps **once**
-- **pc (black)** retained until cutover, then personal gaming
+- **pc (black)** retained until k8s cutover, then personal gaming
 - Tailscale + agent-operable lab; UniFi VLAN isolation

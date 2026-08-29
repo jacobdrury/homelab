@@ -11,13 +11,24 @@ Still **not** using Longhorn/Ceph as the primary store — Unraid owns the disks
 
 Why Unraid over TrueNAS: **mixed drive sizes** over time. Parity must be **≥ largest data disk**.
 
-**Unraid note:** NFS/SMB are first-class. **iSCSI target** is a community plugin (targetcli-based) — workable and in-plan, but expect more manual LUN/target setup than TrueNAS. Prefer SSD/pool-backed LUNs for DB-ish volumes; keep bulk media on NFS.
+**Unraid note:** NFS/SMB are first-class. **Unassigned Devices** mounts non-array disks and can **Share** them over NFS (enable **Settings → NFS**, **UD → Enable NFS export**, **Share** on disk). **iSCSI target** is a community plugin — workable and in-plan. Prefer SSD/pool-backed LUNs for DB-ish volumes; keep bulk media on NFS.
+
+## Current state (Aug 2025)
+
+| Item | Value |
+|------|-------|
+| Host | **scarif** · `192.168.1.10` · 10G to Aggregation |
+| 24TB | UD mount `/mnt/disks/ZXA0VZBA` · XFS · **8.7 TB** used |
+| NFS export | `/mnt/disks/ZXA0VZBA` · NFSv4 |
+| Array | Started · **no data/parity disks** |
+| Consumer | pc (black) VM 101 `arr` → `/mnt/data` (fstab) |
+| 500 GB NVMe | UD · NTFS leftover · can become **cache pool** anytime |
 
 ## Disks
 
 | Disk | Role | Notes |
 |------|------|--------|
-| 24TB HDD | Media library | **Do not format into the array first** — see [Migrating the 24TB](#migrating-the-24tb-no-spare-disk) |
+| 24TB HDD | Media library (UD today) | **On scarif via UD** — see [Phase 1b](#phase-1b--array--parity) for array/parity |
 | NVMe / SATA SSD(s) | Pool / cache | `appdata` + **iSCSI LUNs**; may also hold a small array member if Unraid requires one |
 | USB flash | Boot + **license** (buy) | Required |
 | ≥24TB (future) | Parity and/or array data | Buy when affordable — enables real array + parity |
@@ -25,37 +36,53 @@ Why Unraid over TrueNAS: **mixed drive sizes** over time. Parity must be **≥ l
 
 ## Migrating the 24TB (no spare disk)
 
+**Status: steps 1–5 done** (Aug 2025). Library on scarif UD; arr VM on NFS.
+
 Assigning a disk to the Unraid **array** normally **clears/formats** it. With no second large drive, **do not** assign the 24TB as an array data disk until the library lives somewhere else (or you accept wipe).
 
-**Plan: keep the existing filesystem; mount with Unassigned Devices.**
+**Plan used: keep the existing filesystem; mount with Unassigned Devices.**
 
-1. Move the 24TB from PC #1 into PC #2 (or attach it) **without** adding it to the array.  
-2. Install Unraid; use SSD pool for `appdata` / system.  
-3. Install **Unassigned Devices** (+ UD Plus if useful); mount the 24TB **read/write** with its current filesystem.  
-4. Share that mount over **NFS/SMB** (same paths Jellyfin expects, or update Jellyfin once).  
-5. Validate playback for a while.  
-6. **Later** (when you have space or another large disk): copy library onto an array/share, then optionally wipe/add the old disk as array/parity.
+1. ~~Move the 24TB from pc (black) into pc (white)~~  
+2. ~~Install Unraid; hostname `scarif`~~  
+3. ~~**Unassigned Devices** — mount 24TB read/write (XFS preserved)~~  
+4. ~~**Share** + NFS export~~  
+5. ~~Validate from arr VM~~  
+6. **Later:** copy library onto array data disk(s), then assign 24TB as **parity** (wipes disk).
 
-Until then the library is as “safe” as today (single disk, no Unraid parity) — but you get Unraid + NFS/iSCSI for the rest of the lab **without buying a second 24TB**.
+Until Phase 1b completes, the library has **no Unraid parity** — same risk profile as before, but NFS serves the rest of the lab.
 
 If Unraid insists on at least one array disk, use a **small spare SSD/HDD** as a throwaway/nearly-empty array member — **not** the 24TB.
 
+## Phase 1b — Array / parity
+
+Target: buy **data** capacity first; repurpose the 24TB as **parity** after the library is copied off UD.
+
+| Question | Answer |
+|----------|--------|
+| How much **used** today? | **~8.7 TB** (not compressed) |
+| Data drive to buy? | **~12 TB** one disk is comfortable (minimum ~9 TB raw) |
+| Does Unraid compress on copy? | **No** — byte-for-byte; media stays ~same size |
+| 24TB role after? | **Parity** (must be ≥ largest data disk) |
+| Need a second 24TB for parity? | **No** — the existing drive becomes parity |
+
+Steps: add data disk(s) to array → copy UD → validate → remove UD assignment → add 24TB as parity → parity sync.
+
 ## Standup
 
-1. Install Unraid on PC #2 on the [homelab VLAN](networking.md#unifi-homelab-vlan).  
-2. SSD pool for `appdata` (and small array disk only if required).  
-3. Mount **24TB via Unassigned Devices** — do **not** format into the array.  
-4. NFS/SMB export the UD mount for Jellyfin / later CSI.  
-5. Enable **iSCSI target** plugin; LUNs on SSD/pool.  
-6. When affordable: second large disk or free space → copy into array → optional parity ≥ largest data disk.  
+1. ~~Install Unraid on pc (white); static IP `.10`~~  
+2. SSD pool for `appdata` (500 GB NVMe — **can do now**, no array disks required).  
+3. ~~Mount **24TB via Unassigned Devices**~~  
+4. ~~NFS export for arr / later CSI~~  
+5. Enable **iSCSI target** plugin when cluster needs block PVCs.  
+6. Phase 1b when affordable: data disk → copy → 24TB parity.  
 
 ## NFS → cluster
 
-| Share / export | Use |
+| Export (today) | Use |
 |----------------|-----|
-| UD `media/` (or similar) | Jellyfin libraries (initially) |
+| `/mnt/disks/ZXA0VZBA` | Jellyfin / *arr libraries via `media/` |
+| `appdata/` (future) | *arr config on SSD pool |
 | `downloads/` | qBittorrent (pool or UD as you prefer) |
-| `appdata/` | *arr and most app config (SSD pool) |
 | `backups/` | App dumps / future backup tooling |
 
 Cluster: **NFS CSI** (ReadWriteMany where needed). Point CSI at whatever export serves media (UD path is fine initially).

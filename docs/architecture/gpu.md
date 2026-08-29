@@ -9,7 +9,7 @@ If needed: pass a GPU into **one Talos worker** (not the whole cluster on Unraid
 | Source | How | Notes |
 |--------|-----|--------|
 | **Mac Mini iGPU** | Talos worker/CP with `i915` (BM) or Proxmox passthrough (interim VM) | Quick Sync (QSV); only if transcodes appear |
-| **pc (white) dGPU** | — | **Removed / unused** for Unraid power; GTX 780 not worth it |
+| **pc (white) dGPU** | — | GTX 780 **removed** (Unraid headless; saved idle power) |
 | **Quadro laptop** | Docked 24/7 | NVENC; only if Mini isn’t enough |
 
 ```mermaid

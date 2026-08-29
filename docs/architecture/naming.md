@@ -12,7 +12,7 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 
 | Codename | Hardware | Role | Status | IP (today) | Legacy name |
 |----------|----------|------|--------|------------|-------------|
-| **scarif** | pc (white) | Unraid NAS — NFS + iSCSI | **Active** (Phase 1 install) | `192.168.1.10` | `homelab` |
+| **scarif** | pc (white) | Unraid NAS — NFS + iSCSI | **Active** (Phase 1 done) | `192.168.1.10` | `homelab` |
 | **yavin** | Mac Mini | Interim: Proxmox + Talos VM(s). Steady: Talos CP #1 | Planned | `192.168.1.15` | `homelab03` |
 | **dantooine** | Mini PC #1 | Talos CP #2 (bare metal) | Planned (Phase 4) | TBD | — |
 | **lothal** | Mini PC #2 | Talos CP #3 (bare metal) | Planned (Phase 4) | TBD | — |

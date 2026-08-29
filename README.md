@@ -6,16 +6,16 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 
 | | Today | Target |
 |---|--------|--------|
-| Compute | Proxmox (Mini + pc black + pc white) | Talos `prd`: interim Mini VM → **3 BM CPs** (Mini + 2 mini PCs) |
-| Storage | 24TB on pc (black) | Unraid on **pc (white)** — UD 24TB → **NFS + iSCSI** |
-| pc (black) | Media + HA | **Personal gaming** (after cutover) |
+| Compute | Proxmox (Mini + pc black) · **scarif = Unraid** | Talos `prd`: interim Mini VM → **3 BM CPs** (Mini + 2 mini PCs) |
+| Storage | **scarif** — 24TB UD · **NFS** (~8.7 TB used) | Same + optional array/parity · iSCSI when k8s needs it |
+| pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
 | Network | UniFi (flat-ish) | Homelab **VLAN** + Tailscale |
 | Apps | Pi-hole, HA, Jellyfin, *arr, qBit, Prowlarr | Same on k8s + Homepage; HA after media |
 | Delivery | Manual guests | Argo CD ← this repo |
 | Secrets | Ad hoc | 1Password → Connect → ESO |
 | Access | Partial Tailscale | `*.lab.jacobdrury.com` + **AI agents on the tailnet** |
 
-**Next:** Phase 1 — Unraid on white, expose 24TB (USB stick ordered). Then Talos on Mini, then migrate.
+**Next:** Phase 2 — Talos `prd` on Mac Mini. Phase 1 storage **done** (scarif + arr on NFS).
 
 ## Docs
 
@@ -41,4 +41,4 @@ Pins: [`.prototools`](.prototools). Renovate planned later for dependency PRs.
 
 ## Status
 
-Inventory done. Executing [roadmap](docs/roadmap.md): **Unraid NAS → Talos `prd` → migrate apps → mini PCs / free black PC**.
+Inventory done. Phase 1 storage **done**. Executing [roadmap](docs/roadmap.md): **Talos `prd` → migrate apps → mini PCs / free black PC**.
