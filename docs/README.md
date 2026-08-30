@@ -10,6 +10,7 @@ Planning docs for the GitOps homelab. Implementation code will live under `infra
 | [Kubernetes platform](architecture/platform.md) | Talos stack, apps, repo layout |
 | [Storage (Unraid)](architecture/storage.md) | Disks, NFS + iSCSI, shares |
 | [Networking](architecture/networking.md) | UniFi VLAN, DNS/TLS, Tailscale, domains |
+| [IaC](architecture/iac.md) | OpenTofu vs Helm/Argo; what lives in Git; manual exceptions |
 | [GPU](architecture/gpu.md) | Jellyfin encode (optional; direct play OK) |
 | [Media / VPN](architecture/media.md) | *arr + qBittorrent; Mullvad for peers, UI off-VPN |
 | [Secrets](architecture/secrets.md) | 1Password → cluster |

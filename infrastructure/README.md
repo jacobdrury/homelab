@@ -2,6 +2,8 @@
 
 Apply from your Mac on the LAN. State files stay **local** (gitignored).
 
+**IaC policy:** Git is source of truth for everything here; see [docs/architecture/iac.md](../docs/architecture/iac.md).
+
 Credentials load from each project's `moon.yml` (`TOFU_SECRET_*` / `TOFU_ENV_*`). Sign in first: `op signin`.
 
 ## DNS (`infrastructure/dns/`)
@@ -18,7 +20,7 @@ Creates **Homelab** VLAN 5 (`192.168.5.0/24`), then migrate scarif to `192.168.5
 
 ## Pi-hole (`infrastructure/pihole/`)
 
-Config-only OpenTofu for the LXC at `192.168.1.11` (block lists, domains, upstreams, local `*.lab` DNS). Edit `*.auto.tfvars` in repo → `moon run pihole:apply`. Details: [pihole/README.md](pihole/README.md).
+Config-only OpenTofu for the LXC at `192.168.1.11` (block lists, domains, upstreams, local `*.homelab.com`, lab zone forward). Edit `*.auto.tfvars` in repo → `moon run pihole:apply`. Details: [pihole/README.md](pihole/README.md).
 
 ## Moon (from repo root)
 
