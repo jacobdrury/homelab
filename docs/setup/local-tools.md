@@ -61,11 +61,11 @@ Use a **local** console key. A **Site Manager** key from unifi.ui.com only works
 
 ## Phase 2+ (Talos / cluster)
 
-Add when bootstrapping **yavin**:
+`talosctl` is pinned in [`.prototools`](../../.prototools) (plugin: [`.moon/proto-plugin/talosctl.toml`](../../.moon/proto-plugin/talosctl.toml)). Use **1.12.7** for the Mac Mini 2018 boot image (1.13+ hangs on Apple EFI).
 
 ```bash
-# talosctl — not pinned in .prototools yet; install when needed
-brew install siderolabs/tap/talosctl
+proto install talosctl
+talosctl version
 ```
 
 `kubectl` and `helm` are already via `proto install`.
@@ -76,6 +76,7 @@ brew install siderolabs/tap/talosctl
 op whoami
 tofu version    # 1.9.x
 kubectl version --client
+talosctl version
 moon --version
 ```
 
