@@ -6,15 +6,15 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 
 | Host | Codename (target) | Node / name (today) | Role today | IP | Notes |
 |------|-------------------|---------------------|------------|-----|-------|
-| **Mac Mini** | **yavin** | `homelab03` | Proxmox (idle) → **Talos CP** | `192.168.1.15` | Guests **moved to homelab02**; ready for Phase 2 wipe |
-| **pc (black)** | — | `homelab02` | Proxmox | `192.168.1.12` | arr + HA + Pi-hole + discord bots; **leaving lab** → gaming |
+| **Mac Mini** | **yavin** | `homelab03` | Proxmox (idle, **off cluster**) → **Talos CP** | `192.168.1.15` | Removed from Proxmox cluster Aug 2026 · no guests · ready for Phase 2 wipe |
+| **pc (black)** | — | `homelab02` | Proxmox (**sole node**) | `192.168.1.12` | arr + HA + Pi-hole + discord bots; **leaving lab** → gaming |
 | **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.5.10` | NAS · Homelab VLAN 5 · 24TB UD + NFS · 10G **eth1** |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
 | **Mini PC #1** | **hoth** | — | — | `192.168.5.12` | Talos CP #2 — join existing cluster (Phase 4) |
 | **Mini PC #2** | **endor** | — | — | `192.168.5.13` | Talos CP #3 — join existing cluster (Phase 4) |
 
-**Proxmox cluster (legacy):** `homelab02` · `homelab03` — `homelab` (pc white) retired; scarif is bare-metal Unraid.
+**Proxmox (legacy):** **homelab02 only** — single-node cluster (`pvecm expected 1`, corosync config v6, Aug 2026). **homelab03** delnode'd (Mac Mini → Talos); **homelab** (pc white) retired → bare-metal **scarif** (Unraid).
 
 **Storage today:** **scarif** owns the **24TB** (~**8.7 TB** used) via **Unassigned Devices**; exported **NFSv4** at `/mnt/disks/ZXA0VZBA`. pc (black) **arr** VM mounts it at `/mnt/data`. Array empty (no data/parity disks yet).
 
@@ -35,14 +35,14 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Item | Value |
 |------|-------|
 | Model | Apple Mac mini 2018 (`Macmini8,1`) · serial `C07Y30G3JYVY` |
-| Today | Proxmox 8.4.0 · kernel 6.8.12-9-pve |
+| Today | Proxmox 8.4.0 · kernel 6.8.12-9-pve · **removed from cluster** (Aug 2026) |
 | Target | **Bare-metal Talos** CP #1 — single-node `prd` → expand to 3 CPs |
 | Boot | Apple `AP0128M` 128 GB NVMe |
 | GPU | UHD 630 · Talos extension **`i915`** (+ **`intel-ucode`**) |
 | LAN (target) | **Primary:** USB 2.5G `enx6c1ff721c616` (UGREEN UG-USBC-25052 · RTL8156BG) → Pro Max 16 **Port 15** · **Secondary:** onboard 1G `enp4s0` |
 | LAN (today) | USB Ethernet active; onboard `enp4s0` down |
 
-**Guests:** none — Pi-hole LXC and `discord-bots` VM **migrated to homelab02** (pc black). Stale LVM from old VM 105 may remain on disk.
+**Guests:** none — all migrated to **homelab02**. Stale LVM from old VM 105 may remain on disk. Power off / wipe when installing Talos.
 
 ---
 
@@ -51,7 +51,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Item | Value |
 |------|-------|
 | Board | MSI Z370 Gaming Pro Carbon (MS-7B45) |
-| Proxmox | 8.4.0 · kernel 6.8.12-9-pve |
+| Proxmox | 8.4.0 · kernel 6.8.12-9-pve · **sole cluster node** (expected votes 1 · Aug 2026) |
 | Boot | Samsung 970 EVO 250 GB (`S465NB0K579621D`) · `local` + `local-lvm` |
 | Extra NVMe | 970 EVO 500 GB (`S466NX0KA18171W`) · passed to VM 101 as `virtio3`; unused in guest |
 | GPU | GTX 1080 Ti (`10de:1b06`) |
@@ -104,7 +104,7 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 | OS | **Unraid** · hostname **`scarif`** |
 | Boot | Samsung USB flash 128 GB (`sda`) |
 | GPU | — (GTX 780 removed Aug 2025) |
-| LAN | **eth1** Intel 82599 **10G DAC** → Aggregation **SFP+ 2** (**Homelab** VLAN 5) · `192.168.5.10` static · DNS `192.168.1.11` · bonding/bridging **off** · **eth0** (1G) unused |
+| LAN | **eth1** Intel 82599 **10G DAC** → Aggregation **SFP+ 2** (**Homelab** VLAN 5) · `192.168.5.10` static · DNS `192.168.1.11` · bonding/bridging **off** · **eth0** (1G) unused · UI: `http://scarif.lab.jacobdrury.com` (HTTP only) |
 | Array | **Started** · no data or parity disks assigned |
 | Plugins | **Unassigned Devices** (mount + NFS share) |
 
@@ -294,3 +294,4 @@ AT&T → UDM Pro (.1)
 - Prefer Talos + GitOps — bare-metal **yavin** → **expand to 3 CPs**; migrate apps **once**
 - **pc (black)** retained until k8s cutover, then personal gaming
 - ~~Homelab VLAN + OpenTofu before Talos~~ → Phase **1.5 done**; scarif on `.5.10`
+- ~~3-node Proxmox cluster~~ → **homelab02** standalone (Aug 2026); Mini off cluster, ready for Talos

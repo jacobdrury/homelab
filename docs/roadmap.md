@@ -9,7 +9,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **0** Docs & inventory | **Done** | |
 | **1** Unraid NAS | **Done** (Aug 2025) | |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif on Homelab VLAN `192.168.5.10`; arr NFS via `scarif.lab.jacobdrury.com` |
-| **2** Talos on yavin | **Next** | Gate cleared — homelab VLAN + DNS/IaC live |
+| **2** Talos on yavin | **Next** | Gate cleared · Proxmox unclustered (homelab02 only) |
 | **3–5** | Not started | |
 
 **IaC live today:** `infrastructure/dns/`, `infrastructure/unifi/`, `infrastructure/pihole/` — apply via `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Policy: [iac](architecture/iac.md).
@@ -116,8 +116,11 @@ Buy **data** drive(s) first; **24TB becomes parity** after library is copied off
 
 **Prerequisite:** Phase **1.5** complete (homelab VLAN + OpenTofu DNS/UniFi/Pi-hole + scarif on VLAN 5).
 
+**Proxmox prep (done Aug 2026):** **homelab03** removed from cluster (`pvecm delnode`); **homelab02** single-node (`pvecm expected 1`); stale `corosync.conf` nodelist trimmed. Mac Mini can be wiped without affecting black’s guests.
+
 Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to homelab02) — wipe does not affect Pi-hole, discord bots, arr, or HA. Bootstrap **single-node `prd`** designed to **expand to 3 CPs** later.
 
+- [x] Proxmox: **homelab03** delnode'd; **homelab02** standalone single-node (Aug 2026)
 - [ ] Boot-test Talos metal-amd64 USB on Mac Mini (before wipe)  
 - [ ] Custom Talos ISO / image: extensions **`intel-ucode`**, **`i915`** (+ `realtek-firmware` optional)  
 - [ ] Machine config: **USB 2.5G primary** (`enx6c1ff721c616` / RTL8156BG), **onboard 1G secondary** (`enp4s0`); pin by MAC; **homelab VLAN**  

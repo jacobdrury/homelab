@@ -6,7 +6,7 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 
 | | Today | Target |
 |---|--------|--------|
-| Compute | Proxmox (Mini + pc black) · **scarif = Unraid** | Talos `prd`: **bare-metal yavin** → **expand to 3 BM CPs** |
+| Compute | Proxmox **homelab02** only · **scarif = Unraid** · Mini off cluster | Talos `prd`: **bare-metal yavin** → **expand to 3 BM CPs** |
 | Storage | **scarif** — 24TB UD · **NFS** (~8.7 TB used) | Same + optional array/parity · iSCSI when k8s needs it |
 | pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
 | Network | Homelab **VLAN 5** (scarif) + Drury (arr, Pi-hole) | Full lab on VLAN + Tailscale |
@@ -41,4 +41,4 @@ Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/se
 
 ## Status
 
-Inventory done. Phase 1 storage **done**. Phase **1.5** (VLAN + IaC + scarif move) **done**. Executing [roadmap](docs/roadmap.md): **Talos `prd` → migrate apps → mini PCs / free black PC**.
+Inventory done. Phase 1 storage **done**. Phase **1.5** (VLAN + IaC + scarif move) **done**. Proxmox **homelab02** standalone (Mini delnode'd). Executing [roadmap](docs/roadmap.md): **Talos `prd` → migrate apps → mini PCs / free black PC**.
