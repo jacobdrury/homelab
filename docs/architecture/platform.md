@@ -77,7 +77,8 @@ homelab/
   bootstrap/                       # Argo install notes
   apps/
     system/                        # cilium, nfs-csi, iscsi, cert-manager, tailscale,
-                                   # 1password-connect, external-secrets, envoy-gateway
+                                   # 1password-connect, external-secrets, envoy-gateway,
+                                   # actions-runner-controller (Phase 2b)
     media/                         # jellyfin, *arr, qbittorrent (+ Mullvad WG for peers)
     home/                          # homeassistant, homepage
     network/                       # pihole

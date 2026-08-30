@@ -44,6 +44,6 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Backups | **Decide after Unraid is up** (parity ≠ backup; UD has no parity) |
 | Tooling | **proto + moon** ([moonrepo](https://moonrepo.dev/)) |
 | Dep updates | **Renovate later**; no Dependabot version updates |
-| CI | None until there’s something meaningful to check |
+| CI / OpenTofu | **Manual apply** (`moon` on Mac) until Phase 2b; then **GitHub Actions** — cloud runners for `dns/`, **ARC runners in `prd`** for `unifi/` + `pihole/`; public repo → no fork PRs with secrets — [roadmap Phase 2b](roadmap.md#phase-2b--opentofu-ci-github-actions) |
 | Agents | **First-class**: Tailscale + kubeconfig + lab HTTPS + `op`; GitOps preferred |
 | Host naming | **Star Wars planets** for physical hosts + Talos nodes; Unraid NAS = **`scarif`** — [naming](architecture/naming.md) |

@@ -12,7 +12,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **2** Talos on yavin | Blocked on 1.5 exit | |
 | **3–5** | Not started | |
 
-**IaC live today:** `infrastructure/dns/`, `infrastructure/unifi/`, `infrastructure/pihole/` — apply via `moon run <project>:apply`. Policy: [iac](architecture/iac.md).
+**IaC live today:** `infrastructure/dns/`, `infrastructure/unifi/`, `infrastructure/pihole/` — apply via `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Policy: [iac](architecture/iac.md).
 
 **DNS today (via Pi-hole `192.168.1.11`):** `*.lab.jacobdrury.com` → forwarded to Cloudflare; `*.homelab.com` → local records in Git; infra A records resolve (e.g. `k8s.lab` → `192.168.5.11`) even before hosts are on VLAN 5.
 
@@ -54,6 +54,7 @@ flowchart LR
 10. **Pi-hole last** — stays on pc (black) through Phase 2–3 until k8s cutover  
 11. Tailscale + HTTPS via `lab.jacobdrury.com`  
 12. **Agent-operable** — [agents](architecture/agents.md)  
+13. **OpenTofu apply manual until cluster CI** — `moon run …:apply` from Mac through Phase 1.5–2; shift to GitHub Actions + in-cluster runners in Phase 2b  
 
 ## Phase 0 — Docs & inventory
 
@@ -133,6 +134,61 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [ ] Deploy a throwaway app; confirm GitOps + NFS path to scarif  
 
 **Exit:** `prd` GitOps-reachable on Tailscale + VLAN; NFS CSI talks to scarif; cluster ready to accept CP joins.
+
+### Phase 2b — OpenTofu CI (GitHub Actions)
+
+**Prerequisite:** Phase **2** cluster + Argo + **1Password Connect / ESO** (secrets in-cluster). Until this phase completes, keep applying OpenTofu from your Mac with `moon run <project>:apply`.
+
+**Goal:** `plan` on PRs; controlled `apply` from pipelines. Replace local `*.tfstate` with a **remote backend**.
+
+**Repo is public** — treat self-hosted runners as **trusted compute with LAN access**. Do not run workflows that use secrets on **fork PRs**; restrict `apply` to `main` (or `workflow_dispatch` + environment approval).
+
+```mermaid
+flowchart LR
+  subgraph pr [Pull request]
+    PlanDNS[dns plan - github-hosted]
+    PlanLAN[unifi + pihole plan - ARC]
+  end
+  subgraph main [main branch]
+    Apply[apply - environment approval]
+  end
+  PlanDNS --> CF[Cloudflare API]
+  PlanLAN --> UDM[UniFi LAN]
+  PlanLAN --> PH[Pi-hole LAN]
+  Apply --> State[(remote state)]
+```
+
+#### Bootstrap (manual, now → Phase 2b)
+
+- [x] OpenTofu modules in Git; apply from Mac (`moon`)  
+- [ ] Remote state backend (OTF Cloud or S3-compatible) + migrate state per project  
+- [ ] Cluster up (Phase 2) before LAN-dependent CI  
+
+#### In-cluster runners (ARC)
+
+- [ ] Deploy **Actions Runner Controller** (or official scale-set chart) via Argo — `apps/system/`  
+- [ ] Runner image with **OpenTofu 1.9.x** (+ `git`)  
+- [ ] Runner scale set labeled **`homelab`** — ephemeral pod per job  
+- [ ] **NetworkPolicy:** egress to Cloudflare API, `192.168.1.1` (UniFi), `192.168.1.11` (Pi-hole → cluster later), state backend  
+- [ ] Confirm **Homelab → Drury** (or routes) so pods reach UniFi + Pi-hole on VLAN 1  
+
+#### Secrets & workflows
+
+- [ ] GitHub **Environments** (e.g. `homelab-production`) — required reviewers for `apply`  
+- [ ] Tokens via **ESO + 1Password** (preferred) or GitHub Actions secrets — never in repo  
+- [ ] Workflow: **`dns/`** — `runs-on: ubuntu-latest` (public API only)  
+- [ ] Workflow: **`unifi/`**, **`pihole/`** — `runs-on: [self-hosted, homelab]`  
+- [ ] PR: **plan only**; post plan summary (comment or artifact)  
+- [ ] `main`: **apply** after approval (or manual `workflow_dispatch` for UniFi/Pi-hole at first)  
+- [ ] **No** `pull_request` workflows with secrets from forks — `pull_request` from same repo only, or `push` to `main`  
+
+#### Cutover
+
+- [ ] Migrate `dns`, `unifi`, `pihole` state to remote backend  
+- [ ] First pipeline apply matches Mac-applied infra (no drift)  
+- [ ] Document: Mac `moon run …:apply` becomes break-glass only  
+
+**Exit:** All three OpenTofu projects plan on PR; apply via pipeline; local state retired.
 
 ## Phase 3 — Migrate workloads (once stable)
 

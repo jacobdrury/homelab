@@ -37,16 +37,39 @@ Avoid duplicating the same records in two IaC modules:
 | Moving a host to a new subnet (IP, fstab, cable) | Physical / OS steps outside API |
 | One-time bootstrap (Talos first boot, Argo install, 1Password items) | Chicken-and-egg |
 | BIOS, Proxmox VM create, disk attach | Hypervisor / hardware |
-| `op signin` on the operator Mac | Session auth for secret injection |
+| `op signin` on the operator Mac | Session auth for secret injection — until Phase 2b CI |
+| OpenTofu `plan` / `apply` | **Manual** (`moon` on Mac) until Phase 2b pipelines — [roadmap](../roadmap.md#phase-2b--opentofu-ci-github-actions) |
 
 Document one-off steps in phase checklists ([roadmap](../roadmap.md), [phase-1.5 preflight](../setup/phase-1.5-preflight.md)); promote to IaC once the API and workflow are stable.
 
 ## OpenTofu conventions
 
-- **State:** local on the operator Mac (gitignored) until a remote backend is worth it.
+- **State:** local on the operator Mac (gitignored) until **Phase 2b** remote backend — see [roadmap Phase 2b](../roadmap.md#phase-2b--opentofu-ci-github-actions).
+- **Apply (now):** `moon run <project>:apply` from your Mac on the LAN — manual bootstrap until pipelines exist.
 - **Secrets:** `TOFU_SECRET_*` in project `moon.yml` → `op read` via `.moon/scripts/tofu/env.sh` — never commit credentials.
 - **Vars:** committed `*.auto.tfvars` for non-secret desired state (Pi-hole lists, domains, etc.).
 - **Plan before apply:** `moon run <project>:apply` runs plan → apply; review `.tofu.plan` when unsure.
+
+## CI (Phase 2b — planned)
+
+GitHub Actions replaces Mac apply once the cluster can host runners. **This repo is public** — design workflows accordingly.
+
+| Project | Runner | Why |
+|---------|--------|-----|
+| `infrastructure/dns/` | `ubuntu-latest` | Cloudflare is a public API |
+| `infrastructure/unifi/` | In-cluster ARC (`homelab` label) | API at `192.168.1.1` — LAN only |
+| `infrastructure/pihole/` | In-cluster ARC (`homelab` label) | API at `192.168.1.11` — LAN only |
+
+**Security (public repo):**
+
+- Self-hosted runners = arbitrary code execution **with LAN access** — only for trusted workflows.
+- **Plan on PR** from branches in this repo; **never** pass secrets to workflows triggered by **fork PRs**.
+- **`apply`** only on `main` (or `workflow_dispatch`) with a protected **Environment** and required approval.
+- Prefer **ephemeral** ARC runners (one pod per job).
+
+**Prerequisites:** remote state, Phase 2 cluster, ESO + 1Password, ARC Helm chart in `apps/system/`.
+
+Full checklist: [roadmap Phase 2b](../roadmap.md#phase-2b--opentofu-ci-github-actions).
 
 ## Kubernetes / GitOps conventions
 
