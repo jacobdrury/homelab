@@ -1,0 +1,14 @@
+id: 'unifi'
+layer: 'tool'
+stack: 'infrastructure'
+
+project:
+  name: 'unifi'
+  description: 'UniFi Homelab VLAN and firewall'
+
+tags:
+  - opentofu
+
+env:
+  TOFU_SECRET_TF_VAR_unifi_api_key: 'op://Homelab/bqbnkqxcyyg6h72orwebvozdjm/credential'
+  TOFU_ENV_UNIFI_INSECURE: 'true'

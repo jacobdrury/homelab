@@ -9,7 +9,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Compute (steady) | **3 bare-metal Talos control planes**: **yavin** + **hoth** + **endor**; all schedule workloads |
 | Cluster scale-out | **Expand in place** (join CPs to existing etcd) when mini PCs arrive — **not** a full cluster rebuild |
 | Cluster API endpoint | **`k8s.lab.jacobdrury.com`** — stable DNS from first bootstrap; VIP or DNS update at 3 CPs |
-| Homelab VLAN | **Before Talos bootstrap** — UniFi network name **`Homelab`**, VLAN **6**, `192.168.6.0/24` |
+| Homelab VLAN | **Before Talos bootstrap** — UniFi network name **`Homelab`**, VLAN **5**, `192.168.5.0/24` (reuses former Work VLAN; Teleport holds `.6`) |
 | IaC | **OpenTofu first** — `infrastructure/dns/` + `infrastructure/unifi/`; local gitignored state on Mac |
 | Infra DNS | `*.lab.jacobdrury.com` in Cloudflare (OpenTofu) — see [networking](architecture/networking.md#infra-dns) |
 | yavin networking | **USB 2.5G** (UGREEN RTL8156BG) **primary**; onboard **1G** **secondary**; pin interfaces by MAC in Talos machine config |

@@ -23,5 +23,6 @@ Planning docs for the GitOps homelab. Implementation code will live under `infra
 
 | Doc | What it is |
 |-----|------------|
+| [Infrastructure README](../infrastructure/README.md) | OpenTofu apply order (`dns/`, `unifi/`) |
 | [Local tools](setup/local-tools.md) | Homebrew, 1Password CLI, proto/moon, OpenTofu env |
 | [Phase 1.5 preflight](setup/phase-1.5-preflight.md) | Locked answers before VLAN + DNS IaC |

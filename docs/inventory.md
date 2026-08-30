@@ -11,8 +11,8 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.1.10` | NAS · 24TB UD + NFS · 10G DAC |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
-| **Mini PC #1** | **hoth** | — | — | `192.168.6.12` | Talos CP #2 — join existing cluster (Phase 4) |
-| **Mini PC #2** | **endor** | — | — | `192.168.6.13` | Talos CP #3 — join existing cluster (Phase 4) |
+| **Mini PC #1** | **hoth** | — | — | `192.168.5.12` | Talos CP #2 — join existing cluster (Phase 4) |
+| **Mini PC #2** | **endor** | — | — | `192.168.5.13` | Talos CP #3 — join existing cluster (Phase 4) |
 
 **Proxmox cluster (legacy):** `homelab02` · `homelab03` — `homelab` (pc white) retired; scarif is bare-metal Unraid.
 
@@ -179,7 +179,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 |---------|--------|
 | Gateway | UDM Pro · `192.168.1.1` · AT&T |
 | LAN DNS | Pi-hole · `192.168.1.11` |
-| Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.6.0/24` (**Homelab** · VLAN 6 · planned) |
+| Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · planned) · `192.168.6.0/24` (Teleport) |
 | Remote | Tailscale (free); host client on pc (black) |
 | Ingress / TLS | Not yet (target: Envoy + `lab.jacobdrury.com`) |
 | Backups | None formal — decide after Unraid |

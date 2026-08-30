@@ -6,6 +6,7 @@
 **/.terraform/
 *.tfstate
 *.tfstate.*
+.tofu.plan
 *.tfvars
 !*.tfvars.example
 crash.log

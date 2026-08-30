@@ -8,12 +8,12 @@ Dedicated **homelab VLAN**, isolated from trusted LAN / IoT, with **selective** 
 
 **Gate before Talos:** lab hosts (scarif, yavin, future CPs) move off flat `192.168.1.0/24` onto this VLAN first. Manage with **OpenTofu** (`infrastructure/unifi/`) — not UI-only.
 
-### Addressing (VLAN 6 — homelab)
+### Addressing (VLAN 5 — homelab)
 
 | Resource | IP | Notes |
 |----------|-----|--------|
-| Subnet | `192.168.6.0/24` | UniFi network **`Homelab`** (VLAN 6) |
-| DHCP pool | `.100–.199` | Transient clients |
+| Subnet | `192.168.5.0/24` | UniFi network **`Homelab`** (VLAN 5) |
+| DHCP pool | `.6–.254` | Same convention as Drury / IoT / Guest / Camera |
 | **scarif** | `.10` static | NFS/iSCSI — static on host + reservation |
 | **yavin** | `.11` static | Talos CP #1 |
 | **hoth** | `.12` static | Talos CP #2 (Phase 4) |
@@ -68,11 +68,11 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). Community provide
 
 | FQDN | Points to | Role |
 |------|-----------|------|
-| `scarif.lab.jacobdrury.com` | `192.168.6.10` | NAS / NFS |
-| `yavin.lab.jacobdrury.com` | `192.168.6.11` | Talos CP #1 |
-| `k8s.lab.jacobdrury.com` | `192.168.6.11` | Kubernetes API (same node until VIP) |
-| `hoth.lab.jacobdrury.com` | `192.168.6.12` | Talos CP #2 (Phase 4) |
-| `endor.lab.jacobdrury.com` | `192.168.6.13` | Talos CP #3 (Phase 4) |
+| `scarif.lab.jacobdrury.com` | `192.168.5.10` | NAS / NFS |
+| `yavin.lab.jacobdrury.com` | `192.168.5.11` | Talos CP #1 |
+| `k8s.lab.jacobdrury.com` | `192.168.5.11` | Kubernetes API (same node until VIP) |
+| `hoth.lab.jacobdrury.com` | `192.168.5.12` | Talos CP #2 (Phase 4) |
+| `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
 
 **Apps (Phase 2–3):** `jellyfin.lab`, `qbittorrent.lab`, `argocd.lab`, etc. — same pattern; Envoy + cert-manager later.
 

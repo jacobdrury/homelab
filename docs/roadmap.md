@@ -71,18 +71,12 @@ Details: [storage](architecture/storage.md) · [networking](architecture/network
 
 Details: [networking](architecture/networking.md) · [preflight](setup/phase-1.5-preflight.md). **Exit criteria for Phase 2.**
 
-**Cloudflare (`infrastructure/dns/`)**
-
-- [x] Delegate `jacobdrury.com` DNS to Cloudflare (registrar transfer in progress)  
-- [ ] OpenTofu: preserve **GitHub Pages** apex + `www`  
-- [ ] OpenTofu: infra `*.lab.jacobdrury.com` records (`scarif`, `yavin`, `k8s`, `hoth`, `endor`)  
-- [ ] Cloudflare API token in 1Password **Homelab** vault  
-
-**UniFi (`infrastructure/unifi/`)**
-
-- [ ] OpenTofu: **`Homelab`** network (VLAN 6 · `192.168.6.0/24`), DHCP, firewall (**VLAN 1 → Homelab allow all**; deny Homelab → IoT/guest/camera)  
-- [ ] Migrate **scarif** + **yavin** (and other lab hosts) onto VLAN; static/reserved IPs  
-- [ ] Re-validate NFS: arr VM or test client on VLAN → scarif export  
+- [ ] OpenTofu: **`infrastructure/dns/`** — GitHub Pages (import) + infra `*.lab` records  
+- [ ] OpenTofu: **`infrastructure/unifi/`** — **Homelab** VLAN 5 + firewall  
+- [x] Cloudflare active; API token in 1Password  
+- [x] UniFi API key in 1Password  
+- [ ] Migrate **scarif** to `192.168.5.10`; update arr VM NFS fstab  
+- [ ] Re-validate NFS: arr VM → scarif export  
 
 **Exit:** Lab hosts on homelab VLAN; DNS and network managed in Git via OpenTofu; `k8s.lab.jacobdrury.com` resolves.
 

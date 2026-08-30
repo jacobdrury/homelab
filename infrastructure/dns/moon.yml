@@ -1,0 +1,14 @@
+id: 'dns'
+layer: 'tool'
+stack: 'infrastructure'
+
+project:
+  name: 'dns'
+  description: 'Cloudflare DNS for jacobdrury.com'
+
+tags:
+  - opentofu
+
+# op:// refs — use item ID when the 1Password title contains parentheses.
+env:
+  TOFU_SECRET_TF_VAR_cloudflare_api_token: 'op://Homelab/Cloudflare Zone DNS API Token/credential'

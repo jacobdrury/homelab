@@ -30,12 +30,7 @@ op signin
 op vault list   # expect Homelab
 ```
 
-Example reads (adjust field labels to match your items):
-
-```bash
-export TF_VAR_cloudflare_api_token="$(op read 'op://Homelab/Cloudflare Zone DNS API Token/credential')"
-export UNIFI_API_KEY="$(op read 'op://Homelab/Unifi API Key (opentofu-homelab)/credential')"
-```
+Moon tasks load secrets from each OpenTofu project's `moon.yml` (`TOFU_SECRET_*` → `op read`, `TOFU_ENV_*` → literal). See [infrastructure/README.md](../../infrastructure/README.md).
 
 ## UniFi API key (Phase 1.5)
 

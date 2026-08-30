@@ -1,0 +1,64 @@
+inheritedBy:
+  tags: opentofu
+
+# Paths are relative to each OpenTofu project root (infrastructure/*).
+fileGroups:
+  tf-config:
+    - '**/*.tf'
+  tf-lock:
+    - '.terraform.lock.hcl'
+  tf-state:
+    - '*.tfstate'
+    - '*.tfstate.*'
+
+implicitInputs:
+  - '/.moon/scripts/tofu/env.sh'
+  - '/.moon/tasks/tofu.yml'
+
+taskOptions:
+  cache: false
+  runInCI: false
+
+tasks:
+  init:
+    script: |
+      # shellcheck source=/dev/null
+      source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
+      exec tofu init
+    inputs:
+      - '@group(tf-config)'
+      - '@group(tf-lock)'
+    outputs:
+      - '.terraform'
+    options:
+      cache: true
+
+  plan:
+    deps:
+      - 'init'
+    script: |
+      # shellcheck source=/dev/null
+      source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
+      exec tofu plan -out=.tofu.plan
+    inputs:
+      - '@group(tf-config)'
+      - '@group(tf-lock)'
+      - '@group(tf-state)'
+    outputs:
+      - '.tofu.plan'
+    options:
+      # Always re-plan — remote state (Cloudflare, UniFi) can drift outside Git.
+      cache: false
+
+  apply:
+    deps:
+      - 'plan'
+    script: |
+      # shellcheck source=/dev/null
+      source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
+      test -f .tofu.plan || { echo "missing .tofu.plan — run plan first" >&2; exit 1; }
+      exec tofu apply .tofu.plan
+    inputs:
+      - '.tofu.plan'
+    options:
+      cache: false
