@@ -12,7 +12,7 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 
 | Codename | Hardware | Role | Status | IP (today) | Legacy name |
 |----------|----------|------|--------|------------|-------------|
-| **scarif** | pc (white) | Unraid NAS — NFS + iSCSI | **Active** (Phase 1 done) | `192.168.1.10` | `homelab` |
+| **scarif** | pc (white) | Unraid NAS — NFS + iSCSI | **Active** (Phase 1.5 done) | `192.168.5.10` | `homelab` |
 | **yavin** | Mac Mini | Bare-metal Talos CP #1 (single-node → 3 CP) | Phase 2 | `192.168.1.15` | `homelab03` (Proxmox today) |
 | **hoth** | Mini PC #1 | Talos CP #2 (bare metal) | Planned (Phase 4) | `192.168.5.12` | — |
 | **endor** | Mini PC #2 | Talos CP #3 (bare metal) | Planned (Phase 4) | `192.168.5.13` | — |
@@ -40,7 +40,7 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 | Unraid hostname | Planet | `scarif` |
 | Tailscale machine name | Same as hostname | `scarif` |
 | Talos / Kubernetes node name | Same as hostname | `yavin`, `hoth`, `endor` |
-| NFS server | Hostname or static IP | `scarif` or `192.168.1.10` |
+| NFS server | Hostname or static IP | `scarif.lab.jacobdrury.com` or `192.168.5.10` |
 | SMB / mDNS | Hostname | `scarif.local` |
 | App ingress (Envoy) | Functional subdomain | `jellyfin.lab.jacobdrury.com` |
 | GitOps paths | Environment, not planet | `clusters/prd/`, `infrastructure/prd/` |

@@ -9,13 +9,13 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | Compute | Proxmox (Mini + pc black) · **scarif = Unraid** | Talos `prd`: **bare-metal yavin** → **expand to 3 BM CPs** |
 | Storage | **scarif** — 24TB UD · **NFS** (~8.7 TB used) | Same + optional array/parity · iSCSI when k8s needs it |
 | pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
-| Network | UniFi (flat-ish) | Homelab **VLAN** (OpenTofu) + Tailscale |
+| Network | Homelab **VLAN 5** (scarif) + Drury (arr, Pi-hole) | Full lab on VLAN + Tailscale |
 | Apps | Pi-hole, HA, Jellyfin, *arr, qBit, Prowlarr | Same on k8s + Homepage; HA after media |
 | Delivery | Manual guests | Argo CD ← this repo |
 | Secrets | Ad hoc | 1Password → Connect → ESO |
 | Access | Partial Tailscale | `*.lab.jacobdrury.com` + **AI agents on the tailnet** |
 
-**Next:** Phase **1.5** — homelab VLAN + OpenTofu (Cloudflare + UniFi). Then bare-metal Talos on **yavin**.
+**Next:** Phase **2** — bare-metal Talos on **yavin** (`192.168.5.11` · `k8s.lab.jacobdrury.com`).
 
 ## Docs
 
@@ -41,4 +41,4 @@ Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/se
 
 ## Status
 
-Inventory done. Phase 1 storage **done**. Executing [roadmap](docs/roadmap.md): **Talos `prd` → migrate apps → mini PCs / free black PC**.
+Inventory done. Phase 1 storage **done**. Phase **1.5** (VLAN + IaC + scarif move) **done**. Executing [roadmap](docs/roadmap.md): **Talos `prd` → migrate apps → mini PCs / free black PC**.

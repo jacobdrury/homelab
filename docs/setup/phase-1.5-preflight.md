@@ -2,6 +2,8 @@
 
 Answers captured before OpenTofu work. Source of truth for operators; leans also in [decisions](../decisions.md).
 
+**Status: complete (2026-08-30).** scarif on Homelab VLAN; arr NFS validated. Phase 2 (Talos on yavin) unblocked.
+
 ## Network
 
 | Item | Decision |
@@ -53,7 +55,7 @@ Answers captured before OpenTofu work. Source of truth for operators; leans also
 | Homelab network in UI | **Created** — OpenTofu `infrastructure/unifi/` (applied 2026-08-29) |
 | API auth | **Local API key** → 1Password **`Unifi API Key (opentofu-homelab)`** (`op://Homelab/bqbnkqxcyyg6h72orwebvozdjm/credential`) |
 | Apply from Mac | `https://192.168.1.1` — use **local** key, not Site Manager key |
-| Port map | TBD — assign scarif to VLAN 5 before scarif IP move |
+| Port map | Aggregation **SFP+ 2** → **Homelab** VLAN 5 (applied 2026-08-30) |
 
 Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserves **`192.168.6.0/24`**.
 
@@ -91,7 +93,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 | Item | When |
 |------|------|
 | Tailscale on scarif | Phase 2 or when cluster path is up |
-| Switch port VLAN breakdown | **Before scarif IP move** (still open) |
+| Switch port VLAN breakdown | **Done** — Aggregation SFP+ 2 |
 | `webserver.api.max_sessions` in OpenTofu | Optional — raise in UI if bulk import hits 429 |
 
 ## Exit checklist
@@ -101,8 +103,8 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 - [x] `infrastructure/pihole/` — full config in Git; zone forward + local `*.homelab.com` (applied 2026-08-29)
 - [x] `dig @192.168.1.11 k8s.lab.jacobdrury.com` → `192.168.5.11` (Cloudflare via forward)
 - [x] `dig @192.168.1.11 scarif.lab.jacobdrury.com` → `192.168.5.10` (Cloudflare via forward)
-- [ ] Switch port: scarif on **Homelab** VLAN 5
-- [ ] scarif **live** on `192.168.5.10` (today still `192.168.1.10` on Drury VLAN)
-- [ ] arr VM NFS fstab updated; playback smoke-test over `.5`
+- [x] Switch port: scarif on **Homelab** VLAN 5 (Aggregation SFP+ 2)
+- [x] scarif **live** on `192.168.5.10` (**eth1** 10G; bonding/bridging off; migrated 2026-08-30)
+- [x] arr VM NFS fstab → `scarif.lab.jacobdrury.com`; Jellyfin playback over `.5` OK
 
-**Phase 1.5 done when:** last three boxes checked — then start Phase 2 (Talos on yavin).
+**Phase 1.5 done.** Start Phase 2 (Talos on yavin).

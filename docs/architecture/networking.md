@@ -29,7 +29,7 @@ Dedicated **homelab VLAN**, isolated from trusted LAN / IoT, with **selective** 
 | UniFi fixed IP / reservation only | Weaker at Unraid boot |
 | Both | Optional niceness |
 
-Example scheme (pick numbers that fit your UniFi site): see table above. After migration, retire flat-LAN addresses in [inventory](../inventory.md).
+Example scheme (pick numbers that fit your UniFi site): see table above. **scarif** retired `192.168.1.10` (Aug 2026); update [inventory](../inventory.md) when other hosts move.
 
 ### UniFi IaC
 

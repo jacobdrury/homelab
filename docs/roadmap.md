@@ -2,21 +2,19 @@
 
 Phased path from [inventory](inventory.md) → target. Principles and checklists only; leans live in [decisions](decisions.md).
 
-## Current status (2026-08-29)
+## Current status (2026-08-30)
 
 | Phase | State | Notes |
 |-------|--------|--------|
 | **0** Docs & inventory | **Done** | |
-| **1** Unraid NAS | **Done** (Aug 2025) | scarif still on flat LAN `.10` until VLAN move |
-| **1.5** VLAN + IaC | **In progress** | OpenTofu applied for DNS, UniFi, Pi-hole; **scarif physical move pending** |
-| **2** Talos on yavin | Blocked on 1.5 exit | |
+| **1** Unraid NAS | **Done** (Aug 2025) | |
+| **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif on Homelab VLAN `192.168.5.10`; arr NFS via `scarif.lab.jacobdrury.com` |
+| **2** Talos on yavin | **Next** | Gate cleared — homelab VLAN + DNS/IaC live |
 | **3–5** | Not started | |
 
 **IaC live today:** `infrastructure/dns/`, `infrastructure/unifi/`, `infrastructure/pihole/` — apply via `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Policy: [iac](architecture/iac.md).
 
-**DNS today (via Pi-hole `192.168.1.11`):** `*.lab.jacobdrury.com` → forwarded to Cloudflare; `*.homelab.com` → local records in Git; infra A records resolve (e.g. `k8s.lab` → `192.168.5.11`) even before hosts are on VLAN 5.
-
-**Phase 1.5 remaining:** move scarif to homelab VLAN (`192.168.5.10`), switch port assignment, update arr NFS fstab, smoke-test NFS over `.5`.
+**DNS today (via Pi-hole `192.168.1.11`):** `*.lab.jacobdrury.com` → forwarded to Cloudflare; `*.homelab.com` → local records in Git; infra A records resolve (e.g. `scarif.lab` → `192.168.5.10`, `k8s.lab` → `192.168.5.11`).
 
 ## Sequence (locked)
 
@@ -74,7 +72,7 @@ Details: [storage](architecture/storage.md) · [networking](architecture/network
 - [x] USB boot stick; Unraid license  
 - [x] Wipe / install Unraid bare metal on **pc (white)**; hostname **`scarif`** ([naming](architecture/naming.md))  
 - [x] Remove GTX 780 (unused; saves idle power)  
-- [x] Unraid **static IP** outside DHCP pool (`.10` on flat LAN today)  
+- [x] Unraid **static IP** outside DHCP pool (`192.168.5.10` on Homelab VLAN)  
 - [ ] SSD pool for `appdata` on 500 GB NVMe (optional now — **no array required**)  
 - [x] Move **24TB** from pc (black) into pc (white) — **Unassigned Devices**, keep XFS, **not** in array  
 - [x] NFS export UD mount (`/mnt/disks/ZXA0VZBA`)  
@@ -94,11 +92,11 @@ Details: [networking](architecture/networking.md) · [preflight](setup/phase-1.5
 - [x] Cloudflare active; API token in 1Password
 - [x] UniFi API key in 1Password
 - [x] Pi-hole API app-password + `app_sudo` in 1Password / UI
-- [ ] Switch: assign scarif port to **Homelab** VLAN 5
-- [ ] Migrate **scarif** to `192.168.5.10`; update arr VM NFS fstab (`192.168.5.10` or `scarif.lab.jacobdrury.com`)
-- [ ] Re-validate NFS: arr VM → scarif export over homelab VLAN
+- [x] Switch: assign scarif port to **Homelab** VLAN 5 (Aggregation **SFP+ 2**; applied 2026-08-30)
+- [x] Migrate **scarif** to `192.168.5.10` (**eth1** 10G; bonding/bridging off); arr VM NFS fstab → `scarif.lab.jacobdrury.com` (`_netdev,nofail` — no automount with Docker)
+- [x] Re-validate NFS: arr VM → scarif export over homelab VLAN; Jellyfin playback OK
 
-**Exit:** Lab hosts on homelab VLAN; DNS, network, and Pi-hole policy in Git; `k8s.lab.jacobdrury.com` and `scarif.lab.jacobdrury.com` resolve on LAN (DNS ready — scarif may still be on `.1.10` until migrated).
+**Exit:** ~~Lab hosts on homelab VLAN; DNS, network, and Pi-hole policy in Git.~~ **Done Aug 2026.** scarif live on `.5.10`; `k8s.lab.jacobdrury.com` and `scarif.lab.jacobdrury.com` resolve on LAN.
 
 ### Phase 1b — Array / parity (when you can)
 

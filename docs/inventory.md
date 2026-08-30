@@ -8,7 +8,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 |------|-------------------|---------------------|------------|-----|-------|
 | **Mac Mini** | **yavin** | `homelab03` | Proxmox (idle) → **Talos CP** | `192.168.1.15` | Guests **moved to homelab02**; ready for Phase 2 wipe |
 | **pc (black)** | — | `homelab02` | Proxmox | `192.168.1.12` | arr + HA + Pi-hole + discord bots; **leaving lab** → gaming |
-| **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.1.10` | NAS · 24TB UD + NFS · 10G DAC |
+| **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.5.10` | NAS · Homelab VLAN 5 · 24TB UD + NFS · 10G **eth1** |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
 | **Mini PC #1** | **hoth** | — | — | `192.168.5.12` | Talos CP #2 — join existing cluster (Phase 4) |
@@ -86,7 +86,7 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 
 | Path | Size | Used by |
 |------|------|---------|
-| `/mnt/data` | NFSv4 | `192.168.1.10:/mnt/disks/ZXA0VZBA` (fstab · `_netdev` · `nofail`) |
+| `/mnt/data` | NFSv4 | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (fstab · `_netdev,nofail` — boot mount, not automount) |
 | `/mnt/data/media/anime` | 6.9 TB | Jellyfin, Sonarr |
 | `/mnt/data/media/tv` | 608 GB | Jellyfin, Sonarr |
 | `/mnt/data/media/downloads` | ~27 GB | qBittorrent |
@@ -104,7 +104,7 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 | OS | **Unraid** · hostname **`scarif`** |
 | Boot | Samsung USB flash 128 GB (`sda`) |
 | GPU | — (GTX 780 removed Aug 2025) |
-| LAN | Intel 82599 **10G DAC** → Aggregation **SFP+ 2** · `192.168.1.10` static · DNS `192.168.1.11` |
+| LAN | **eth1** Intel 82599 **10G DAC** → Aggregation **SFP+ 2** (**Homelab** VLAN 5) · `192.168.5.10` static · DNS `192.168.1.11` · bonding/bridging **off** · **eth0** (1G) unused |
 | Array | **Started** · no data or parity disks assigned |
 | Plugins | **Unassigned Devices** (mount + NFS share) |
 
@@ -123,7 +123,7 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 |--------|---------|---------------|
 | `/mnt/disks/ZXA0VZBA` | `*` (LAN) | `media/{anime,tv,downloads}` |
 
-Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk. Linux clients: `mount -t nfs4 192.168.1.10:/mnt/disks/ZXA0VZBA /mnt/data`.
+Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk. Linux clients: `mount -t nfs4 scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA /mnt/data` (or `192.168.5.10`).
 
 ### Not yet
 
@@ -164,7 +164,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 |---------|-------|-------|--------------|
 | Pi-hole | pc (black) LXC **106** | `192.168.1.11` · `:53`/admin UI | LAN DNS · config in **`infrastructure/pihole/`** (OpenTofu) · `*.lab` → Cloudflare forward |
 | Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
-| **NFS (media)** | **scarif** | `192.168.1.10:/mnt/disks/ZXA0VZBA` | ~8.7 TB library |
+| **NFS (media)** | **scarif** | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (`192.168.5.10`) | ~8.7 TB library |
 | Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` via NFS |
 | Sonarr (TV / anime) | VM 101 via Gluetun | `:8989` / `:8990` | `/mnt/data/media` via NFS |
 | qBittorrent | VM 101 via Gluetun | `:8085` | downloads · Mullvad WG |
@@ -179,19 +179,18 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 |---------|--------|
 | Gateway | UDM Pro · `192.168.1.1` · AT&T |
 | LAN DNS | Pi-hole · `192.168.1.11` |
-| Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · **live**, OpenTofu) · `192.168.6.0/24` (Teleport) |
+| Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · **scarif live**) · `192.168.6.0/24` (Teleport) |
 | Public / lab DNS | Cloudflare — **`infrastructure/dns/`** · LAN via Pi-hole forward for `*.lab` |
 | Remote | Tailscale (free); host client on pc (black) |
 | Ingress / TLS | Not yet (target: Envoy + `lab.jacobdrury.com`) |
 | Backups | None formal — decide after Unraid |
 
-### IP map
+### IP map (Drury · VLAN 1)
 
 | IP | Device |
 |----|--------|
 | `.1` | UDM Pro |
 | `.9` | `arr` VM (pc black) |
-| `.10` | **scarif** (pc white) · Unraid NAS |
 | `.11` | Pi-hole |
 | `.12` | pc (black) / `homelab02` |
 | `.13` | USW Aggregation |
@@ -209,13 +208,23 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | `.2.171` | Lutron bridge (IoT) |
 | `.2.211` | IoT device |
 
+### IP map (Homelab · VLAN 5)
+
+| IP | Device |
+|----|--------|
+| `.10` | **scarif** (pc white) · Unraid NAS |
+| `.11` | **yavin** (target · Talos Phase 2) |
+| `.12` | **hoth** (target · Phase 4) |
+| `.13` | **endor** (target · Phase 4) |
+| `.20` | API VIP (optional · Phase 4) |
+
 ### Topology
 
 ```
 AT&T → UDM Pro (.1)
          └─ 10G ─ USW Aggregation (.13)
                     ├─ SFP+ 1 ─ pc black (.12) 10G
-                    ├─ SFP+ 2 ─ pc white / **scarif** (.10) 10G NAS
+                    ├─ SFP+ 2 ─ pc white / **scarif** (`.5.10`) 10G NAS · **Homelab VLAN 5**
                     ├─ SFP+ 3 ─ Flex 2.5G (.109) ─ APs, Bedroom, Flex Mini
                     ├─ SFP+ 5 ─ Pro Max 16 (.197)
                     │              ├─ Port 13 ─ Pi-hole (.11)
@@ -242,7 +251,7 @@ AT&T → UDM Pro (.1)
 | Port | Connected |
 |------|-----------|
 | 1 | pc (black) 10G · `.12` |
-| 2 | pc (white) / **scarif** 10G · `.10` |
+| 2 | pc (white) / **scarif** 10G · `.5.10` · **Homelab VLAN 5** |
 | 3 | Flex 2.5G · `.109` |
 | 4, 6 | Empty |
 | 5 | Pro Max 16 · `.197` |
@@ -284,4 +293,4 @@ AT&T → UDM Pro (.1)
 - ~~No dedicated NAS~~ → **scarif** live; media on NFS; Phase 1 storage **done**
 - Prefer Talos + GitOps — bare-metal **yavin** → **expand to 3 CPs**; migrate apps **once**
 - **pc (black)** retained until k8s cutover, then personal gaming
-- Tailscale + agent-operable lab; UniFi VLAN isolation
+- ~~Homelab VLAN + OpenTofu before Talos~~ → Phase **1.5 done**; scarif on `.5.10`

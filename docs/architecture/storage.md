@@ -13,15 +13,15 @@ Why Unraid over TrueNAS: **mixed drive sizes** over time. Parity must be **≥ l
 
 **Unraid note:** NFS/SMB are first-class. **Unassigned Devices** mounts non-array disks and can **Share** them over NFS (enable **Settings → NFS**, **UD → Enable NFS export**, **Share** on disk). **iSCSI target** is a community plugin — workable and in-plan. Prefer SSD/pool-backed LUNs for DB-ish volumes; keep bulk media on NFS.
 
-## Current state (Aug 2025)
+## Current state (Aug 2026)
 
 | Item | Value |
 |------|-------|
-| Host | **scarif** · `192.168.1.10` · 10G to Aggregation |
+| Host | **scarif** · `192.168.5.10` · Homelab VLAN 5 · 10G **eth1** to Aggregation SFP+ 2 |
 | 24TB | UD mount `/mnt/disks/ZXA0VZBA` · XFS · **8.7 TB** used |
 | NFS export | `/mnt/disks/ZXA0VZBA` · NFSv4 |
 | Array | Started · **no data/parity disks** |
-| Consumer | pc (black) VM 101 `arr` → `/mnt/data` (fstab) |
+| Consumer | pc (black) VM 101 `arr` → `/mnt/data` via `scarif.lab.jacobdrury.com` (fstab · `_netdev,nofail`) |
 | 500 GB NVMe | UD · NTFS leftover · can become **cache pool** anytime |
 
 ## Disks

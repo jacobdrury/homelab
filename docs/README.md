@@ -26,4 +26,4 @@ Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live
 |-----|------------|
 | [Infrastructure README](../infrastructure/README.md) | OpenTofu apply order (`dns/`, `unifi/`, `pihole/`) |
 | [Local tools](setup/local-tools.md) | Homebrew, 1Password CLI, proto/moon, OpenTofu env |
-| [Phase 1.5 preflight](setup/phase-1.5-preflight.md) | Locked answers before VLAN + DNS IaC |
+| [Phase 1.5 preflight](setup/phase-1.5-preflight.md) | Locked VLAN + DNS answers (**complete** · Aug 2026) |

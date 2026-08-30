@@ -16,7 +16,7 @@ Manages GitHub Pages records (imported) and `*.lab.jacobdrury.com` infra A recor
 
 **Firewall:** legacy `LAN_IN` rules (no Zone-Based Firewall required). If you later enable ZBF, migrate `firewall.tf` to zone policies.
 
-Creates **Homelab** VLAN 5 (`192.168.5.0/24`), then migrate scarif to `192.168.5.10` manually.
+Creates **Homelab** VLAN 5 (`192.168.5.0/24`). scarif migrated to `192.168.5.10` (2026-08-30).
 
 ## Pi-hole (`infrastructure/pihole/`)
 
@@ -54,5 +54,5 @@ Full setup: [docs/setup/local-tools.md](../docs/setup/local-tools.md)
 1. `dns` apply — Cloudflare records (public + `*.lab`)
 2. `unifi` apply — Homelab VLAN + firewall
 3. `pihole` apply — Pi-hole policy (lists, local DNS, lab zone forward)
-4. Move scarif to VLAN 5 (`192.168.5.10`); update arr NFS fstab
+4. ~~Move scarif to VLAN 5 (`192.168.5.10`); update arr NFS fstab~~ **Done (2026-08-30)**
 5. Phase 2 — Talos on yavin
