@@ -37,9 +37,15 @@ variable "domains" {
 }
 
 variable "local_dns" {
-  description = "Local DNS A records (hostname → IP)"
+  description = "Pi-hole local DNS A records (LAN hostnames not in Cloudflare)"
   type        = map(string)
   default     = {}
+}
+
+variable "lab_zone_forward_upstreams" {
+  description = "Resolvers for lab.jacobdrury.com (Cloudflare public DNS)"
+  type        = list(string)
+  default     = ["1.1.1.1", "1.0.0.1"]
 }
 
 variable "dns_upstreams" {

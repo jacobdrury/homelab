@@ -78,8 +78,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). Community provide
 
 **Resolving names on LAN**
 
-1. **Now (Pi-hole on VLAN 1):** add conditional forward for `lab.jacobdrury.com` → Cloudflare, *or* local Pi-hole CNAMEs mirroring Tofu — until cluster Pi-hole takes over.
-2. **Steady:** Pi-hole on homelab VLAN serves `*.lab` (or forwards to Cloudflare).
+Pi-hole forwards `lab.jacobdrury.com` to Cloudflare (`1.1.1.1` / `1.0.0.1`) via `infrastructure/pihole/dns_forward.tf`. Infra and app records live only in `infrastructure/dns/` (+ external-dns later). When Pi-hole moves to the homelab VLAN / k8s, keep the same forward — change `pihole_url` only.
 
 **Tailscale (Phase 2+)** — operator exposes kube API + HTTPRoutes on the tailnet; optional MagicDNS for `yavin.<tailnet>.ts.net`. Complements `*.lab.jacobdrury.com`; does not replace Cloudflare for LE DNS-01.
 
