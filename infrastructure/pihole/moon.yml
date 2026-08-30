@@ -1,0 +1,14 @@
+id: pihole
+layer: tool
+stack: infrastructure
+
+project:
+  name: pihole
+  description: Pi-hole DNS config (LXC now; k8s later)
+
+tags:
+  - opentofu
+
+env:
+  TOFU_ENV_PIHOLE_URL: 'http://192.168.1.11'
+  TOFU_SECRET_PIHOLE_PASSWORD: 'op://Homelab/Pi-hole API/credential'

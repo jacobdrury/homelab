@@ -9,6 +9,7 @@
 .tofu.plan
 *.tfvars
 !*.tfvars.example
+!*.auto.tfvars
 crash.log
 crash.*.log
 override.tf

@@ -73,6 +73,7 @@ homelab/
     stg/                           # reserved
     dns/                           # OpenTofu Cloudflare
     unifi/                         # OpenTofu UniFi
+    pihole/                        # OpenTofu Pi-hole config (API)
   bootstrap/                       # Argo install notes
   apps/
     system/                        # cilium, nfs-csi, iscsi, cert-manager, tailscale,

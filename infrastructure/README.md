@@ -14,6 +14,12 @@ Manages GitHub Pages records (imported) and `*.lab.jacobdrury.com` infra A recor
 
 **Firewall:** legacy `LAN_IN` rules (no Zone-Based Firewall required). If you later enable ZBF, migrate `firewall.tf` to zone policies.
 
+Creates **Homelab** VLAN 5 (`192.168.5.0/24`), then migrate scarif to `192.168.5.10` manually.
+
+## Pi-hole (`infrastructure/pihole/`)
+
+Config-only OpenTofu for the LXC at `192.168.1.11` (block lists, domains, upstreams, local `*.lab` DNS). Edit `*.auto.tfvars` in repo → `moon run pihole:apply`. Details: [pihole/README.md](pihole/README.md).
+
 ## Moon (from repo root)
 
 `apply` runs `plan` → `init` first. `plan` writes `.tofu.plan` (gitignored); `apply` uses that file.
@@ -26,6 +32,7 @@ Run `moon run <project>:init` manually after clone if you skip the full chain.
 op signin
 moon run dns:apply
 moon run unifi:apply
+moon run pihole:apply
 ```
 
 New OpenTofu project: tag `opentofu` and add `env` entries:
@@ -39,8 +46,6 @@ env:
 Manual `tofu`: `op read 'op://...'` and export the `TF_VAR_*` yourself.
 
 Full setup: [docs/setup/local-tools.md](../docs/setup/local-tools.md)
-
-Creates **Homelab** VLAN 5 (`192.168.5.0/24`), then migrate scarif to `192.168.5.10` manually.
 
 ## Order
 
