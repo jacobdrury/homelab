@@ -11,8 +11,8 @@ Physical hosts and Talos/k8s **node names** use **Star Wars planets** (lowercase
 |----------|---------|------|
 | **scarif** | pc (white) | Unraid NAS — **use this name now** |
 | **yavin** | Mac Mini | Talos CP #1 (bare metal; expand to 3) |
-| **dantooine** | Mini PC #1 | Talos CP #2 |
-| **lothal** | Mini PC #2 | Talos CP #3 |
+| **hoth** | Mini PC #1 | Talos CP #2 |
+| **endor** | Mini PC #2 | Talos CP #3 |
 
 - App URLs stay `*.lab.jacobdrury.com` — not planet-themed.
 - pc (black) is leaving the lab; no planet name.

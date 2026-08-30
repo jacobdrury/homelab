@@ -14,8 +14,8 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 |----------|----------|------|--------|------------|-------------|
 | **scarif** | pc (white) | Unraid NAS — NFS + iSCSI | **Active** (Phase 1 done) | `192.168.1.10` | `homelab` |
 | **yavin** | Mac Mini | Bare-metal Talos CP #1 (single-node → 3 CP) | Phase 2 | `192.168.1.15` | `homelab03` (Proxmox today) |
-| **dantooine** | Mini PC #1 | Talos CP #2 (bare metal) | Planned (Phase 4) | TBD | — |
-| **lothal** | Mini PC #2 | Talos CP #3 (bare metal) | Planned (Phase 4) | TBD | — |
+| **hoth** | Mini PC #1 | Talos CP #2 (bare metal) | Planned (Phase 4) | `192.168.6.12` | — |
+| **endor** | Mini PC #2 | Talos CP #3 (bare metal) | Planned (Phase 4) | `192.168.6.13` | — |
 
 **Out of theme**
 
@@ -30,8 +30,8 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 |----------|-----------|
 | **scarif** | Imperial data archive — central storage for the lab |
 | **yavin** | Rebel base / command — primary cluster node and GitOps anchor |
-| **dantooine** | Remote rebel outpost — second control plane |
-| **lothal** | Growing rebel cell — third control plane |
+| **hoth** | Remote rebel base — second control plane |
+| **endor** | Forest moon outpost — third control plane |
 
 ## Usage by layer
 
@@ -39,7 +39,7 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 |-------|------------|---------|
 | Unraid hostname | Planet | `scarif` |
 | Tailscale machine name | Same as hostname | `scarif` |
-| Talos / Kubernetes node name | Same as hostname | `yavin`, `dantooine`, `lothal` |
+| Talos / Kubernetes node name | Same as hostname | `yavin`, `hoth`, `endor` |
 | NFS server | Hostname or static IP | `scarif` or `192.168.1.10` |
 | SMB / mDNS | Hostname | `scarif.local` |
 | App ingress (Envoy) | Functional subdomain | `jellyfin.lab.jacobdrury.com` |
@@ -52,7 +52,7 @@ Replace Proxmox-era hostnames as each machine is rebuilt or re-rolled:
 
 1. **scarif** — set at Unraid USB creation (Phase 1); retires `homelab` on pc (white).
 2. **yavin** — set at bare-metal Talos install on the Mac Mini (Phase 2); retires `homelab03`.
-3. **dantooine** / **lothal** — set at first Talos boot on each mini PC (Phase 4).
+3. **hoth** / **endor** — set at first Talos boot on each mini PC (Phase 4).
 
 Update [inventory](../inventory.md) when a rename is done. Prefer DNS/Tailscale names over bare IPs in docs and manifests once stable.
 

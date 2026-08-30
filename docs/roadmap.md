@@ -8,7 +8,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 2. **Network + IaC** — homelab VLAN (OpenTofu) + Cloudflare DNS (OpenTofu) **before** Talos  
 3. **Cluster** — **bare-metal Talos** on Mac Mini (**yavin**) → single-node `prd`  
 4. **Migrate once** — apps to GitOps on `prd` (**Pi-hole last**)  
-5. **Expand later** — join **dantooine** + **lothal** as CPs (**1→3**); free pc (black) → gaming
+5. **Expand later** — join **hoth** + **endor** as CPs (**1→3**); free pc (black) → gaming
 
 pc (black) **stays in lab during transition** — arr serves media from **scarif NFS** until Phase 3 k8s cutover.
 
@@ -69,19 +69,18 @@ Details: [storage](architecture/storage.md) · [networking](architecture/network
 
 ### Phase 1.5 — Homelab VLAN + OpenTofu (gate before Talos)
 
-Details: [networking](architecture/networking.md). **Exit criteria for Phase 2.**
+Details: [networking](architecture/networking.md) · [preflight](setup/phase-1.5-preflight.md). **Exit criteria for Phase 2.**
 
 **Cloudflare (`infrastructure/dns/`)**
 
-- [ ] Delegate `jacobdrury.com` DNS to Cloudflare (preserve GitHub Pages apex/`www`)  
-- [ ] OpenTofu: zone + `lab.jacobdrury.com` records  
-- [ ] **`k8s.lab.jacobdrury.com`** — API endpoint record (points at yavin on homelab VLAN)  
-- [ ] Cloudflare API token in 1Password for Tofu + cert-manager  
+- [x] Delegate `jacobdrury.com` DNS to Cloudflare (registrar transfer in progress)  
+- [ ] OpenTofu: preserve **GitHub Pages** apex + `www`  
+- [ ] OpenTofu: infra `*.lab.jacobdrury.com` records (`scarif`, `yavin`, `k8s`, `hoth`, `endor`)  
+- [ ] Cloudflare API token in 1Password **Homelab** vault  
 
 **UniFi (`infrastructure/unifi/`)**
 
-- [ ] Pick homelab VLAN subnet (e.g. `10.40.0.0/24`) — document in Tofu + [inventory](inventory.md)  
-- [ ] OpenTofu: homelab network, DHCP range, baseline firewall (admin → lab; deny lab → sensitive VLANs)  
+- [ ] OpenTofu: **`Homelab`** network (VLAN 6 · `192.168.6.0/24`), DHCP, firewall (**VLAN 1 → Homelab allow all**; deny Homelab → IoT/guest/camera)  
 - [ ] Migrate **scarif** + **yavin** (and other lab hosts) onto VLAN; static/reserved IPs  
 - [ ] Re-validate NFS: arr VM or test client on VLAN → scarif export  
 
@@ -141,11 +140,11 @@ pc (black) retained until these are validated; then idle.
 
 ## Phase 4 — Expand to 3 CPs + free pc (black)
 
-Target: **yavin + dantooine + lothal**, all Talos **control planes**, all schedule pods. **Join** the existing cluster (**1→3**, not 1→2). Details: [platform](architecture/platform.md#node-layout).
+Target: **yavin + hoth + endor**, all Talos **control planes**, all schedule pods. **Join** the existing cluster (**1→3**, not 1→2). Details: [platform](architecture/platform.md#node-layout).
 
 - [ ] Two mini PCs on hand; homelab VLAN + static/DHCP reservations  
 - [ ] Same Talos version + extensions on all nodes  
-- [ ] Boot Talos on **dantooine** / **lothal** → apply `controlplane` join configs (shared secrets + API endpoint)  
+- [ ] Boot Talos on **hoth** / **endor** → apply `controlplane` join configs (shared secrets + API endpoint)  
 - [ ] `allowSchedulingOnControlPlanes: true` on all three  
 - [ ] Talos machine configs in `infrastructure/prd/` per node  
 - [ ] API endpoint: DNS or VIP survives expansion (no kubeconfig IP churn)  

@@ -37,7 +37,7 @@ proto install                 # or: moon run root:tools-install
 moon run root:check
 ```
 
-Pins: [`.prototools`](.prototools). Renovate planned later for dependency PRs.
+Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/setup/local-tools.md).
 
 ## Status
 

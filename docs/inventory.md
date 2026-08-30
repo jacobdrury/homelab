@@ -11,8 +11,8 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.1.10` | NAS · 24TB UD + NFS · 10G DAC |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
-| **Mini PC #1** | **dantooine** | — | — | TBD | Talos CP #2 — join existing cluster (Phase 4) |
-| **Mini PC #2** | **lothal** | — | — | TBD | Talos CP #3 — join existing cluster (Phase 4) |
+| **Mini PC #1** | **hoth** | — | — | `192.168.6.12` | Talos CP #2 — join existing cluster (Phase 4) |
+| **Mini PC #2** | **endor** | — | — | `192.168.6.13` | Talos CP #3 — join existing cluster (Phase 4) |
 
 **Proxmox cluster (legacy):** `homelab02` · `homelab03` — `homelab` (pc white) retired; scarif is bare-metal Unraid.
 
@@ -64,8 +64,8 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 |------|------|------|-----|------|-----|-------|
 | 101 | VM | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | Full media stack · library via **NFS → scarif** |
 | 105 | VM | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · no USB radios |
-| — | LXC | `Pi-Hole` | `192.168.1.11` | untagged | 1 GB / 8 GB | **Migrated from homelab03** (was 106) · k8s cutover **last** |
-| — | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Migrated from homelab03** (was 103) |
+| — | LXC | `Pi-Hole` | `192.168.1.11` | untagged | 1 GB / 8 GB | VMID **106** · ex homelab03 · k8s cutover **last** |
+| 103 | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Migrated from homelab03** |
 
 **Must migrate or retire all guests before wipe → personal gaming.**
 
@@ -162,14 +162,14 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 
 | Service | Where | Reach | Data / notes |
 |---------|-------|-------|--------------|
-| Pi-hole | pc (black) LXC | `192.168.1.11` · `:53`/admin UI | LAN DNS · ex homelab03 |
+| Pi-hole | pc (black) LXC **106** | `192.168.1.11` · `:53`/admin UI | LAN DNS · ex homelab03 |
 | Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
 | **NFS (media)** | **scarif** | `192.168.1.10:/mnt/disks/ZXA0VZBA` | ~8.7 TB library |
 | Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` via NFS |
 | Sonarr (TV / anime) | VM 101 via Gluetun | `:8989` / `:8990` | `/mnt/data/media` via NFS |
 | qBittorrent | VM 101 via Gluetun | `:8085` | downloads · Mullvad WG |
 | Prowlarr | VM 101 via Gluetun | `:9696` | config on VM root |
-| Discord bots | pc (black) VM | `192.168.1.18` | outbound only · ex homelab03 |
+| Discord bots | pc (black) VM **103** | `192.168.1.18` | outbound only · ex homelab03 |
 
 ---
 
@@ -179,7 +179,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 |---------|--------|
 | Gateway | UDM Pro · `192.168.1.1` · AT&T |
 | LAN DNS | Pi-hole · `192.168.1.11` |
-| Networks | `192.168.1.0/24` (LAN) · `192.168.2.0/24` (IoT + HA) · dedicated homelab VLAN **planned** |
+| Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.6.0/24` (**Homelab** · VLAN 6 · planned) |
 | Remote | Tailscale (free); host client on pc (black) |
 | Ingress / TLS | Not yet (target: Envoy + `lab.jacobdrury.com`) |
 | Backups | None formal — decide after Unraid |

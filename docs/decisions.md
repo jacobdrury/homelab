@@ -6,11 +6,12 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 |------|----------|
 | Sequence | **1)** Unraid owns 24TB → **1.5)** homelab VLAN + OpenTofu → **2)** bare-metal Talos on yavin → **3)** migrate apps (Pi-hole **last**) → **4)** expand to **3 CPs** |
 | Compute (bootstrap) | **Bare-metal Talos** on Mac Mini (**yavin**) — single-node `prd`; **`allowSchedulingOnControlPlanes: true`** |
-| Compute (steady) | **3 bare-metal Talos control planes**: **yavin** + **dantooine** + **lothal**; all schedule workloads |
+| Compute (steady) | **3 bare-metal Talos control planes**: **yavin** + **hoth** + **endor**; all schedule workloads |
 | Cluster scale-out | **Expand in place** (join CPs to existing etcd) when mini PCs arrive — **not** a full cluster rebuild |
 | Cluster API endpoint | **`k8s.lab.jacobdrury.com`** — stable DNS from first bootstrap; VIP or DNS update at 3 CPs |
-| Homelab VLAN | **Before Talos bootstrap** — move lab hosts onto dedicated VLAN (not flat `192.168.1.0/24` first) |
-| IaC | **OpenTofu first** — Cloudflare DNS (`infrastructure/dns/`) + UniFi (`infrastructure/unifi/`); avoid UI-only unless briefly unblocking |
+| Homelab VLAN | **Before Talos bootstrap** — UniFi network name **`Homelab`**, VLAN **6**, `192.168.6.0/24` |
+| IaC | **OpenTofu first** — `infrastructure/dns/` + `infrastructure/unifi/`; local gitignored state on Mac |
+| Infra DNS | `*.lab.jacobdrury.com` in Cloudflare (OpenTofu) — see [networking](architecture/networking.md#infra-dns) |
 | yavin networking | **USB 2.5G** (UGREEN RTL8156BG) **primary**; onboard **1G** **secondary**; pin interfaces by MAC in Talos machine config |
 | Cluster availability | **No HA** until 3 CPs; single-node downtime acceptable (matches today) |
 | Talos extensions (yavin) | `intel-ucode`, `i915`; `realtek-firmware` optional; `iscsi-tools` when block PVCs needed |
@@ -30,7 +31,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Domain | `lab.jacobdrury.com`; registrar Squarespace → **Cloudflare DNS** (OpenTofu), full Cloudflare transfer later |
 | TLS | cert-manager + **Let’s Encrypt DNS-01** via Cloudflare |
 | App DNS | Start **always Tailscale** for app hostnames |
-| LAN | UniFi **homelab VLAN** + selective firewall |
+| Homelab firewall | **Phase 1.5:** allow **all** Drury (VLAN 1) → Homelab; deny Homelab → IoT/guest/camera; tighten later (Tailscale / allowlist) |
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
 | DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; keeps `.11` until cutover |

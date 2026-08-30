@@ -22,9 +22,9 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | Stage | Nodes | Notes |
 |-------|-------|--------|
 | **Bootstrap** | 1× bare-metal CP on Mac Mini (**yavin**) | Single-node `prd`; **`allowSchedulingOnControlPlanes: true`**; **no HA** |
-| **Steady** | **3× bare-metal control planes** — **yavin** + **dantooine** + **lothal** | Expand **in place**; all CPs schedule workloads; no dedicated workers |
+| **Steady** | **3× bare-metal control planes** — **yavin** + **hoth** + **endor** | Expand **in place**; all CPs schedule workloads; no dedicated workers |
 
-**Scale-out (Phase 4):** when **dantooine** and **lothal** arrive, **join them as control planes** to the existing cluster (**1→3** etcd members). Use the same cluster secrets and a **stable API endpoint** (DNS or VIP) defined at first bootstrap. Media stays on **scarif NFS** — expansion does not touch library data.
+**Scale-out (Phase 4):** when **hoth** and **endor** arrive, **join them as control planes** to the existing cluster (**1→3** etcd members). Use the same cluster secrets and a **stable API endpoint** (DNS or VIP) defined at first bootstrap. Media stays on **scarif NFS** — expansion does not touch library data.
 
 **Bootstrap requirements (day one):**
 

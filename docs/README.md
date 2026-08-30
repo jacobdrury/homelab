@@ -17,4 +17,11 @@ Planning docs for the GitOps homelab. Implementation code will live under `infra
 | [Roadmap](roadmap.md) | Phased migration checklists |
 | [Decisions](decisions.md) | Locked leans (single source of truth) |
 
-Start with [overview](architecture/overview.md) + [decisions](decisions.md), then use [roadmap](roadmap.md) as the working checklist.
+| Start with [overview](architecture/overview.md) + [decisions](decisions.md), then use [roadmap](roadmap.md) as the working checklist.
+
+## Setup
+
+| Doc | What it is |
+|-----|------------|
+| [Local tools](setup/local-tools.md) | Homebrew, 1Password CLI, proto/moon, OpenTofu env |
+| [Phase 1.5 preflight](setup/phase-1.5-preflight.md) | Locked answers before VLAN + DNS IaC |

@@ -46,7 +46,7 @@ flowchart TB
 | — | pc (black) | **Out of lab** — personal gaming (after Phase 3–4) |
 | **scarif** | pc (white) | **Unraid** bare metal; **no dGPU**; 24TB via UD → NFS/iSCSI |
 | **yavin** | Mac Mini | **Bare-metal Talos CP #1** (bootstrap single-node → expand to 3) |
-| **dantooine** · **lothal** | Mini PCs (×2) | Bare-metal Talos **control planes** (#2 and #3) |
+| **hoth** · **endor** | Mini PCs (×2) | Bare-metal Talos **control planes** (#2 and #3) |
 | — | Laptops | Precision optional; Inspiron out of lab plan |
 
 Host naming: [naming](naming.md).
