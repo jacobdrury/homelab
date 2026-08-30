@@ -6,16 +6,16 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 
 | | Today | Target |
 |---|--------|--------|
-| Compute | Proxmox (Mini + pc black) · **scarif = Unraid** | Talos `prd`: interim Mini VM → **3 BM CPs** (Mini + 2 mini PCs) |
+| Compute | Proxmox (Mini + pc black) · **scarif = Unraid** | Talos `prd`: **bare-metal yavin** → **expand to 3 BM CPs** |
 | Storage | **scarif** — 24TB UD · **NFS** (~8.7 TB used) | Same + optional array/parity · iSCSI when k8s needs it |
 | pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
-| Network | UniFi (flat-ish) | Homelab **VLAN** + Tailscale |
+| Network | UniFi (flat-ish) | Homelab **VLAN** (OpenTofu) + Tailscale |
 | Apps | Pi-hole, HA, Jellyfin, *arr, qBit, Prowlarr | Same on k8s + Homepage; HA after media |
 | Delivery | Manual guests | Argo CD ← this repo |
 | Secrets | Ad hoc | 1Password → Connect → ESO |
 | Access | Partial Tailscale | `*.lab.jacobdrury.com` + **AI agents on the tailnet** |
 
-**Next:** Phase 2 — Talos `prd` on Mac Mini. Phase 1 storage **done** (scarif + arr on NFS).
+**Next:** Phase **1.5** — homelab VLAN + OpenTofu (Cloudflare + UniFi). Then bare-metal Talos on **yavin**.
 
 ## Docs
 

@@ -1,10 +1,10 @@
 # Architecture overview
 
-Ideal end state. Path: **Unraid first** → **Talos `prd` on Mini VMs** → **migrate apps once** → **3 bare-metal CPs** (Mini + 2 mini PCs) + free pc (black). See [decisions](../decisions.md) · [roadmap](../roadmap.md).
+Ideal end state. Path: **Unraid first** → **VLAN + OpenTofu** → **bare-metal Talos on yavin** → **migrate apps (Pi-hole last)** → **expand to 3 CPs** + free pc (black). See [decisions](../decisions.md) · [roadmap](../roadmap.md).
 
 ## Design goals
 
-- **Kubernetes** for app workloads (Talos Linux); single-node `prd` OK until mini PCs
+- **Kubernetes** for app workloads (Talos Linux); single-node `prd` OK until mini PCs join
 - **Steady cluster:** 3 control planes, workloads on all nodes
 - **GitOps** — GitHub source of truth; Argo CD reconciles
 - **Unraid** owns disks only (**NFS + iSCSI**); apps are not parked on Unraid Docker
@@ -45,7 +45,7 @@ flowchart TB
 |----------|---------|------|
 | — | pc (black) | **Out of lab** — personal gaming (after Phase 3–4) |
 | **scarif** | pc (white) | **Unraid** bare metal; **no dGPU**; 24TB via UD → NFS/iSCSI |
-| **yavin** | Mac Mini | Interim: Proxmox + Talos VM(s). Steady: **bare-metal Talos CP** (#1 of 3) |
+| **yavin** | Mac Mini | **Bare-metal Talos CP #1** (bootstrap single-node → expand to 3) |
 | **dantooine** · **lothal** | Mini PCs (×2) | Bare-metal Talos **control planes** (#2 and #3) |
 | — | Laptops | Precision optional; Inspiron out of lab plan |
 

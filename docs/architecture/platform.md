@@ -21,14 +21,32 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 
 | Stage | Nodes | Notes |
 |-------|-------|--------|
-| **Interim** | 1× Talos VM on Mac Mini Proxmox (`yavin`) | Single-node CP; **`allowSchedulingOnControlPlanes: true`** |
-| **Steady** | **3× bare-metal control planes** — `yavin` + `dantooine` + `lothal` | All CPs; all schedule workloads; no dedicated workers |
+| **Bootstrap** | 1× bare-metal CP on Mac Mini (**yavin**) | Single-node `prd`; **`allowSchedulingOnControlPlanes: true`**; **no HA** |
+| **Steady** | **3× bare-metal control planes** — **yavin** + **dantooine** + **lothal** | Expand **in place**; all CPs schedule workloads; no dedicated workers |
 
-**Scale-out (Phase 4):** when the two mini PCs arrive, prefer a **fresh 3-CP bootstrap** + Argo resync over expanding the interim VM cluster’s etcd live. Unraid holds data; Git holds desired apps — short cutover, less etcd risk.
+**Scale-out (Phase 4):** when **dantooine** and **lothal** arrive, **join them as control planes** to the existing cluster (**1→3** etcd members). Use the same cluster secrets and a **stable API endpoint** (DNS or VIP) defined at first bootstrap. Media stays on **scarif NFS** — expansion does not touch library data.
 
-**Joining mental model:** boot Talos → apply `controlplane` machine config (shared cluster secrets + API endpoint) → node Ready. New pods can land on new nodes; existing pods stay until roll/drain. Use a stable API endpoint (DNS or VIP) before going multi-CP.
+**Bootstrap requirements (day one):**
 
-Machine configs live under `infrastructure/prd/`; keep CP patches consistent across the three nodes. Node hostnames: [naming](naming.md).
+- Kubernetes API: **`k8s.lab.jacobdrury.com`** (OpenTofu → yavin on homelab VLAN; VIP later at 3 CPs)  
+- Homelab **VLAN** live before install — not flat `192.168.1.0/24`  
+- One `talosctl gen config` / secrets bundle reused for join configs  
+- Per-node machine config patches (hostname, interfaces) kept in `infrastructure/prd/`  
+- **etcd snapshots** on a schedule while single-node  
+- Odd CP count only: **1 → 3**, not 1 → 2  
+
+**Joining mental model:** boot Talos → apply `controlplane` machine config (shared cluster secrets + API endpoint) → node Ready. New pods can land on new nodes; existing pods stay until roll/drain.
+
+### yavin networking (Mac Mini 2018)
+
+| Interface | Role | Hardware |
+|-----------|------|----------|
+| `enx6c1ff721c616` | **Primary** (2.5G) | UGREEN USB-C · Realtek **RTL8156BG** → Pro Max 16 Port 15 |
+| `enp4s0` | **Secondary** (1G) | Onboard Intel · fallback / recovery |
+
+Pin both in Talos machine config by **MAC** or predictable interface name. Verify **2500 Mbps** link after install.
+
+Machine configs live under `infrastructure/prd/`; keep CP patches consistent across all nodes. Node hostnames: [naming](naming.md).
 
 ## App placement
 
@@ -36,9 +54,9 @@ Machine configs live under `infrastructure/prd/`; keep CP patches consistent acr
 |----------|--------|--------|
 | Jellyfin | k8s | NFS `media/`; GPU worker — [gpu](gpu.md) |
 | Sonarr ×2, Prowlarr, qBittorrent | k8s | NFS downloads; **peers via Mullvad WG**, **UI/API off-VPN** — [media](media.md) |
-| Pi-hole | k8s | keep Pi-hole |
+| Pi-hole | k8s | Migrate **last** from pc (black) LXC — `.11` until cutover |
 | Homepage | k8s | [gethomepage.dev](https://gethomepage.dev) |
-| Home Assistant | k8s | **After** Jellyfin/*arr; downtime OK; USB passthrough if radio needs it |
+| Home Assistant | k8s | Before Pi-hole; downtime OK; USB passthrough if radio needs it |
 | Argo CD | k8s | bootstrap once |
 | Monitoring | k8s | Phase 5 |
 
@@ -76,4 +94,4 @@ homelab/
 
 **Contract:** merge to `main` → Argo on that cluster applies `clusters/<env>/` only.
 
-**Bootstrap:** stand up **`prd` only**. Add `stg` when you want a scratch cluster (e.g. minimal VMs on the Mac Mini).
+**Bootstrap:** stand up **`prd` only**. Add `stg` when you want a scratch cluster (e.g. extra hardware or a small VM elsewhere).

@@ -13,7 +13,7 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 | Codename | Hardware | Role | Status | IP (today) | Legacy name |
 |----------|----------|------|--------|------------|-------------|
 | **scarif** | pc (white) | Unraid NAS — NFS + iSCSI | **Active** (Phase 1 done) | `192.168.1.10` | `homelab` |
-| **yavin** | Mac Mini | Interim: Proxmox + Talos VM(s). Steady: Talos CP #1 | Planned | `192.168.1.15` | `homelab03` |
+| **yavin** | Mac Mini | Bare-metal Talos CP #1 (single-node → 3 CP) | Phase 2 | `192.168.1.15` | `homelab03` (Proxmox today) |
 | **dantooine** | Mini PC #1 | Talos CP #2 (bare metal) | Planned (Phase 4) | TBD | — |
 | **lothal** | Mini PC #2 | Talos CP #3 (bare metal) | Planned (Phase 4) | TBD | — |
 
@@ -51,7 +51,7 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 Replace Proxmox-era hostnames as each machine is rebuilt or re-rolled:
 
 1. **scarif** — set at Unraid USB creation (Phase 1); retires `homelab` on pc (white).
-2. **yavin** — set when Talos lands on the Mac Mini (Phase 2/4 bare metal); retires `homelab03`.
+2. **yavin** — set at bare-metal Talos install on the Mac Mini (Phase 2); retires `homelab03`.
 3. **dantooine** / **lothal** — set at first Talos boot on each mini PC (Phase 4).
 
 Update [inventory](../inventory.md) when a rename is done. Prefer DNS/Tailscale names over bare IPs in docs and manifests once stable.
@@ -60,7 +60,7 @@ Update [inventory](../inventory.md) when a rename is done. Prefer DNS/Tailscale 
 
 If the lab grows and you want a second naming layer:
 
-- **Starships** — long-lived VMs or special guests (e.g. interim Talos VM before bare metal)
+- **Starships** — long-lived VMs or special guests outside the Talos cluster
 - **Droids** — disposable dev containers or test namespaces
 
 Do not adopt these until there is a concrete need; planets cover the steady-state design.

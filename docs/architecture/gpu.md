@@ -8,29 +8,27 @@ If needed: pass a GPU into **one Talos worker** (not the whole cluster on Unraid
 
 | Source | How | Notes |
 |--------|-----|--------|
-| **Mac Mini iGPU** | Talos worker/CP with `i915` (BM) or Proxmox passthrough (interim VM) | Quick Sync (QSV); only if transcodes appear |
+| **Mac Mini iGPU** | Talos CP **yavin** with `i915` extension | Quick Sync (QSV); only if transcodes appear |
 | **pc (white) dGPU** | — | GTX 780 **removed** (Unraid headless; saved idle power) |
 | **Quadro laptop** | Docked 24/7 | NVENC; only if Mini isn’t enough |
 
 ```mermaid
 flowchart TB
-  subgraph mini [Mac_Mini_optional]
+  subgraph yavin [yavin_Mac_Mini]
     iGPU[Intel_iGPU]
-    W1[Talos_worker_VM]
-    iGPU -->|passthrough| W1
+    CP[Talos_CP]
+    iGPU --> CP
   end
 
-  CP[Control_plane]
-  Unraid[Unraid_NFS]
-  W1 --> CP
-  W1 -->|NFS| Unraid
+  scarif[scarif_NFS]
+  CP -->|NFS| scarif
 ```
 
 ## Talos / Jellyfin bits (Intel)
 
-- Talos extensions: `i915` (+ intel-ucode as needed)  
+- Talos extensions: `i915` + `intel-ucode` on **yavin**  
 - Device plugin or `/dev/dri` → Jellyfin uses `/dev/dri/renderD128`  
-- Full iGPU passthrough: that VM **owns** the iGPU (fine on a headless Mini)  
+- iGPU on the CP node is fine with **`allowSchedulingOnControlPlanes: true`**
 
 ## Avoid
 

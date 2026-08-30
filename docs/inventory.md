@@ -6,13 +6,13 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 
 | Host | Codename (target) | Node / name (today) | Role today | IP | Notes |
 |------|-------------------|---------------------|------------|-----|-------|
-| **Mac Mini** | **yavin** | `homelab03` | Proxmox | `192.168.1.15` | Pi-hole + discord bots; interim Talos target |
-| **pc (black)** | — | `homelab02` | Proxmox | `192.168.1.12` | arr + HA; media via **NFS → scarif**; **leaving lab** → gaming |
+| **Mac Mini** | **yavin** | `homelab03` | Proxmox (idle) → **Talos CP** | `192.168.1.15` | Guests **moved to homelab02**; ready for Phase 2 wipe |
+| **pc (black)** | — | `homelab02` | Proxmox | `192.168.1.12` | arr + HA + Pi-hole + discord bots; **leaving lab** → gaming |
 | **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.1.10` | NAS · 24TB UD + NFS · 10G DAC |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
-| **Mini PC #1** | **dantooine** | — | — | TBD | Talos CP #2 (Phase 4) |
-| **Mini PC #2** | **lothal** | — | — | TBD | Talos CP #3 (Phase 4) |
+| **Mini PC #1** | **dantooine** | — | — | TBD | Talos CP #2 — join existing cluster (Phase 4) |
+| **Mini PC #2** | **lothal** | — | — | TBD | Talos CP #3 — join existing cluster (Phase 4) |
 
 **Proxmox cluster (legacy):** `homelab02` · `homelab03` — `homelab` (pc white) retired; scarif is bare-metal Unraid.
 
@@ -35,19 +35,14 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Item | Value |
 |------|-------|
 | Model | Apple Mac mini 2018 (`Macmini8,1`) · serial `C07Y30G3JYVY` |
-| Proxmox | 8.4.0 · kernel 6.8.12-9-pve |
-| Boot | Apple `AP0128M` 128 GB · `local` + `local-lvm` (~70% thin used) |
-| GPU | UHD 630 · `/dev/dri/renderD128` (Quick Sync candidate) |
-| LAN | USB Ethernet `enx6c1ff721c616` → Pro Max 16 **Port 15** · onboard `enp4s0` down |
+| Today | Proxmox 8.4.0 · kernel 6.8.12-9-pve |
+| Target | **Bare-metal Talos** CP #1 — single-node `prd` → expand to 3 CPs |
+| Boot | Apple `AP0128M` 128 GB NVMe |
+| GPU | UHD 630 · Talos extension **`i915`** (+ **`intel-ucode`**) |
+| LAN (target) | **Primary:** USB 2.5G `enx6c1ff721c616` (UGREEN UG-USBC-25052 · RTL8156BG) → Pro Max 16 **Port 15** · **Secondary:** onboard 1G `enp4s0` |
+| LAN (today) | USB Ethernet active; onboard `enp4s0` down |
 
-### Guests
-
-| ID | Type | Name | IP | Specs | Notes |
-|----|------|------|-----|-------|-------|
-| 106 | LXC | `Pi-Hole` | `192.168.1.11` | 1 GB / 8 GB | Debian 12 · FTL on `:53`/`:80`/`:443` · Core v6.0.6 (behind latest) |
-| 103 | VM | `discord-bots` | `192.168.1.18` | 1 GB / 32 GB | Docker: `frankbot`, `math-boi-original` under `/home/mathboi/` |
-
-Stale LVM volumes for VM 105 remain on this host (HA now on pc black).
+**Guests:** none — Pi-hole LXC and `discord-bots` VM **migrated to homelab02** (pc black). Stale LVM from old VM 105 may remain on disk.
 
 ---
 
@@ -65,12 +60,14 @@ Stale LVM volumes for VM 105 remain on this host (HA now on pc black).
 
 ### Guests
 
-| VMID | Name | IP | VLAN | RAM | Notes |
-|------|------|-----|------|-----|-------|
-| 101 | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | Full media stack · library via **NFS → scarif** |
-| 105 | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · no USB radios |
+| VMID | Type | Name | IP | VLAN | RAM | Notes |
+|------|------|------|-----|------|-----|-------|
+| 101 | VM | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | Full media stack · library via **NFS → scarif** |
+| 105 | VM | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · no USB radios |
+| — | LXC | `Pi-Hole` | `192.168.1.11` | untagged | 1 GB / 8 GB | **Migrated from homelab03** (was 106) · k8s cutover **last** |
+| — | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Migrated from homelab03** (was 103) |
 
-**Must migrate or retire both VMs before wipe → personal gaming.**
+**Must migrate or retire all guests before wipe → personal gaming.**
 
 ### VM 101 `arr` — media stack
 
@@ -165,14 +162,14 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 
 | Service | Where | Reach | Data / notes |
 |---------|-------|-------|--------------|
-| Pi-hole | Mac Mini LXC 106 | `192.168.1.11` · `:53`/admin UI | LAN DNS |
+| Pi-hole | pc (black) LXC | `192.168.1.11` · `:53`/admin UI | LAN DNS · ex homelab03 |
 | Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
 | **NFS (media)** | **scarif** | `192.168.1.10:/mnt/disks/ZXA0VZBA` | ~8.7 TB library |
 | Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` via NFS |
 | Sonarr (TV / anime) | VM 101 via Gluetun | `:8989` / `:8990` | `/mnt/data/media` via NFS |
 | qBittorrent | VM 101 via Gluetun | `:8085` | downloads · Mullvad WG |
 | Prowlarr | VM 101 via Gluetun | `:9696` | config on VM root |
-| Discord bots | Mac Mini VM 103 | outbound only | `/home/mathboi/{frankbot,math-boi-original}/` |
+| Discord bots | pc (black) VM | `192.168.1.18` | outbound only · ex homelab03 |
 
 ---
 
@@ -284,6 +281,6 @@ AT&T → UDM Pro (.1)
 ## Why change
 
 - ~~No dedicated NAS~~ → **scarif** live; media on NFS; Phase 1 storage **done**
-- Prefer Talos + GitOps — Mini VM `prd` → **3 bare-metal CPs** (Mini + 2 mini PCs); migrate apps **once**
+- Prefer Talos + GitOps — bare-metal **yavin** → **expand to 3 CPs**; migrate apps **once**
 - **pc (black)** retained until k8s cutover, then personal gaming
 - Tailscale + agent-operable lab; UniFi VLAN isolation

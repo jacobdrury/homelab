@@ -4,10 +4,16 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 
 | Area | Decision |
 |------|----------|
-| Sequence | **1)** Unraid owns 24TB → **2)** Talos `prd` on Mini VMs → **3)** migrate apps once stable → **4)** 3-node BM cluster + free pc (black) |
-| Compute (interim) | Talos **VM(s) on Mac Mini Proxmox** — single-node `prd` OK (`allowSchedulingOnControlPlanes`) |
-| Compute (steady) | **3 bare-metal Talos control planes**: Mac Mini + **2 mini PCs**; all schedule workloads |
-| Cluster scale-out | Prefer **GitOps rebuild** (fresh 3-CP + Argo sync) over live 1→3 etcd expansion when mini PCs arrive |
+| Sequence | **1)** Unraid owns 24TB → **1.5)** homelab VLAN + OpenTofu → **2)** bare-metal Talos on yavin → **3)** migrate apps (Pi-hole **last**) → **4)** expand to **3 CPs** |
+| Compute (bootstrap) | **Bare-metal Talos** on Mac Mini (**yavin**) — single-node `prd`; **`allowSchedulingOnControlPlanes: true`** |
+| Compute (steady) | **3 bare-metal Talos control planes**: **yavin** + **dantooine** + **lothal**; all schedule workloads |
+| Cluster scale-out | **Expand in place** (join CPs to existing etcd) when mini PCs arrive — **not** a full cluster rebuild |
+| Cluster API endpoint | **`k8s.lab.jacobdrury.com`** — stable DNS from first bootstrap; VIP or DNS update at 3 CPs |
+| Homelab VLAN | **Before Talos bootstrap** — move lab hosts onto dedicated VLAN (not flat `192.168.1.0/24` first) |
+| IaC | **OpenTofu first** — Cloudflare DNS (`infrastructure/dns/`) + UniFi (`infrastructure/unifi/`); avoid UI-only unless briefly unblocking |
+| yavin networking | **USB 2.5G** (UGREEN RTL8156BG) **primary**; onboard **1G** **secondary**; pin interfaces by MAC in Talos machine config |
+| Cluster availability | **No HA** until 3 CPs; single-node downtime acceptable (matches today) |
+| Talos extensions (yavin) | `intel-ucode`, `i915`; `realtek-firmware` optional; `iscsi-tools` when block PVCs needed |
 | Compute (exit) | **pc (black)** → personal gaming **after** workloads leave; **retain during transition** |
 | NAS | **Unraid bare metal on pc (white)**; USB boot + license; GTX 780 **removed** |
 | Apps vs NAS | Unraid is **storage only**; apps go to k8s/GitOps (no Unraid Docker as intermediate) |
@@ -26,10 +32,10 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | App DNS | Start **always Tailscale** for app hostnames |
 | LAN | UniFi **homelab VLAN** + selective firewall |
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
-| UniFi IaC | OpenTofu under `infrastructure/unifi/` (UI OK to unblock) |
-| DNS app | Keep **Pi-hole** |
+| UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
+| DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; keeps `.11` until cutover |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
-| Apps | Jellyfin, *arr, qBit, Prowlarr, Pi-hole, **Homepage**, HA after media; monitoring → Discord |
+| Apps (migrate order) | *arr + qBit → Jellyfin → Homepage → HA → **Pi-hole last** |
 | qBittorrent VPN | Peers via **Mullvad WG**; UI at **`qbittorrent.lab.jacobdrury.com`** (normal Envoy lab exposure) |
 | Power | Prefer fewer always-on watts when cheap (strip white GPU; black off when gaming-only); **not** a reason to defer k8s/GitOps |
 | Laptops | Precision optional NVENC/burst; Inspiron **out of lab plan** |
