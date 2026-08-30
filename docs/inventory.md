@@ -162,7 +162,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 
 | Service | Where | Reach | Data / notes |
 |---------|-------|-------|--------------|
-| Pi-hole | pc (black) LXC **106** | `192.168.1.11` · `:53`/admin UI | LAN DNS · ex homelab03 |
+| Pi-hole | pc (black) LXC **106** | `192.168.1.11` · `:53`/admin UI | LAN DNS · config in **`infrastructure/pihole/`** (OpenTofu) · `*.lab` → Cloudflare forward |
 | Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
 | **NFS (media)** | **scarif** | `192.168.1.10:/mnt/disks/ZXA0VZBA` | ~8.7 TB library |
 | Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` via NFS |
@@ -179,7 +179,8 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 |---------|--------|
 | Gateway | UDM Pro · `192.168.1.1` · AT&T |
 | LAN DNS | Pi-hole · `192.168.1.11` |
-| Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · planned) · `192.168.6.0/24` (Teleport) |
+| Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · **live**, OpenTofu) · `192.168.6.0/24` (Teleport) |
+| Public / lab DNS | Cloudflare — **`infrastructure/dns/`** · LAN via Pi-hole forward for `*.lab` |
 | Remote | Tailscale (free); host client on pc (black) |
 | Ingress / TLS | Not yet (target: Envoy + `lab.jacobdrury.com`) |
 | Backups | None formal — decide after Unraid |

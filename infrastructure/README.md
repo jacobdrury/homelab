@@ -51,7 +51,8 @@ Full setup: [docs/setup/local-tools.md](../docs/setup/local-tools.md)
 
 ## Order
 
-1. `dns` apply — names resolve (public DNS)
-2. `unifi` apply — VLAN exists
-3. Move scarif to VLAN 5; update arr NFS fstab
-4. Phase 2 — Talos on yavin
+1. `dns` apply — Cloudflare records (public + `*.lab`)
+2. `unifi` apply — Homelab VLAN + firewall
+3. `pihole` apply — Pi-hole policy (lists, local DNS, lab zone forward)
+4. Move scarif to VLAN 5 (`192.168.5.10`); update arr NFS fstab
+5. Phase 2 — Talos on yavin

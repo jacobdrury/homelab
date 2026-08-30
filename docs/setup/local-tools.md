@@ -32,6 +32,17 @@ op vault list   # expect Homelab
 
 Moon tasks load secrets from each OpenTofu project's `moon.yml` (`TOFU_SECRET_*` → `op read`, `TOFU_ENV_*` → literal). See [infrastructure/README.md](../../infrastructure/README.md).
 
+OpenTofu projects (Phase 1.5):
+
+```bash
+op signin
+moon run dns:apply
+moon run unifi:apply
+moon run pihole:apply
+```
+
+IaC policy: [architecture/iac.md](../architecture/iac.md).
+
 ## UniFi API key (Phase 1.5)
 
 On the **UDM Pro** (local UI — `https://192.168.1.1`), not unifi.ui.com Site Manager:

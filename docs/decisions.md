@@ -34,6 +34,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Homelab firewall | **Phase 1.5:** allow **all** Drury (VLAN 1) → Homelab; deny Homelab → IoT/guest/camera; tighten later (Tailscale / allowlist) |
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
+| Pi-hole IaC | OpenTofu under `infrastructure/pihole/` — config in Git; migrate **deployment** to k8s last |
 | DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; keeps `.11` until cutover |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
 | Apps (migrate order) | *arr + qBit → Jellyfin → Homepage → HA → **Pi-hole last** |

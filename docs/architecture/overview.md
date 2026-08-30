@@ -9,7 +9,7 @@ Ideal end state. Path: **Unraid first** → **VLAN + OpenTofu** → **bare-metal
 - **GitOps** — GitHub source of truth; Argo CD reconciles
 - **Unraid** owns disks only (**NFS + iSCSI**); apps are not parked on Unraid Docker
 - **Private access** — homelab VLAN + Tailscale; no public app ingress by default
-- **Declarative** machines and apps; minimize snowflakes / re-migrations
+- **Declarative** machines and apps (OpenTofu + Helm/Argo) — [iac](iac.md); minimize snowflakes / re-migrations
 - **pc (white) = Unraid**; **pc (black) → gaming** after cutover (retained during transition)
 - **Agent-operable** — Cursor/AI on the tailnet ([agents](agents.md))
 - **`prd` first** — `stg` layout reserved for later
@@ -64,5 +64,5 @@ Host naming: [naming](naming.md).
 
 ## Related
 
-- [Platform](platform.md) · [Storage](storage.md) · [Networking](networking.md) · [GPU](gpu.md) · [Media](media.md) · [Secrets](secrets.md) · [Agents](agents.md)  
+- [Platform](platform.md) · [Storage](storage.md) · [Networking](networking.md) · [IaC](iac.md) · [GPU](gpu.md) · [Media](media.md) · [Secrets](secrets.md) · [Agents](agents.md)  
 - [Roadmap](../roadmap.md) · [Inventory](../inventory.md)  

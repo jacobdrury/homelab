@@ -1,6 +1,6 @@
 # Homelab docs
 
-Planning docs for the GitOps homelab. Implementation code will live under `infrastructure/`, `apps/`, and `clusters/` later.
+Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live under `infrastructure/` (DNS, UniFi, Pi-hole); **Helm/Argo** under `apps/` and `clusters/` starting Phase 2.
 
 | Doc | What it is |
 |-----|------------|
@@ -24,6 +24,6 @@ Planning docs for the GitOps homelab. Implementation code will live under `infra
 
 | Doc | What it is |
 |-----|------------|
-| [Infrastructure README](../infrastructure/README.md) | OpenTofu apply order (`dns/`, `unifi/`) |
+| [Infrastructure README](../infrastructure/README.md) | OpenTofu apply order (`dns/`, `unifi/`, `pihole/`) |
 | [Local tools](setup/local-tools.md) | Homebrew, 1Password CLI, proto/moon, OpenTofu env |
 | [Phase 1.5 preflight](setup/phase-1.5-preflight.md) | Locked answers before VLAN + DNS IaC |

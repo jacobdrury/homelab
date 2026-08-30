@@ -2,6 +2,22 @@
 
 Phased path from [inventory](inventory.md) → target. Principles and checklists only; leans live in [decisions](decisions.md).
 
+## Current status (2026-08-29)
+
+| Phase | State | Notes |
+|-------|--------|--------|
+| **0** Docs & inventory | **Done** | |
+| **1** Unraid NAS | **Done** (Aug 2025) | scarif still on flat LAN `.10` until VLAN move |
+| **1.5** VLAN + IaC | **In progress** | OpenTofu applied for DNS, UniFi, Pi-hole; **scarif physical move pending** |
+| **2** Talos on yavin | Blocked on 1.5 exit | |
+| **3–5** | Not started | |
+
+**IaC live today:** `infrastructure/dns/`, `infrastructure/unifi/`, `infrastructure/pihole/` — apply via `moon run <project>:apply`. Policy: [iac](architecture/iac.md).
+
+**DNS today (via Pi-hole `192.168.1.11`):** `*.lab.jacobdrury.com` → forwarded to Cloudflare; `*.homelab.com` → local records in Git; infra A records resolve (e.g. `k8s.lab` → `192.168.5.11`) even before hosts are on VLAN 5.
+
+**Phase 1.5 remaining:** move scarif to homelab VLAN (`192.168.5.10`), switch port assignment, update arr NFS fstab, smoke-test NFS over `.5`.
+
 ## Sequence (locked)
 
 1. **NAS first** — Unraid on pc (white); 24TB exposed via Unassigned Devices (no new large drive)  
@@ -69,16 +85,19 @@ Details: [storage](architecture/storage.md) · [networking](architecture/network
 
 ### Phase 1.5 — Homelab VLAN + OpenTofu (gate before Talos)
 
-Details: [networking](architecture/networking.md) · [preflight](setup/phase-1.5-preflight.md). **Exit criteria for Phase 2.**
+Details: [networking](architecture/networking.md) · [preflight](setup/phase-1.5-preflight.md) · [iac](architecture/iac.md). **Exit criteria for Phase 2.**
 
-- [ ] OpenTofu: **`infrastructure/dns/`** — GitHub Pages (import) + infra `*.lab` records  
-- [ ] OpenTofu: **`infrastructure/unifi/`** — **Homelab** VLAN 5 + firewall  
-- [x] Cloudflare active; API token in 1Password  
-- [x] UniFi API key in 1Password  
-- [ ] Migrate **scarif** to `192.168.5.10`; update arr VM NFS fstab  
-- [ ] Re-validate NFS: arr VM → scarif export  
+- [x] OpenTofu: **`infrastructure/dns/`** — GitHub Pages (import) + infra `*.lab` records (applied 2026-08-29)
+- [x] OpenTofu: **`infrastructure/unifi/`** — **Homelab** VLAN 5 + firewall (applied 2026-08-29)
+- [x] OpenTofu: **`infrastructure/pihole/`** — lists, domains, upstreams, `*.homelab.com` local DNS, `*.lab` zone forward to Cloudflare (applied 2026-08-29)
+- [x] Cloudflare active; API token in 1Password
+- [x] UniFi API key in 1Password
+- [x] Pi-hole API app-password + `app_sudo` in 1Password / UI
+- [ ] Switch: assign scarif port to **Homelab** VLAN 5
+- [ ] Migrate **scarif** to `192.168.5.10`; update arr VM NFS fstab (`192.168.5.10` or `scarif.lab.jacobdrury.com`)
+- [ ] Re-validate NFS: arr VM → scarif export over homelab VLAN
 
-**Exit:** Lab hosts on homelab VLAN; DNS and network managed in Git via OpenTofu; `k8s.lab.jacobdrury.com` resolves.
+**Exit:** Lab hosts on homelab VLAN; DNS, network, and Pi-hole policy in Git; `k8s.lab.jacobdrury.com` and `scarif.lab.jacobdrury.com` resolve on LAN (DNS ready — scarif may still be on `.1.10` until migrated).
 
 ### Phase 1b — Array / parity (when you can)
 
@@ -96,7 +115,7 @@ Buy **data** drive(s) first; **24TB becomes parity** after library is copied off
 
 ## Phase 2 — Bare-metal Talos `prd` on **yavin** (Mac Mini)
 
-**Prerequisite:** Phase **1.5** complete (homelab VLAN + OpenTofu DNS).
+**Prerequisite:** Phase **1.5** complete (homelab VLAN + OpenTofu DNS/UniFi/Pi-hole + scarif on VLAN 5).
 
 Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to homelab02) — wipe does not affect Pi-hole, discord bots, arr, or HA. Bootstrap **single-node `prd`** designed to **expand to 3 CPs** later.
 
