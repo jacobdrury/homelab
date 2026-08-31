@@ -7,7 +7,7 @@ Jellyfin, Sonarr ×2, Prowlarr, qBittorrent on k8s; libraries/downloads on Unrai
 | Traffic | Requirement |
 |---------|-------------|
 | BitTorrent peers (up/down) | Out **Mullvad WireGuard** (kill switch / no clearnet leak) |
-| Web UI | Same as any lab app: **`https://qbittorrent.lab.jacobdrury.com`** on Tailscale or LAN |
+| Web UI | **`https://qbittorrent.lab.jacobdrury.com`** — Envoy TLS; same URL on LAN and Tailscale ([networking](networking.md#https)) |
 
 No special UI exposure story — Envoy + `*.lab.jacobdrury.com` like Argo/Jellyfin/Homepage. Implementation detail at deploy time (Service + HTTPRoute, etc.) does not matter as long as that hostname works on the lab path.
 

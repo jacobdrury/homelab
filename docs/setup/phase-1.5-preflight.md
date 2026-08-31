@@ -68,7 +68,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 | API auth | **1Password:** `Pi-hole API` (app password) |
 | Write access | **`webserver.api.app_sudo`** = true (All settings) |
 | `*.lab.jacobdrury.com` | **Forward** to Cloudflare (`1.1.1.1`, `1.0.0.1`) — records live in `infrastructure/dns/` only |
-| `*.homelab.com` | **Local** A records in `local_dns.auto.tfvars` |
+| `*.homelab.com` | **Local** A records in `local_dns.auto.tfvars` — **transitional**; retire when apps use `*.lab` on k8s |
 | Migrate to k8s | Phase 3 **last** — same OpenTofu module, new `pihole_url` |
 
 ## OpenTofu
@@ -92,7 +92,8 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 
 | Item | When |
 |------|------|
-| Tailscale on scarif | Phase 2 or when cluster path is up |
+| Tailscale on scarif | Optional — **`https://scarif.lab`** via Envoy proxy; Unraid plugin not required |
+| Tailscale split DNS + routes | **`infrastructure/tailscale/`** — `moon run tailscale:apply` · [README](../../infrastructure/tailscale/README.md) |
 | Switch port VLAN breakdown | **Done** — Aggregation SFP+ 2 |
 | `webserver.api.max_sessions` in OpenTofu | Optional — raise in UI if bulk import hits 429 |
 

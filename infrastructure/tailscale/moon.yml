@@ -1,0 +1,18 @@
+id: tailscale
+layer: tool
+stack: infrastructure
+
+project:
+  name: tailscale
+  description: Tailscale tailnet DNS and subnet routes (split DNS → Cloudflare)
+
+tags:
+  - opentofu
+
+# Create in 1Password → Homelab vault:
+#   Item: "Tailscale OAuth" — fields: client id, credential (client secret)
+# OAuth scopes — see README § OAuth scopes (use "full TF" set if managing ACL + keys + settings)
+env:
+  TOFU_SECRET_TAILSCALE_OAUTH_CLIENT_ID: 'op://Homelab/Tailscale OAuth/client id'
+  TOFU_SECRET_TAILSCALE_OAUTH_CLIENT_SECRET: 'op://Homelab/Tailscale OAuth/credential'
+  TOFU_ENV_TAILSCALE_TAILNET: '-'

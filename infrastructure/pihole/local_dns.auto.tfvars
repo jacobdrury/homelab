@@ -1,3 +1,4 @@
+# Transitional LAN names — retire as apps move to *.lab.jacobdrury.com on k8s.
 local_dns = {
   "arr.homelab.com"             = "192.168.1.9"
   "pihole.homelab.com"          = "192.168.1.11"

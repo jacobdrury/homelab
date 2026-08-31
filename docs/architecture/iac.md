@@ -11,6 +11,7 @@ Locked leans: [decisions](../decisions.md). Apply tooling: [local-tools](../setu
 | Public DNS (`jacobdrury.com`, `*.lab`) | **OpenTofu** | `infrastructure/dns/` | `moon run dns:apply` |
 | UniFi networks + firewall | **OpenTofu** | `infrastructure/unifi/` | `moon run unifi:apply` |
 | Pi-hole policy (lists, domains, upstreams, local `*.homelab.com`, zone forward) | **OpenTofu** | `infrastructure/pihole/` | `moon run pihole:apply` |
+| Tailscale (policy, DNS, routes, keys, device settings) | **OpenTofu** | `infrastructure/tailscale/` | `moon run tailscale:apply` |
 | Talos machine / cluster config | **OpenTofu** (+ generated YAML) | `infrastructure/prd/` | TBD at Phase 2 |
 | Kubernetes platform + apps | **Helm** via **Argo CD** | `apps/`, `clusters/prd/` | Git push → sync |
 | Dynamic app DNS (`jellyfin.lab`, …) | **external-dns** | Helm values in `apps/system/` | Argo |
@@ -26,8 +27,8 @@ Avoid duplicating the same records in two IaC modules:
 | Zone / names | Authoritative IaC | Pi-hole role |
 |--------------|-------------------|--------------|
 | `*.lab.jacobdrury.com` | `infrastructure/dns/` (Cloudflare) | Forward zone to Cloudflare (`dns_forward.tf`) |
-| `*.homelab.com` (LAN legacy) | `infrastructure/pihole/local_dns.auto.tfvars` | Local A records |
-| App hostnames (Phase 2+) | external-dns → Cloudflare | Resolved via forward — no Pi-hole copy |
+| `*.homelab.com` (LAN legacy, **retiring**) | `infrastructure/pihole/local_dns.auto.tfvars` | Local A records until k8s cutover |
+| App hostnames (Phase 2+) | external-dns → Cloudflare | Resolved via forward (LAN) or Tailscale split DNS → Cloudflare (away) |
 
 ## What stays manual (for now)
 
@@ -38,6 +39,7 @@ Avoid duplicating the same records in two IaC modules:
 | One-time bootstrap (Talos first boot, Argo install, 1Password items) | Chicken-and-egg |
 | BIOS, Proxmox VM create, disk attach | Hypervisor / hardware |
 | `op signin` on the operator Mac | Session auth for secret injection — until Phase 2b CI |
+| Tailscale **advertise-routes** on subnet router host | Device-local (`tailscale set` on homelab02; k8s operator Helm in Phase 2) — API only **enables** advertised routes |
 | OpenTofu `plan` / `apply` | **Manual** (`moon` on Mac) until Phase 2b pipelines — [roadmap](../roadmap.md#phase-2b--opentofu-ci-github-actions) |
 
 Document one-off steps in phase checklists ([roadmap](../roadmap.md), [phase-1.5 preflight](../setup/phase-1.5-preflight.md)); promote to IaC once the API and workflow are stable.

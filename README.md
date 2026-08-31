@@ -7,13 +7,13 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | | Today | Target |
 |---|--------|--------|
 | Compute | Proxmox **homelab02** only · **scarif = Unraid** · Mini off cluster | Talos `prd`: **bare-metal yavin** → **expand to 3 BM CPs** |
+| Access | Tailscale: Mac + homelab02 on tailnet; split DNS → Envoy (Phase 2+) | Same **`*.lab` URLs** home/away · LE HTTPS · agents on tailnet |
 | Storage | **scarif** — 24TB UD · **NFS** (~8.7 TB used) | Same + optional array/parity · iSCSI when k8s needs it |
 | pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
 | Network | Homelab **VLAN 5** (scarif) + Drury (arr, Pi-hole) | Full lab on VLAN + Tailscale |
 | Apps | Pi-hole, HA, Jellyfin, *arr, qBit, Prowlarr | Same on k8s + Homepage; HA after media |
 | Delivery | Manual guests | Argo CD ← this repo |
 | Secrets | Ad hoc | 1Password → Connect → ESO |
-| Access | Partial Tailscale | `*.lab.jacobdrury.com` + **AI agents on the tailnet** |
 
 **Next:** Phase **2** — bare-metal Talos on **yavin** (`192.168.5.11` · `k8s.lab.jacobdrury.com`).
 

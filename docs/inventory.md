@@ -56,7 +56,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Extra NVMe | 970 EVO 500 GB (`S466NX0KA18171W`) · passed to VM 101 as `virtio3`; unused in guest |
 | GPU | GTX 1080 Ti (`10de:1b06`) |
 | LAN | 10G → Aggregation **SFP+ 1** (`98:b7:85:21:cd:70`); onboard also on Pro Max **Port 6** |
-| Tailscale | `tailscale0` on host |
+| Tailscale | `tailscale0` on host · tailnet **`homelab02`** · exit node **off** (Aug 2026) · **interim** subnet router candidate until k8s operator |
 
 ### Guests
 
@@ -181,8 +181,8 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | LAN DNS | Pi-hole · `192.168.1.11` |
 | Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · **scarif live**) · `192.168.6.0/24` (Teleport) |
 | Public / lab DNS | Cloudflare — **`infrastructure/dns/`** · LAN via Pi-hole forward for `*.lab` |
-| Remote | Tailscale (free); host client on pc (black) |
-| Ingress / TLS | Not yet (target: Envoy + `lab.jacobdrury.com`) |
+| Remote | Tailscale: **Mac** + **homelab02** on tailnet; split DNS + subnet router per [networking](architecture/networking.md#tailscale) |
+| Ingress / TLS | Not yet — target: Envoy + cert-manager LE DNS-01; `https://*.lab.jacobdrury.com` same URL on LAN and tailnet |
 | Backups | None formal — decide after Unraid |
 
 ### IP map (Drury · VLAN 1)

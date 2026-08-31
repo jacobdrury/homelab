@@ -27,15 +27,16 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | GitOps | **Argo CD** + this GitHub repo |
 | Ingress | **Envoy Gateway** (Gateway API) |
 | Secrets | **1Password** + Connect + External Secrets |
-| Mesh | **Tailscale operator** + Unraid on tailnet; subnet router only if needed |
+| Mesh | **Tailscale operator** on `prd` advertises **`192.168.5.0/24`** (steady subnet router); **homelab02 interim** until pc (black) leaves; tailnet DNS in **`infrastructure/tailscale/`** |
 | Domain | `lab.jacobdrury.com`; registrar Squarespace → **Cloudflare DNS** (OpenTofu), full Cloudflare transfer later |
-| TLS | cert-manager + **Let’s Encrypt DNS-01** via Cloudflare |
-| App DNS | Start **always Tailscale** for app hostnames |
+| TLS | cert-manager + **Let’s Encrypt DNS-01** via Cloudflare; wildcard **`*.lab.jacobdrury.com`** on Envoy; **scarif** HTTPS via Envoy proxy to Unraid HTTP |
+| Remote `*.lab` URLs | **Same names** home and away: Cloudflare RFC1918 A records; LAN via Pi-hole forward; Tailscale **split DNS → Cloudflare** + **subnet router** — [networking](architecture/networking.md#same-urls-at-home-and-away) |
 | Homelab firewall | **Phase 1.5:** allow **all** Drury (VLAN 1) → Homelab; deny Homelab → IoT/guest/camera; tighten later (Tailscale / allowlist) |
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
 | Pi-hole IaC | OpenTofu under `infrastructure/pihole/` — config in Git; migrate **deployment** to k8s last |
-| DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; keeps `.11` until cutover |
+| DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; **LAN ad blocking**; `*.lab` stays in Cloudflare |
+| Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` on k8s |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
 | Apps (migrate order) | *arr + qBit → Jellyfin → Homepage → HA → **Pi-hole last** |
 | qBittorrent VPN | Peers via **Mullvad WG**; UI at **`qbittorrent.lab.jacobdrury.com`** (normal Envoy lab exposure) |

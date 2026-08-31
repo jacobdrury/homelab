@@ -65,7 +65,13 @@ Use a **local** console key. A **Site Manager** key from unifi.ui.com only works
 
 ```bash
 proto install talosctl
-talosctl version
+talosctl version --client
+```
+
+**Tailscale (remote `*.lab`):** `moon run tailscale:apply` — see [infrastructure/tailscale/README.md](../../infrastructure/tailscale/README.md). macOS CLI:
+
+```bash
+/Applications/Tailscale.app/Contents/MacOS/Tailscale status
 ```
 
 `kubectl` and `helm` are already via `proto install`.

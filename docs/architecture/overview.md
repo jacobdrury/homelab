@@ -8,7 +8,7 @@ Ideal end state. Path: **Unraid first** → **VLAN + OpenTofu** → **bare-metal
 - **Steady cluster:** 3 control planes, workloads on all nodes
 - **GitOps** — GitHub source of truth; Argo CD reconciles
 - **Unraid** owns disks only (**NFS + iSCSI**); apps are not parked on Unraid Docker
-- **Private access** — homelab VLAN + Tailscale; no public app ingress by default
+- **Private access** — homelab VLAN + Tailscale; same **`*.lab` URLs** home and away ([networking](networking.md#same-urls-at-home-and-away)); LE HTTPS on Envoy; no public app ingress by default
 - **Declarative** machines and apps (OpenTofu + Helm/Argo) — [iac](iac.md); minimize snowflakes / re-migrations
 - **pc (white) = Unraid**; **pc (black) → gaming** after cutover (retained during transition)
 - **Agent-operable** — Cursor/AI on the tailnet ([agents](agents.md))

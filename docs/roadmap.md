@@ -50,7 +50,7 @@ flowchart LR
 8. **No HA** until 3 CPs; planned downtime is acceptable  
 9. **Homelab VLAN + OpenTofu before Talos** — no bare-metal bootstrap on flat LAN  
 10. **Pi-hole last** — stays on pc (black) through Phase 2–3 until k8s cutover  
-11. Tailscale + HTTPS via `lab.jacobdrury.com`  
+11. Tailscale + HTTPS via `lab.jacobdrury.com` — split DNS, subnet router on **k8s operator** (homelab02 interim); LE DNS-01 on Envoy  
 12. **Agent-operable** — [agents](architecture/agents.md)  
 13. **OpenTofu apply manual until cluster CI** — `moon run …:apply` from Mac through Phase 1.5–2; shift to GitHub Actions + in-cluster runners in Phase 2b  
 
@@ -78,7 +78,6 @@ Details: [storage](architecture/storage.md) · [networking](architecture/network
 - [x] NFS export UD mount (`/mnt/disks/ZXA0VZBA`)  
 - [x] Smoke-test: arr VM + LAN mount; library readable  
 - [ ] iSCSI target plugin + SSD/pool LUNs (can wait until cluster needs block PVCs)  
-- [ ] Tailscale on Unraid (and Mac Mini always-on path)  
 
 **Exit:** ~~Unraid is the NAS; 24TB exported.~~ **Done Aug 2025.** arr VM on NFS; black PC no longer holds the disk.
 
@@ -129,12 +128,14 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [ ] `talosctl bootstrap` on yavin; **`allowSchedulingOnControlPlanes: true`**  
 - [ ] etcd snapshot cadence (single-node DR until expansion)  
 - [ ] `infrastructure/prd` + Argo → `clusters/prd`  
-- [ ] Cilium, NFS CSI (→ scarif), iSCSI CSI when needed, Tailscale operator, Envoy, cert-manager  
+- [ ] Cilium, NFS CSI (→ scarif), iSCSI CSI when needed, **Tailscale operator** (subnet router `192.168.5.0/24`), Envoy, cert-manager  
+- [ ] Tailscale **split DNS** + subnet routes — `moon run tailscale:apply` ([README](../../infrastructure/tailscale/README.md)); homelab02 **advertise-routes** first
+- [ ] Tailscale on scarif (optional — Envoy can proxy `https://scarif.lab` without Unraid plugin)
 - [ ] 1Password Connect + ESO; seed once  
-- [ ] LE for `*.lab.jacobdrury.com` (cert-manager + Cloudflare DNS-01)  
-- [ ] Deploy a throwaway app; confirm GitOps + NFS path to scarif  
+- [ ] LE for `*.lab.jacobdrury.com` (cert-manager + DNS-01); optional Envoy route **`scarif.lab`** → Unraid HTTP  
+- [ ] Deploy a throwaway app; confirm GitOps + NFS; test **`https://`** on LAN and away via Tailscale  
 
-**Exit:** `prd` GitOps-reachable on Tailscale + VLAN; NFS CSI talks to scarif; cluster ready to accept CP joins.
+**Exit:** `prd` GitOps-reachable on Tailscale + VLAN; **`https://*.lab`** works home and away; NFS CSI talks to scarif; cluster ready to accept CP joins.
 
 ### Phase 2b — OpenTofu CI (GitHub Actions)
 

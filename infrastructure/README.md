@@ -22,6 +22,10 @@ Creates **Homelab** VLAN 5 (`192.168.5.0/24`). scarif migrated to `192.168.5.10`
 
 Config-only OpenTofu for the LXC at `192.168.1.11` (block lists, domains, upstreams, local `*.homelab.com`, lab zone forward). Edit `*.auto.tfvars` in repo → `moon run pihole:apply`. Details: [pihole/README.md](pihole/README.md).
 
+## Tailscale (`infrastructure/tailscale/`)
+
+Tailnet DNS + subnet route approval in Git. Split DNS sends `lab.jacobdrury.com` → **Cloudflare** (`1.1.1.1`); enables routes on **homelab02** (interim subnet router). One-time device bootstrap: [tailscale/README.md](tailscale/README.md).
+
 ## Moon (from repo root)
 
 `apply` runs `plan` → `init` first. `plan` writes `.tofu.plan` (gitignored); `apply` uses that file.
@@ -35,6 +39,7 @@ op signin
 moon run dns:apply
 moon run unifi:apply
 moon run pihole:apply
+moon run tailscale:apply
 ```
 
 New OpenTofu project: tag `opentofu` and add `env` entries:

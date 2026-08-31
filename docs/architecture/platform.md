@@ -13,7 +13,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | Secrets | **1Password** + Connect + ESO | [secrets](secrets.md) |
 | Storage | **NFS CSI + iSCSI → Unraid** | [storage](storage.md) — NFS media/shared; iSCSI block |
 | Ingress | **Envoy Gateway** | Gateway API / HTTPRoute |
-| Mesh | **Tailscale operator** | + Unraid on tailnet |
+| Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
 | Monitoring | Prometheus, Grafana, Uptime Kuma | Discord alerts |
 

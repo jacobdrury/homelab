@@ -25,11 +25,13 @@ flowchart LR
 
 | Path | Role |
 |------|------|
-| Tailscale on agent host | Primary (prefer local Cursor + Tailscale; cloud agents need Tailscale or MCP bridge) |
+| Tailscale on agent host | Primary remote path — **split DNS** for `lab.jacobdrury.com` + **subnet routes** to Homelab |
+| `*.lab.jacobdrury.com` | Same URLs: LAN via Pi-hole → Cloudflare; away via split DNS → **Cloudflare direct** |
 | kubeconfig / talosconfig | Local paths; CLIs via proto/moon |
-| `*.lab.jacobdrury.com` | Same URLs as humans |
 | `op` | Secrets — never in Git |
 | MCP (optional) | k8s / HA structured tools when shell is painful |
+
+Details: [networking](networking.md#tailscale) (split DNS, subnet router timeline, HTTPS).
 
 ## Operating model
 
@@ -42,9 +44,11 @@ flowchart LR
 
 | Phase | What |
 |-------|------|
-| 1–2 | Tailscale on Mac + Unraid + cluster; moon tools |
-| 2 | Stable kubectl over Tailscale; Argo on `*.lab` |
-| 3+ | HA/Unraid API tokens in 1Password; Homepage |
-| 5 | Agent RBAC, optional MCP, `.cursor` rules |
+| **Now** | Tailscale on **agent Mac** + **homelab02** (tailnet member; exit node **off**); moon/proto tools |
+| **Interim** | Tailscale **split DNS** (`lab.jacobdrury.com` → Cloudflare); optional **homelab02** subnet routes until cluster |
+| **2** | **Tailscale operator** — subnet router **`192.168.5.0/24`**; Envoy + cert-manager; `https://*.lab` on LAN and tailnet |
+| **2** | Stable kubectl over Tailscale; Argo on `*.lab` |
+| **3+** | Remove homelab02 subnet routes before pc (black) retires; retire legacy `*.homelab.com` Pi-hole records |
+| **5** | Agent RBAC, optional MCP, `.cursor` rules |
 
 **Non-goal:** public kube API or Unraid for agents. Agents use the **tailnet**.
