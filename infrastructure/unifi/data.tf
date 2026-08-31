@@ -1,5 +1,5 @@
 data "unifi_network" "drury" {
-  name = var.drury_network_name
+  name = local.lab.networks.drury.unifi_name
 }
 
 data "unifi_network" "iot" {

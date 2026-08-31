@@ -1,7 +1,7 @@
 locals {
   auto_approver_routes = merge(
-    { (var.homelab_subnet_route) = ["autogroup:member"] },
-    var.enable_drury_subnet_route ? { (var.drury_subnet_route) = ["autogroup:member"] } : {},
+    { (local.lab.networks.homelab.route_cidr) = ["autogroup:member"] },
+    var.enable_drury_subnet_route ? { (local.lab.networks.drury.route_cidr) = ["autogroup:member"] } : {},
   )
 
   tailnet_policy = {

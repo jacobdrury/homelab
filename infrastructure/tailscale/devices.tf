@@ -1,7 +1,7 @@
 data "tailscale_device" "subnet_router" {
   count = var.manage_subnet_router ? 1 : 0
 
-  hostname = var.subnet_router_hostname
+  hostname = local.lab.tailscale.interim_subnet_router
   wait_for = "60s"
 }
 

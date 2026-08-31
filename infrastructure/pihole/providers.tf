@@ -1,4 +1,4 @@
-# Password via PIHOLE_PASSWORD env (moon → op). Do not set password here.
+# Password via PIHOLE_PASSWORD env (moon → op). Host from lab_locals.tf → ../lab.yaml.
 provider "pihole" {
-  url = var.pihole_url
+  url = "http://${local.lab.services.pihole.host}"
 }

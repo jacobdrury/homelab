@@ -49,7 +49,7 @@ Document one-off steps in phase checklists ([roadmap](../roadmap.md), [phase-1.5
 - **State:** local on the operator Mac (gitignored) until **Phase 2b** remote backend — see [roadmap Phase 2b](../roadmap.md#phase-2b--opentofu-ci-github-actions).
 - **Apply (now):** `moon run <project>:apply` from your Mac on the LAN — manual bootstrap until pipelines exist.
 - **Secrets:** `TOFU_SECRET_*` in project `moon.yml` → `op read` via `.moon/scripts/tofu/env.sh` — never commit credentials.
-- **Vars:** committed `*.auto.tfvars` for non-secret desired state (Pi-hole lists, domains, etc.).
+- **Vars:** committed `*.auto.tfvars` for project-specific state (Pi-hole lists, domains); **shared lab constants** in [`infrastructure/lab.yaml`](../../infrastructure/lab.yaml). New OpenTofu projects under `infrastructure/` get `lab_locals.tf` on `moon run <project>:init`.
 - **Plan before apply:** `moon run <project>:apply` runs plan → apply; review `.tofu.plan` when unsure.
 
 ## CI (Phase 2b — planned)

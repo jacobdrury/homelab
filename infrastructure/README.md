@@ -1,8 +1,10 @@
-# Infrastructure (OpenTofu)
+# Shared lab constants — see ../lab.yaml (zone, subnets, hosts, Cloudflare DNS, Pi-hole, Tailscale).
 
 Apply from your Mac on the LAN. State files stay **local** (gitignored).
 
 **IaC policy:** Git is source of truth for everything here; see [docs/architecture/iac.md](../docs/architecture/iac.md).
+
+**Shared constants:** [lab.yaml](lab.yaml) — structured as `dns`, `networks` (drury / homelab + hosts), `services`, `tailscale`. Each OpenTofu project reads it via `lab_locals.tf`.
 
 Credentials load from each project's `moon.yml` (`TOFU_SECRET_*` / `TOFU_ENV_*`). Sign in first: `op signin`.
 
@@ -32,7 +34,7 @@ Tailnet DNS + subnet route approval in Git. Split DNS sends `lab.jacobdrury.com`
 
 Moon caching: **`init`** is cached (restores `.terraform/` when lock/config unchanged). **`plan`** and **`apply`** are never cached — they talk to live APIs and apply changes. A cached `init` still satisfies the `plan` dep without re-downloading providers.
 
-Run `moon run <project>:init` manually after clone if you skip the full chain.
+Run `moon run <project>:init` manually after clone if you skip the full chain. **`init`** creates `lab_locals.tf` automatically when `../lab.yaml` exists (new infrastructure modules).
 
 ```bash
 op signin

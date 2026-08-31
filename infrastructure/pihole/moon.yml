@@ -10,5 +10,4 @@ tags:
   - opentofu
 
 env:
-  TOFU_ENV_PIHOLE_URL: 'http://192.168.1.11'
   TOFU_SECRET_PIHOLE_PASSWORD: 'op://Homelab/Pi-hole API/credential'

@@ -1,0 +1,54 @@
+# =============================================================================
+# Shared lab constants — single source of truth for OpenTofu under infrastructure/.
+# Each project reads this via lab_locals.tf (created on moon run <project>:init).
+# =============================================================================
+
+# Public DNS zone for apps and infra (*.lab.jacobdrury.com).
+# Authoritative records: infrastructure/dns/ (+ external-dns in Phase 2+).
+dns:
+  zone: lab.jacobdrury.com
+  # Resolvers for *.lab — Pi-hole forwards here on LAN; Tailscale split DNS away.
+  cloudflare_resolvers:
+    - 1.1.1.1
+    - 1.0.0.1
+
+networks:
+  # Primary trusted LAN (UniFi VLAN 1). Pi-hole, Proxmox, arr VM, IoT gateway path.
+  drury:
+    unifi_name: Drury
+    route_cidr: 192.168.1.0/24 # Tailscale interim — drop when pc (black) leaves lab
+
+  # Isolated homelab VLAN (UniFi VLAN 5). Talos CPs, Unraid, cluster workloads.
+  homelab:
+    unifi_name: Homelab
+    vlan_id: 5
+    gateway_cidr: 192.168.5.1/24 # UniFi network subnet (gateway at .1)
+    route_cidr: 192.168.5.0/24   # Tailscale subnet router (steady: k8s operator)
+    dhcp:
+      start: 192.168.5.6
+      stop: 192.168.5.254
+    # Infra A records on this VLAN — Cloudflare grey-cloud in infrastructure/dns/.
+    hosts:
+      scarif:
+        ip: 192.168.5.10
+        role: unraid # NAS · NFS/iSCSI
+      yavin:
+        ip: 192.168.5.11
+        role: talos_cp # Mac Mini · bootstrap CP #1
+      k8s:
+        ip: 192.168.5.11
+        role: kubernetes_api # same node until VIP .20
+      hoth:
+        ip: 192.168.5.12
+        role: talos_cp # Phase 4
+      endor:
+        ip: 192.168.5.13
+        role: talos_cp # Phase 4
+
+services:
+  pihole:
+    host: 192.168.1.11 # LXC on homelab02 · network: drury · migrates to k8s last
+  # gateway: 192.168.1.1  # UDM Pro — add when needed for IaC
+
+tailscale:
+  interim_subnet_router: homelab02 # advertises routes on host; TF enables in admin

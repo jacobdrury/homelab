@@ -21,34 +21,3 @@ variable "unifi_site" {
   type        = string
   default     = "default"
 }
-
-variable "homelab_network_name" {
-  type    = string
-  default = "Homelab"
-}
-
-variable "homelab_vlan_id" {
-  type    = number
-  default = 5
-}
-
-variable "homelab_subnet" {
-  description = "Gateway CIDR (UniFi convention: .1 is gateway)"
-  type        = string
-  default     = "192.168.5.1/24"
-}
-
-variable "homelab_dhcp_start" {
-  type    = string
-  default = "192.168.5.6"
-}
-
-variable "homelab_dhcp_stop" {
-  type    = string
-  default = "192.168.5.254"
-}
-
-variable "drury_network_name" {
-  type    = string
-  default = "Drury"
-}

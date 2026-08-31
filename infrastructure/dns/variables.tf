@@ -10,12 +10,6 @@ variable "zone_name" {
   default     = "jacobdrury.com"
 }
 
-variable "lab_domain" {
-  description = "Homelab app and host DNS suffix (under zone_name)"
-  type        = string
-  default     = "lab.jacobdrury.com"
-}
-
 variable "zone_id" {
   description = "Cloudflare zone ID for jacobdrury.com"
   type        = string

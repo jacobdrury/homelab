@@ -1,6 +1,6 @@
 # Pi-hole (OpenTofu)
 
-Manages **configuration** for the Pi-hole LXC at `192.168.1.11` (VMID 106 on homelab02). Deployment stays on Proxmox now; k8s later via Argo. Same module — change `pihole_url` when you cut over.
+Manages **configuration** for the Pi-hole LXC (host in [`../lab.yaml`](../lab.yaml)). Deployment stays on Proxmox now; k8s later via Argo — update `pihole.host` in `lab.yaml` when you cut over.
 
 **Provider:** [barryw/pihole-v6](https://registry.opentofu.org/providers/barryw/pihole-v6/latest) (Pi-hole **v6** API).
 
@@ -31,8 +31,7 @@ Do **not** change lists, domains, or upstreams in the Pi-hole UI — those chang
 | `domains.auto.tfvars` | Per-domain allow/deny (`pihole_domain_list`) |
 | `upstreams.auto.tfvars` | Default upstream resolvers (`pihole_dns_upstreams`) |
 | `local_dns.auto.tfvars` | LAN local DNS (`pihole_dns_record`) — e.g. `*.homelab.com` |
-| `lab_forward.auto.tfvars` | Cloudflare resolvers for `lab.jacobdrury.com` |
-| `dns_forward.tf` | Zone forward via `misc.dnsmasq_lines` (`pihole_setting`) |
+| `dns_forward.tf` | Zone forward for `lab.yaml` → `zone` via Cloudflare (`cloudflare_dns`) |
 | `local_dns.tf` | Local DNS record resources |
 
 **Not here:** `*.lab.jacobdrury.com` DNS records → `infrastructure/dns/` (+ external-dns for apps in Phase 2+).
@@ -43,4 +42,4 @@ Do **not** change lists, domains, or upstreams in the Pi-hole UI — those chang
 
 ## HA (later)
 
-When running two Pi-hole replicas, duplicate provider with aliases or run this module twice with different `pihole_url` values.
+When running two Pi-hole replicas, duplicate provider with aliases or run this module twice with different `lab.yaml` / provider config.

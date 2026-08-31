@@ -1,9 +1,9 @@
 # Forward *.lab.jacobdrury.com to Cloudflare — authoritative zone is infrastructure/dns/.
 # Cloudflare returns RFC1918 A records (grey cloud); external-dns app records appear automatically.
 locals {
-  lab_zone = "lab.jacobdrury.com"
+  lab_zone = local.lab.dns.zone
   lab_zone_forward_lines = [
-    for upstream in var.lab_zone_forward_upstreams :
+    for upstream in local.lab.dns.cloudflare_resolvers :
     "server=/${local.lab_zone}/${upstream}"
   ]
 }

@@ -13,7 +13,9 @@ fileGroups:
 
 implicitInputs:
   - '/.moon/scripts/tofu/env.sh'
+  - '/.moon/scripts/tofu/bootstrap-lab-locals.sh'
   - '/.moon/tasks/tofu.yml'
+  - '/infrastructure/lab.yaml'
 
 taskOptions:
   cache: false
@@ -24,6 +26,7 @@ tasks:
     script: |
       # shellcheck source=/dev/null
       source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
+      "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/bootstrap-lab-locals.sh"
       exec tofu init
     inputs:
       - '@group(tf-config)'
