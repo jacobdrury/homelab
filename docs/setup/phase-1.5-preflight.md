@@ -93,7 +93,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 | Item | When |
 |------|------|
 | Tailscale on scarif | Optional — **`https://scarif.lab`** via Envoy proxy; Unraid plugin not required |
-| Tailscale split DNS + routes | **`infrastructure/tailscale/`** — `moon run tailscale:apply` · [README](../../infrastructure/tailscale/README.md) |
+| Tailscale split DNS + routes | **`infrastructure/tailscale/`** — applied 2026-08-30 · remote scarif verified |
 | Switch port VLAN breakdown | **Done** — Aggregation SFP+ 2 |
 | `webserver.api.max_sessions` in OpenTofu | Optional — raise in UI if bulk import hits 429 |
 

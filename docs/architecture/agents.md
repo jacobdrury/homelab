@@ -44,9 +44,8 @@ Details: [networking](networking.md#tailscale) (split DNS, subnet router timelin
 
 | Phase | What |
 |-------|------|
-| **Now** | Tailscale on **agent Mac** + **homelab02** (tailnet member; exit node **off**); moon/proto tools |
-| **Interim** | Tailscale **split DNS** (`lab.jacobdrury.com` → Cloudflare); optional **homelab02** subnet routes until cluster |
-| **2** | **Tailscale operator** — subnet router **`192.168.5.0/24`**; Envoy + cert-manager; `https://*.lab` on LAN and tailnet |
+| **Now** | Tailscale IaC applied; **homelab02** interim subnet router; `http://*.lab` remote via split DNS → Cloudflare |
+| **2** | **Tailscale operator** on `prd` (subnet router); Envoy + cert-manager → `https://*.lab` |
 | **2** | Stable kubectl over Tailscale; Argo on `*.lab` |
 | **3+** | Remove homelab02 subnet routes before pc (black) retires; retire legacy `*.homelab.com` Pi-hole records |
 | **5** | Agent RBAC, optional MCP, `.cursor` rules |

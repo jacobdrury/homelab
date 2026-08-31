@@ -1,6 +1,6 @@
 # Homelab docs
 
-Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live under `infrastructure/` (DNS, UniFi, Pi-hole); **Helm/Argo** under `apps/` and `clusters/` starting Phase 2.
+Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live under `infrastructure/` (DNS, UniFi, Pi-hole, Tailscale); **Helm/Argo** under `apps/` and `clusters/` starting Phase 2.
 
 | Doc | What it is |
 |-----|------------|

@@ -7,7 +7,7 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | | Today | Target |
 |---|--------|--------|
 | Compute | Proxmox **homelab02** only · **scarif = Unraid** · Mini off cluster | Talos `prd`: **bare-metal yavin** → **expand to 3 BM CPs** |
-| Access | Tailscale: Mac + homelab02 on tailnet; split DNS → Envoy (Phase 2+) | Same **`*.lab` URLs** home/away · LE HTTPS · agents on tailnet |
+| Access | Tailscale IaC live; **`http://scarif.lab`** home + away; homelab02 interim router | Same URLs · **`https://`** via Envoy (Phase 2) · operator replaces homelab02 |
 | Storage | **scarif** — 24TB UD · **NFS** (~8.7 TB used) | Same + optional array/parity · iSCSI when k8s needs it |
 | pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
 | Network | Homelab **VLAN 5** (scarif) + Drury (arr, Pi-hole) | Full lab on VLAN + Tailscale |

@@ -7,14 +7,33 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | Phase | State | Notes |
 |-------|--------|--------|
 | **0** Docs & inventory | **Done** | |
-| **1** Unraid NAS | **Done** (Aug 2025) | |
-| **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif on Homelab VLAN `192.168.5.10`; arr NFS via `scarif.lab.jacobdrury.com` |
-| **2** Talos on yavin | **Next** | Gate cleared · Proxmox unclustered (homelab02 only) |
+| **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
+| **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
+| **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; `http://scarif.lab` works home + away |
+| **2** Talos on yavin | **Next** | Blocked on Mac Mini access — boot-test USB first |
 | **3–5** | Not started | |
 
-**IaC live today:** `infrastructure/dns/`, `infrastructure/unifi/`, `infrastructure/pihole/` — apply via `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Policy: [iac](architecture/iac.md).
+**IaC live today:** `infrastructure/dns/`, `unifi/`, `pihole/`, **`tailscale/`** — `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Policy: [iac](architecture/iac.md).
 
-**DNS today (via Pi-hole `192.168.1.11`):** `*.lab.jacobdrury.com` → forwarded to Cloudflare; `*.homelab.com` → local records in Git; infra A records resolve (e.g. `scarif.lab` → `192.168.5.10`, `k8s.lab` → `192.168.5.11`).
+**DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/dns/`). LAN: Pi-hole forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare (no per-record Tailscale changes).
+
+**Remote access (verified):** split DNS + homelab02 subnet router (`192.168.1.0/24`, `192.168.5.0/24`) · policy/keys in `infrastructure/tailscale/`.
+
+## What's next — Phase 2
+
+**Gate:** physical access to **yavin** (Mac Mini). Nothing else blocks bootstrap.
+
+| Step | Action |
+|------|--------|
+| **1** | Boot-test **Talos 1.12.7** metal-amd64 USB on Mac Mini (1.13+ hangs on 2018 Apple EFI) |
+| **2** | Custom image: extensions `intel-ucode`, `i915`; machine config — USB 2.5G primary, onboard 1G secondary, homelab VLAN, `192.168.5.11` |
+| **3** | `infrastructure/prd/` — cluster secrets, Talos configs; `talosctl bootstrap` → **`k8s.lab.jacobdrury.com`** |
+| **4** | Platform: Cilium, Argo CD, NFS CSI → scarif, Envoy + cert-manager, **Tailscale operator** (take over subnet router from homelab02) |
+| **5** | 1Password Connect + ESO; throwaway app; confirm GitOps + `https://*.lab` on LAN and tailnet |
+
+Optional anytime: SSD `appdata` pool on scarif; array/parity ([Phase 1b](#phase-1b--array--parity-when-you-can)).
+
+Tools ready: `proto install talosctl` (1.12.7) · k8s operator preauth key in tfstate → copy to 1Password — [tailscale README](../infrastructure/tailscale/README.md).
 
 ## Sequence (locked)
 
@@ -94,8 +113,10 @@ Details: [networking](architecture/networking.md) · [preflight](setup/phase-1.5
 - [x] Switch: assign scarif port to **Homelab** VLAN 5 (Aggregation **SFP+ 2**; applied 2026-08-30)
 - [x] Migrate **scarif** to `192.168.5.10` (**eth1** 10G; bonding/bridging off); arr VM NFS fstab → `scarif.lab.jacobdrury.com` (`_netdev,nofail` — no automount with Docker)
 - [x] Re-validate NFS: arr VM → scarif export over homelab VLAN; Jellyfin playback OK
+- [x] OpenTofu: **`infrastructure/tailscale/`** — split DNS → Cloudflare, ACL, homelab02 routes, k8s operator preauth key (applied 2026-08-30)
+- [x] homelab02 **advertise-routes**; remote `http://scarif.lab.jacobdrury.com` verified on tailnet
 
-**Exit:** ~~Lab hosts on homelab VLAN; DNS, network, and Pi-hole policy in Git.~~ **Done Aug 2026.** scarif live on `.5.10`; `k8s.lab.jacobdrury.com` and `scarif.lab.jacobdrury.com` resolve on LAN.
+**Exit:** ~~Lab hosts on homelab VLAN; DNS, network, and Pi-hole policy in Git.~~ **Done Aug 2026.** scarif live on `.5.10`; `*.lab` resolves on LAN and away; interim remote access via homelab02 subnet router.
 
 ### Phase 1b — Array / parity (when you can)
 
@@ -128,9 +149,8 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [ ] `talosctl bootstrap` on yavin; **`allowSchedulingOnControlPlanes: true`**  
 - [ ] etcd snapshot cadence (single-node DR until expansion)  
 - [ ] `infrastructure/prd` + Argo → `clusters/prd`  
-- [ ] Cilium, NFS CSI (→ scarif), iSCSI CSI when needed, **Tailscale operator** (subnet router `192.168.5.0/24`), Envoy, cert-manager  
-- [ ] Tailscale **split DNS** + subnet routes — `moon run tailscale:apply` ([README](../../infrastructure/tailscale/README.md)); homelab02 **advertise-routes** first
-- [ ] Tailscale on scarif (optional — Envoy can proxy `https://scarif.lab` without Unraid plugin)
+- [ ] Cilium, NFS CSI (→ scarif), iSCSI CSI when needed, Envoy, cert-manager  
+- [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire homelab02 routes when stable  
 - [ ] 1Password Connect + ESO; seed once  
 - [ ] LE for `*.lab.jacobdrury.com` (cert-manager + DNS-01); optional Envoy route **`scarif.lab`** → Unraid HTTP  
 - [ ] Deploy a throwaway app; confirm GitOps + NFS; test **`https://`** on LAN and away via Tailscale  

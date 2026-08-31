@@ -181,8 +181,8 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | LAN DNS | Pi-hole · `192.168.1.11` |
 | Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · **scarif live**) · `192.168.6.0/24` (Teleport) |
 | Public / lab DNS | Cloudflare — **`infrastructure/dns/`** · LAN via Pi-hole forward for `*.lab` |
-| Remote | Tailscale: **Mac** + **homelab02** on tailnet; split DNS + subnet router per [networking](architecture/networking.md#tailscale) |
-| Ingress / TLS | Not yet — target: Envoy + cert-manager LE DNS-01; `https://*.lab.jacobdrury.com` same URL on LAN and tailnet |
+| Remote | Tailscale IaC (`infrastructure/tailscale/`): split DNS → Cloudflare; **homelab02** interim subnet router — `http://scarif.lab` verified away (Aug 2026) |
+| Ingress / TLS | **HTTP** on scarif via tailnet/LAN; target: Envoy + cert-manager → `https://*.lab` (Phase 2) |
 | Backups | None formal — decide after Unraid |
 
 ### IP map (Drury · VLAN 1)
