@@ -64,5 +64,5 @@ Host naming: [naming](naming.md).
 
 ## Related
 
-- [Platform](platform.md) · [Storage](storage.md) · [Networking](networking.md) · [IaC](iac.md) · [GPU](gpu.md) · [Media](media.md) · [Secrets](secrets.md) · [Agents](agents.md)  
+- [Platform](platform.md) · [Storage](storage.md) · [Networking](networking.md) · [IaC](iac.md) · [GPU](gpu.md) · [Media](media.md) · [Games](games.md) · [Secrets](secrets.md) · [Agents](agents.md)  
 - [Roadmap](../roadmap.md) · [Inventory](../inventory.md)  

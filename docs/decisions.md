@@ -39,6 +39,11 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` on k8s |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
 | Apps (migrate order) | *arr + qBit → Jellyfin → Homepage → HA → **Pi-hole last** |
+| Games (ATM10) | **Phase 6** — after core platform stable; **itzg/minecraft-server** on k8s; iSCSI block PVC; pin to beefiest node — [games](architecture/games.md) |
+| Friend remote access | **Tailscale per-service expose** (`*.ts.net`); `group:friends` → `tag:shared` only (Jellyfin + Minecraft); **no** subnet routes for friends — [games](architecture/games.md#friend-access--tailscale) |
+| Friend Jellyfin HTTPS | **Tailscale L7 Ingress** (`ingressClassName: tailscale`) — LE cert on `https://jellyfin.<tailnet>.ts.net`; not L3 Service expose (self-signed) |
+| Friend Minecraft | **Tailscale L3 Service expose** — TCP `:25565`; no HTTPS on game port |
+| MagicDNS tailnet suffix | Rename once in **admin console** (word list); **not** OpenTofu; hostname prefixes in k8s GitOps |
 | qBittorrent VPN | Peers via **Mullvad WG**; UI at **`qbittorrent.lab.jacobdrury.com`** (normal Envoy lab exposure) |
 | Power | Prefer fewer always-on watts when cheap (strip white GPU; black off when gaming-only); **not** a reason to defer k8s/GitOps |
 | Laptops | Precision optional NVENC/burst; Inspiron **out of lab plan** |

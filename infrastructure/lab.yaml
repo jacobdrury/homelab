@@ -51,4 +51,5 @@ services:
   # gateway: 192.168.1.1  # UDM Pro — add when needed for IaC
 
 tailscale:
+  magic_dns_suffix: ibex-ladon.ts.net # Rename tailnet in admin console — not settable via OpenTofu
   interim_subnet_router: homelab02 # advertises routes on host; TF enables in admin

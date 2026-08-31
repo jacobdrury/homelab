@@ -57,6 +57,7 @@ Machine configs live under `infrastructure/prd/`; keep CP patches consistent acr
 | Pi-hole | k8s | Migrate **last** from pc (black) LXC — `.11` until cutover |
 | Homepage | k8s | [gethomepage.dev](https://gethomepage.dev) |
 | Home Assistant | k8s | Before Pi-hole; downtime OK; USB passthrough if radio needs it |
+| ATM10 (Minecraft) | k8s | Phase 6 — iSCSI PVC; friend access via Tailscale `.ts.net` — [games](games.md) |
 | Argo CD | k8s | bootstrap once |
 | Monitoring | k8s | Phase 5 |
 
@@ -81,6 +82,7 @@ homelab/
                                    # actions-runner-controller (Phase 2b)
     media/                         # jellyfin, *arr, qbittorrent (+ Mullvad WG for peers)
     home/                          # homeassistant, homepage
+    games/                         # minecraft-atm10 (Phase 6)
     network/                       # pihole
   clusters/
     prd/                           # Argo app-of-apps

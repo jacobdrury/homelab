@@ -12,6 +12,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; `http://scarif.lab` works home + away |
 | **2** Talos on yavin | **Next** | Blocked on Mac Mini access — boot-test USB first |
 | **3–5** | Not started | |
+| **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
 **IaC live today:** `infrastructure/dns/`, `unifi/`, `pihole/`, **`tailscale/`** — `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Policy: [iac](architecture/iac.md).
 
@@ -253,3 +254,35 @@ Target: **yavin + hoth + endor**, all Talos **control planes**, all schedule pod
 - [ ] Renovate when ready  
 - [ ] Restore / node-replace docs  
 - [ ] Public HTTPS only if needed  
+
+## Phase 6 — Games (ATM10)
+
+**Goal:** Minecraft **All the Mods 10** for friends on `prd`; friends use **Tailscale MagicDNS** (`jellyfin` + `minecraft` on `*.ts.net`), not `*.lab` URLs. Full design: [games](architecture/games.md).
+
+**Does not block Phases 2–5.** Prefer deploying after **hoth** / **endor** join (Phase 4) so ATM10 can pin to the beefiest node.
+
+### Prerequisites (by earlier phase)
+
+| Phase | Prerequisite for ATM10 |
+|-------|------------------------|
+| 1 optional | scarif SSD pool + iSCSI LUN |
+| 2 | Tailscale k8s operator; iSCSI CSI; `iscsi-tools` on Talos nodes |
+| 3 | Jellyfin on k8s (friend expose uses same Tailscale pattern) |
+| 4 | Node with **12+ GB RAM free** for the ATM10 pod (likely hoth or endor) |
+| 5 | PVC backup approach chosen |
+
+### Checklist
+
+- [ ] Confirm target node CPU/RAM; set `nodeSelector` in manifests  
+- [ ] scarif iSCSI LUN + StorageClass; 80 Gi PVC for world data  
+- [ ] `apps/games/minecraft-atm10/` → Argo Application in `clusters/prd/`  
+- [ ] ESO: CurseForge API key, RCON password (1Password)  
+- [ ] Jellyfin **Tailscale L7 Ingress** (`ingress-friends.yaml`) + HTTPS enabled on tailnet — not Service `expose`  
+- [ ] Minecraft Service: Tailscale **L3** `expose` + `tailscale.com/hostname: minecraft`  
+- [ ] Tighten `infrastructure/tailscale/acl.tf` — `group:friends` → `tag:shared` only; remove allow-all grant  
+- [ ] Auth keys for friends (`tag:friend`); share `https://jellyfin.ibex-ladon.ts.net` + `minecraft.ibex-ladon.ts.net:25565`  
+- [ ] Minecraft whitelist; Jellyfin accounts for each friend  
+- [ ] Smoke-test: friend on tailnet (no `--accept-routes`) reaches both services, not Argo/Unraid  
+- [ ] Backup drill for game PVC  
+
+**Exit:** Friends play ATM10 and watch Jellyfin over Tailscale; no access to rest of homelab.

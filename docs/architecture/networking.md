@@ -217,3 +217,11 @@ tailscale set --advertise-routes=192.168.1.0/24,192.168.5.0/24
 Operator config (Phase 2) replaces homelab02 advertise/enable; document in `apps/system/tailscale/`. Tailnet DNS stays in `infrastructure/tailscale/`.
 
 Free Personal plan is enough until limits hit. Agents: [agents](agents.md).
+
+### Friend access (Jellyfin + Minecraft)
+
+**You:** subnet router + `*.lab` (above).
+
+**Friends:** Tailscale k8s operator — **L7 Ingress** for Jellyfin (`https://jellyfin.<tailnet>.ts.net`, LE cert), **L3 Service expose** for Minecraft (`minecraft.<tailnet>.ts.net:25565`, TCP). ACL `group:friends` → `tag:shared` only; friends **do not** use subnet routes or `--accept-routes`.
+
+**MagicDNS naming:** hostname prefix (`jellyfin`, `minecraft`) in k8s GitOps; tailnet suffix (`*.ts.net`) renamed once in admin console (word list only — not arbitrary, not OpenTofu). Phase 6 — [games](games.md#friend-access--tailscale).

@@ -64,3 +64,38 @@ curl -sI http://scarif.lab.jacobdrury.com
 - Point `devices.tf` at the k8s operator node; drop Drury route when pc (black) leaves.
 - Operator Helm uses auth key from 1Password / ESO.
 - Split DNS unchanged.
+
+## Friend access (Phase 3 / 6)
+
+**Admins:** subnet router + `*.lab` URLs (unchanged).
+
+**Friends:** Jellyfin via Tailscale **L7 Ingress** (`https://jellyfin.<tailnet>.ts.net`); Minecraft via **L3 Service expose** (`minecraft.<tailnet>.ts.net:25565`). ACL `group:friends` → `tag:shared` only — **not** homelab subnet routes.
+
+Full design: [docs/architecture/games.md](../../docs/architecture/games.md#friend-access--tailscale). Tighten `acl.tf` before issuing friend auth keys.
+
+## MagicDNS & tailnet naming
+
+MagicDNS hostnames look like **`jellyfin.ibex-ladon.ts.net`** — hostname prefix + tailnet suffix (see `lab.yaml`).
+
+| What | Customizable? | Managed in Git? |
+|------|---------------|-----------------|
+| **Tailnet suffix** (`ibex-ladon.ts.net`) | Pick from random word list in [admin DNS](https://login.tailscale.com/admin/dns) → **Rename tailnet** | **No** — recorded in `lab.yaml` |
+| **HTTPS on tailnet** (required for L7 Ingress certs) | Enable in same DNS page | **No** — admin console |
+| **Hostname prefix** (`jellyfin`, `minecraft`) | Yes | **Yes** — k8s manifests via Argo (`spec.tls.hosts` on Ingress; `tailscale.com/hostname` on Service) |
+| **ACLs, split DNS, MagicDNS toggle** | Yes | **Yes** — `acl.tf`, `dns.tf`, `dns_preferences.tf` |
+
+You cannot set an arbitrary tailnet name like `jacobdrury.ts.net`. For branded DNS, keep using `*.lab.jacobdrury.com` (you) — friends stay on `.ts.net`.
+
+After renaming the tailnet, note the chosen suffix here for operators:
+
+```text
+# Tailnet MagicDNS suffix (admin console — also in lab.yaml):
+ibex-ladon.ts.net
+```
+
+**Friend URLs (when Jellyfin + ATM10 are live):**
+
+| Service | URL |
+|---------|-----|
+| Jellyfin | `https://jellyfin.ibex-ladon.ts.net` |
+| Minecraft | `minecraft.ibex-ladon.ts.net:25565` |

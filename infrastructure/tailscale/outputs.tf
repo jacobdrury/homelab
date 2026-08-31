@@ -1,3 +1,8 @@
+output "magic_dns_suffix" {
+  description = "Tailnet MagicDNS suffix (from lab.yaml — set in admin console, not by Terraform)"
+  value       = local.lab.tailscale.magic_dns_suffix
+}
+
 output "lab_split_dns" {
   description = "Split DNS domain and nameservers applied to the tailnet"
   value = {
