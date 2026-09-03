@@ -12,3 +12,16 @@ resource "cloudflare_dns_record" "lab_host" {
   ttl     = 1
   comment = "Homelab infra — ${each.key} (VLAN 5)"
 }
+
+# Transitional pre-k8s aliases (Drury VLAN guests). Retire at Phase 3 cutover.
+resource "cloudflare_dns_record" "lab_transitional" {
+  for_each = local.transitional_lab_hosts
+
+  zone_id = data.cloudflare_zone.jacobdrury.id
+  name    = "${each.key}.lab"
+  type    = "A"
+  content = each.value
+  proxied = false
+  ttl     = 1
+  comment = "Transitional *.lab — ${each.key} (pre-k8s)"
+}

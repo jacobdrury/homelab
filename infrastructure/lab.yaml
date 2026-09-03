@@ -11,6 +11,9 @@ dns:
   cloudflare_resolvers:
     - 1.1.1.1
     - 1.0.0.1
+  # Pre-k8s *.lab aliases (Drury guests). Retire when apps cut over to Envoy / external-dns.
+  transitional_hosts:
+    arr: 192.168.1.9 # VM 101 · same as arr.homelab.com (Pi-hole local)
 
 networks:
   # Primary trusted LAN (UniFi VLAN 1). Pi-hole, Proxmox, arr VM, IoT gateway path.
