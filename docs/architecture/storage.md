@@ -76,6 +76,28 @@ Steps: add data disk(s) to array → copy UD → validate → remove UD assignme
 5. Enable **iSCSI target** plugin when cluster needs block PVCs.  
 6. Phase 1b when affordable: data disk → copy → 24TB parity.  
 
+## NFS permissions (UID / squash)
+
+Unraid NFSv4 for this export **squashes client UIDs** to Unraid **`nobody:users` (`99:100`)**. The client may still *show* files as `1000:1000` (inode owners), but writes run as `99`. If dirs are `drwxrwxr-x` owned by `1000:1000`, squashed clients (and even `root` on the client, after root_squash) get **Permission denied**.
+
+Symptoms seen on VM 101 `arr` (Sep 2026):
+
+- qBittorrent: `file_open ... error: Permission denied` under `/home/data/downloads`
+- Sonarr: `UnauthorizedAccessException` / `Permission denied` when moving into `media/anime/...` or `media/tv/...`
+- Host check: `touch /mnt/data/media/downloads/.write-test` fails for both `arr` and `sudo`
+
+**On-disk model (scarif):** keep the media tree owned by the squash identity:
+
+```bash
+# on scarif
+chown -R nobody:users /mnt/disks/ZXA0VZBA/media
+chmod -R ug+rwX,o+rX /mnt/disks/ZXA0VZBA/media
+```
+
+**App identity:** every writer (Docker **or** k8s) must run as **`uid=99` `gid=100`**, not host user `1000`. Short-term `chmod a+rwX` works but new files recreated as `1000:1000` break again. Step-by-step for today’s Compose stack: [media](media.md#nfs-uid-fix-vm-101-arr).
+
+This is **not Docker-specific** — it is Unraid NFS + matching process UID/GID.
+
 ## NFS → cluster
 
 | Export (today) | Use |
@@ -86,6 +108,16 @@ Steps: add data disk(s) to array → copy UD → validate → remove UD assignme
 | `backups/` | App dumps / future backup tooling |
 
 Cluster: **NFS CSI** (ReadWriteMany where needed). Point CSI at whatever export serves media (UD path is fine initially).
+
+**k8s must use the same UID model** as above — CSI mounts the export; it does not remap Unraid squash. For media Pods / charts:
+
+| Setting | Value |
+|---------|--------|
+| `runAsUser` / linuxserver `PUID` | `99` |
+| `runAsGroup` / `fsGroup` / `PGID` | `100` |
+| scarif tree | `nobody:users` + group-writable (`ug+rwX`) |
+
+Validate with a throwaway Pod that mounts the PVC and `touch`es a file under `media/downloads` before cutting over *arr.
 
 ## iSCSI → cluster
 
