@@ -1,0 +1,12 @@
+# Image Factory schematic for yavin (reuse for hoth/endor when they join).
+# Content-addressed ID: see schematic.id
+# Recreate: curl -X POST --data-binary @schematic.yaml https://factory.talos.dev/schematics
+#
+# Installer: factory.talos.dev/metal-installer/<schematic.id>:v1.12.7
+# ISO:       https://factory.talos.dev/image/<schematic.id>/v1.12.7/metal-amd64.iso
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/intel-ucode
+      - siderolabs/i915
+      - siderolabs/realtek-firmware

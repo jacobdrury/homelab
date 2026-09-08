@@ -43,7 +43,7 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 | NFS server | Hostname or static IP | `scarif.lab.jacobdrury.com` or `192.168.5.10` |
 | SMB / mDNS | Hostname | `scarif.local` |
 | App ingress (Envoy) | Functional subdomain | `jellyfin.lab.jacobdrury.com` |
-| GitOps paths | Environment, not planet | `clusters/prd/`, `infrastructure/prd/` |
+| GitOps paths | Environment, not planet | `clusters/prd/`, `infrastructure/talos/prd/` |
 | Kubernetes Services | Functional | `pihole`, `jellyfin`, not `jedha` |
 
 ## Migration from legacy names

@@ -1,0 +1,6 @@
+# Applied by gen.sh (replaces auto: stable from talosctl gen config).
+# Talos 1.12+ — do not set machine.network.hostname.
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: off
+hostname: yavin

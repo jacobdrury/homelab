@@ -20,6 +20,8 @@ Manages GitHub Pages records (imported) and `*.lab.jacobdrury.com` infra A recor
 
 Creates **Homelab** VLAN 5 (`192.168.5.0/24`). scarif migrated to `192.168.5.10` (2026-08-30).
 
+**Switch ports** (`devices.tf`): Pro Max 16 **Ports 13 + 5** → Homelab (**yavin** USB 2.5G + onboard 1G). Existing IoT/Drury overrides on that switch are declared too (provider replaces the full override array).
+
 ## Pi-hole (`infrastructure/pihole/`)
 
 Config-only OpenTofu for the LXC at `192.168.1.11` (block lists, domains, upstreams, local `*.homelab.com`, lab zone forward). Edit `*.auto.tfvars` in repo → `moon run pihole:apply`. Details: [pihole/README.md](pihole/README.md).
@@ -27,6 +29,15 @@ Config-only OpenTofu for the LXC at `192.168.1.11` (block lists, domains, upstre
 ## Tailscale (`infrastructure/tailscale/`)
 
 Tailnet DNS + subnet route approval in Git. Split DNS sends `lab.jacobdrury.com` → **Cloudflare** (`1.1.1.1`); enables routes on **homelab02** (interim subnet router). One-time device bootstrap: [tailscale/README.md](tailscale/README.md).
+
+## Talos (`infrastructure/talos/`)
+
+Bare-metal bootstrap under **`talos/prd/`** (future: `talos/stg/`). Patches + Image Factory schematic in Git; `secrets.yaml` / `generated/` gitignored. See [talos/prd/README.md](talos/prd/README.md).
+
+```bash
+cd infrastructure/talos/prd && ./gen.sh
+# then apply-config when ready to wipe the Mini
+```
 
 ## Moon (from repo root)
 

@@ -39,7 +39,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Target | **Bare-metal Talos** CP #1 — single-node `prd` → expand to 3 CPs |
 | Boot | Apple `AP0128M` 128 GB NVMe |
 | GPU | UHD 630 · Talos extension **`i915`** (+ **`intel-ucode`**) |
-| LAN (target) | **Primary:** USB 2.5G `enx6c1ff721c616` (UGREEN UG-USBC-25052 · RTL8156BG) → Pro Max 16 **Port 15** · **Secondary:** onboard 1G `enp4s0` |
+| LAN (target) | **Primary:** USB 2.5G → Pro Max **Port 13** (`192.168.5.11`) · **Secondary:** onboard 1G → Pro Max **Port 5** (`192.168.5.111`) — both Homelab VLAN 5 |
 | LAN (today) | USB Ethernet active; onboard `enp4s0` down |
 
 **Guests:** none — all migrated to **homelab02**. Stale LVM from old VM 105 may remain on disk. Power off / wipe when installing Talos.
@@ -227,9 +227,9 @@ AT&T → UDM Pro (.1)
                     ├─ SFP+ 2 ─ pc white / **scarif** (`.5.10`) 10G NAS · **Homelab VLAN 5**
                     ├─ SFP+ 3 ─ Flex 2.5G (.109) ─ APs, Bedroom, Flex Mini
                     ├─ SFP+ 5 ─ Pro Max 16 (.197)
-                    │              ├─ Port 13 ─ Pi-hole (.11)
-                    │              ├─ Port 15 ─ Mac Mini (.15)
-                    │              └─ Ports 1–3, … ─ PDU, IoT, clients
+                    │              ├─ Port 5 ─ yavin onboard 1G → Homelab VLAN 5
+                    │              ├─ Port 13 ─ yavin USB 2.5G → Homelab VLAN 5
+                    │              └─ Ports 1–3, … ─ PDU, IoT, clients · Pi-hole (.11) on Drury
                     └─ SFP+ 7 ─ UDM Pro
 ```
 
@@ -265,14 +265,14 @@ AT&T → UDM Pro (.1)
 | 1 | PDU Pro · `.70` |
 | 2–3 | IoT (`.2.211`, Lutron `.2.171`) |
 | 4 | Empty (was pc white 1G mgmt) |
-| 5 | `mathboi` (MAC matches discord-bots — TBD) |
+| 5 | **yavin** onboard 1G · Homelab VLAN 5 (`192.168.5.111`) |
 | 6 | pc (black) onboard GbE |
 | 7, 10, 11 | Unknown · same MAC `04:92:26:c1:6c:51` |
 | 8–9 | Empty |
 | 12 | Living-Room client |
-| 13 | Pi-hole · `.11` (2.5G) |
+| 13 | **yavin** USB 2.5G · Homelab VLAN 5 |
 | 14, 16 | Pulsar-MBP |
-| 15 | Mac Mini · `.15` |
+| 15 | Empty / TBD |
 | SFP+ 1 | Unknown MAC `70:a7:41:7c:9c:69` |
 | SFP+ 2 | Aggregation uplink |
 

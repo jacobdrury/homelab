@@ -1,0 +1,23 @@
+id: 'talos-prd'
+layer: 'tool'
+stack: 'infrastructure'
+
+project:
+  name: 'talos-prd'
+  description: 'Talos prd cluster — yavin bootstrap configs'
+
+tags:
+  - talos
+
+tasks:
+  gen:
+    script: |
+      exec ./gen.sh
+    inputs:
+      - 'schematic.id'
+      - 'schematic.yaml'
+      - 'patches/**/*.yaml'
+      - 'secrets.yaml'
+      - 'gen.sh'
+    options:
+      cache: false

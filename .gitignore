@@ -2,6 +2,10 @@
 .moon/cache/
 .moon/docker/
 
+# Talos secrets + generated machine configs (PKI)
+infrastructure/talos/**/*/secrets.yaml
+infrastructure/talos/**/*/generated/
+
 # OpenTofu / Terraform (local state on workstation — not committed)
 **/.terraform/
 *.tfstate

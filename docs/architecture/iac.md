@@ -9,10 +9,10 @@ Locked leans: [decisions](../decisions.md). Apply tooling: [local-tools](../setu
 | Layer | Tool | Repo path | Applies with |
 |-------|------|-----------|--------------|
 | Public DNS (`jacobdrury.com`, `*.lab`) | **OpenTofu** | `infrastructure/dns/` | `moon run dns:apply` |
-| UniFi networks + firewall | **OpenTofu** | `infrastructure/unifi/` | `moon run unifi:apply` |
+| UniFi networks + firewall + selected switch ports | **OpenTofu** | `infrastructure/unifi/` | `moon run unifi:apply` |
 | Pi-hole policy (lists, domains, upstreams, local `*.homelab.com`, zone forward) | **OpenTofu** | `infrastructure/pihole/` | `moon run pihole:apply` |
 | Tailscale (policy, DNS, routes, keys, device settings) | **OpenTofu** | `infrastructure/tailscale/` | `moon run tailscale:apply` |
-| Talos machine / cluster config | **OpenTofu** (+ generated YAML) | `infrastructure/prd/` | TBD at Phase 2 |
+| Talos machine / cluster config | **OpenTofu** (+ generated YAML) | `infrastructure/talos/prd/` | TBD at Phase 2 |
 | Kubernetes platform + apps | **Helm** via **Argo CD** | `apps/`, `clusters/prd/` | Git push → sync |
 | Dynamic app DNS (`jellyfin.lab`, …) | **external-dns** | Helm values in `apps/system/` | Argo |
 | TLS certificates | **cert-manager** | Helm | Argo |
@@ -34,7 +34,7 @@ Avoid duplicating the same records in two IaC modules:
 
 | Task | Why |
 |------|-----|
-| Switch port VLAN assignment | No UniFi provider coverage for port profiles yet |
+| Switch ports not yet in `unifi/devices.tf` | Provider replaces the whole `port_overrides` array per device — only manage switches we’ve declared completely |
 | Moving a host to a new subnet (IP, fstab, cable) | Physical / OS steps outside API |
 | One-time bootstrap (Talos first boot, Argo install, 1Password items) | Chicken-and-egg |
 | BIOS, Proxmox VM create, disk attach | Hypervisor / hardware |

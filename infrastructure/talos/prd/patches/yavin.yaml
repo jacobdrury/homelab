@@ -1,0 +1,37 @@
+machine:
+  kubelet:
+    # Prefer primary Homelab address (USB .11) for NodeInternalIP.
+    nodeIP:
+      validSubnets:
+        - 192.168.5.11/32
+  network:
+    interfaces:
+      # USB 2.5G RTL8156BG — Homelab (Pro Max Port 13) — primary
+      - deviceSelector:
+          hardwareAddr: 6c:1f:f7:21:c6:16
+        dhcp: false
+        addresses:
+          - 192.168.5.11/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.5.1
+            metric: 100
+      # Onboard 1G — Homelab (Pro Max Port 5) — fallback if USB NIC dies
+      - deviceSelector:
+          hardwareAddr: 68:fe:f7:10:39:b9
+        dhcp: false
+        addresses:
+          - 192.168.5.111/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.5.1
+            metric: 200
+    nameservers:
+      - 192.168.1.11
+      - 1.1.1.1
+  install:
+    disk: /dev/nvme0n1
+    wipe: false
+  nodeLabels:
+    node.kubernetes.io/instance-type: mac-mini
+    topology.kubernetes.io/zone: yavin

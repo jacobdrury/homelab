@@ -28,7 +28,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 |------|--------|
 | **1** | Boot-test **Talos 1.12.7** metal-amd64 USB on Mac Mini (1.13+ hangs on 2018 Apple EFI) |
 | **2** | Custom image: extensions `intel-ucode`, `i915`; machine config — USB 2.5G primary, onboard 1G secondary, homelab VLAN, `192.168.5.11` |
-| **3** | `infrastructure/prd/` — cluster secrets, Talos configs; `talosctl bootstrap` → **`k8s.lab.jacobdrury.com`** |
+| **3** | `infrastructure/talos/prd/` — cluster secrets, Talos configs; `talosctl bootstrap` → **`k8s.lab.jacobdrury.com`** |
 | **4** | Platform: Cilium, Argo CD, NFS CSI → scarif, Envoy + cert-manager, **Tailscale operator** (take over subnet router from homelab02) |
 | **5** | 1Password Connect + ESO; throwaway app; confirm GitOps + `https://*.lab` on LAN and tailnet |
 
@@ -146,10 +146,10 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [ ] Custom Talos ISO / image: extensions **`intel-ucode`**, **`i915`** (+ `realtek-firmware` optional)  
 - [ ] Machine config: **USB 2.5G primary** (`enx6c1ff721c616` / RTL8156BG), **onboard 1G secondary** (`enp4s0`); pin by MAC; **homelab VLAN**  
 - [ ] API endpoint: **`k8s.lab.jacobdrury.com`** (OpenTofu record → yavin)  
-- [ ] Generate cluster secrets once; store in `infrastructure/prd/` for join configs  
+- [ ] Generate cluster secrets once; store in `infrastructure/talos/prd/` for join configs  
 - [ ] `talosctl bootstrap` on yavin; **`allowSchedulingOnControlPlanes: true`**  
 - [ ] etcd snapshot cadence (single-node DR until expansion)  
-- [ ] `infrastructure/prd` + Argo → `clusters/prd`  
+- [ ] `infrastructure/talos/prd` + Argo → `clusters/prd`  
 - [ ] Cilium, NFS CSI (→ scarif), iSCSI CSI when needed, Envoy, cert-manager  
 - [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire homelab02 routes when stable  
 - [ ] 1Password Connect + ESO; seed once  
@@ -238,7 +238,7 @@ Target: **yavin + hoth + endor**, all Talos **control planes**, all schedule pod
 - [ ] Same Talos version + extensions on all nodes  
 - [ ] Boot Talos on **hoth** / **endor** → apply `controlplane` join configs (shared secrets + API endpoint)  
 - [ ] `allowSchedulingOnControlPlanes: true` on all three  
-- [ ] Talos machine configs in `infrastructure/prd/` per node  
+- [ ] Talos machine configs in `infrastructure/talos/prd/` per node  
 - [ ] API endpoint: DNS or VIP survives expansion (no kubeconfig IP churn)  
 - [ ] Validate etcd health + rolling workload placement across CPs  
 - [ ] Wipe pc (black) → personal gaming  

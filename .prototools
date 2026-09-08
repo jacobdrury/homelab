@@ -3,9 +3,11 @@ tofu = "1.9.1"
 kubectl = "1.32.7"
 helm = "3.17.3"
 talosctl = "1.12.7"
+k9s = "0.51.0"
 
-[plugins]
+[plugins.tools]
 tofu = "https://raw.githubusercontent.com/appthrust/proto-toml-plugins/main/tofu/plugin.toml"
 kubectl = "https://raw.githubusercontent.com/trillion-labs/proto-plugins/refs/heads/main/kubectl.toml"
 helm = "https://raw.githubusercontent.com/stk0vrfl0w/proto-toml-plugins/main/plugins/helm.toml"
 talosctl = "file://./.moon/proto-plugin/talosctl.toml"
+k9s = "https://raw.githubusercontent.com/appthrust/proto-toml-plugins/main/k9s/plugin.toml"

@@ -7,7 +7,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | Piece | Choice | Notes |
 |-------|--------|--------|
 | OS | **Talos Linux** | Immutable, API-driven |
-| Bootstrap | `talosctl` + configs in Git | Under `infrastructure/prd/` |
+| Bootstrap | `talosctl` + configs in Git | Under `infrastructure/talos/prd/` |
 | CNI | **Cilium** | |
 | GitOps | **Argo CD** | Root → `clusters/prd` |
 | Secrets | **1Password** + Connect + ESO | [secrets](secrets.md) |
@@ -31,7 +31,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 - Kubernetes API: **`k8s.lab.jacobdrury.com`** (OpenTofu → yavin on homelab VLAN; VIP later at 3 CPs)  
 - Homelab **VLAN** live before install — not flat `192.168.1.0/24`  
 - One `talosctl gen config` / secrets bundle reused for join configs  
-- Per-node machine config patches (hostname, interfaces) kept in `infrastructure/prd/`  
+- Per-node machine config patches (hostname, interfaces) kept in `infrastructure/talos/prd/`  
 - **etcd snapshots** on a schedule while single-node  
 - Odd CP count only: **1 → 3**, not 1 → 2  
 
@@ -41,12 +41,12 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 
 | Interface | Role | Hardware |
 |-----------|------|----------|
-| `enx6c1ff721c616` | **Primary** (2.5G) | UGREEN USB-C · Realtek **RTL8156BG** → Pro Max 16 Port 15 |
-| `enp4s0` | **Secondary** (1G) | Onboard Intel · fallback / recovery |
+| `enx6c1ff721c616` / `enp8s0u2` | **Primary** (2.5G) | UGREEN USB-C · Realtek **RTL8156BG** → Pro Max 16 **Port 13** |
+| `enp4s0` (`68:fe:f7:10:39:b9`) | **Secondary** (1G) | Onboard Intel → Pro Max 16 **Port 5** (Homelab `192.168.5.111`) |
 
 Pin both in Talos machine config by **MAC** or predictable interface name. Verify **2500 Mbps** link after install.
 
-Machine configs live under `infrastructure/prd/`; keep CP patches consistent across all nodes. Node hostnames: [naming](naming.md).
+Machine configs live under `infrastructure/talos/prd/`; keep CP patches consistent across all nodes. Node hostnames: [naming](naming.md).
 
 ## App placement
 
@@ -70,11 +70,13 @@ homelab/
   .prototools / .moon / moon.yml   # proto + moon
   docs/                            # you are here
   infrastructure/
-    prd/                           # Talos for prd
-    stg/                           # reserved
+    talos/
+      prd/                         # Talos for prd
+      stg/                         # reserved
     dns/                           # OpenTofu Cloudflare
     unifi/                         # OpenTofu UniFi
     pihole/                        # OpenTofu Pi-hole config (API)
+    tailscale/                     # OpenTofu Tailscale
   bootstrap/                       # Argo install notes
   apps/
     system/                        # cilium, nfs-csi, iscsi, cert-manager, tailscale,
@@ -94,7 +96,7 @@ homelab/
 | `apps/*` | Shared manifests; env overlays for hostnames |
 | `clusters/prd` | What `prd` Argo syncs → `*.lab.jacobdrury.com` |
 | `clusters/stg` | Later → `*.stg.lab.jacobdrury.com` |
-| `infrastructure/prd` | Talos machine configs |
+| `infrastructure/talos/prd` | Talos machine configs |
 
 **Contract:** merge to `main` → Argo on that cluster applies `clusters/<env>/` only.
 

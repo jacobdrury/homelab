@@ -4,7 +4,7 @@ stack: 'infrastructure'
 
 project:
   name: 'unifi'
-  description: 'UniFi Homelab VLAN and firewall'
+  description: 'UniFi Homelab VLAN, firewall, and switch ports'
 
 tags:
   - opentofu
