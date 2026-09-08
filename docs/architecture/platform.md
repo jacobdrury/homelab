@@ -68,6 +68,7 @@ Migration order: [roadmap Phase 3](../roadmap.md#phase-3--migrate-apps).
 ```text
 homelab/
   .prototools / .moon / moon.yml   # proto + moon
+  connect/                         # cd connect/prd (direnv) — kubeconfig/talosconfig gitignored
   docs/                            # you are here
   infrastructure/
     talos/
@@ -93,6 +94,7 @@ homelab/
 
 | Path | Role |
 |------|------|
+| `connect/` | Local kubectl / talosctl / k9s — [README](../../connect/README.md) |
 | `apps/*` | Shared manifests; env overlays for hostnames |
 | `clusters/prd` | What `prd` Argo syncs → `*.lab.jacobdrury.com` |
 | `clusters/stg` | Later → `*.stg.lab.jacobdrury.com` |

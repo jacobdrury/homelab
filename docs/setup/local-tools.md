@@ -61,12 +61,31 @@ Use a **local** console key. A **Site Manager** key from unifi.ui.com only works
 
 ## Phase 2+ (Talos / cluster)
 
-`talosctl` is pinned in [`.prototools`](../../.prototools) (plugin: [`.moon/proto-plugin/talosctl.toml`](../../.moon/proto-plugin/talosctl.toml)). Use **1.12.7** for the Mac Mini 2018 boot image (1.13+ hangs on Apple EFI).
+`talosctl` and `k9s` are pinned in [`.prototools`](../../.prototools). Use **1.12.7** for the Mac Mini 2018 boot image (1.13+ hangs on Apple EFI).
 
 ```bash
-proto install talosctl
+proto install
 talosctl version --client
+k9s version
 ```
+
+### Cluster CLI (`connect/`)
+
+Client kubeconfig + talosconfig live under [`connect/<cluster>/`](../../connect/) (gitignored secrets). **direnv** loads them when you `cd` into that directory.
+
+```bash
+brew install direnv
+echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc   # once
+
+moon run connect:sync
+cd connect/prd && direnv allow
+kubectl get nodes
+k9s
+```
+
+Without direnv: `source connect/env.sh` from anywhere. Staging later: `cd connect/stg`.
+
+Details: [connect/README.md](../../connect/README.md).
 
 **Tailscale (remote `*.lab`):** `moon run tailscale:apply` — see [infrastructure/tailscale/README.md](../../infrastructure/tailscale/README.md). macOS CLI:
 
@@ -90,4 +109,5 @@ moon --version
 
 - [Networking](../architecture/networking.md) — DNS, VLAN, firewall  
 - [Secrets](../architecture/secrets.md) — 1Password → cluster  
-- [Agents](../architecture/agents.md) — tailnet + kubeconfig  
+- [Agents](../architecture/agents.md) — tailnet + `connect/`  
+- [connect/README](../../connect/README.md) — kubectl / talosctl / k9s

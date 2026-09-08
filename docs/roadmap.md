@@ -29,6 +29,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1** | Boot-test **Talos 1.12.7** metal-amd64 USB on Mac Mini (1.13+ hangs on 2018 Apple EFI) |
 | **2** | Custom image: extensions `intel-ucode`, `i915`; machine config — USB 2.5G primary, onboard 1G secondary, homelab VLAN, `192.168.5.11` |
 | **3** | `infrastructure/talos/prd/` — cluster secrets, Talos configs; `talosctl bootstrap` → **`k8s.lab.jacobdrury.com`** |
+| **3b** | **`connect/`** — direnv + moon sync for kubectl / talosctl / k9s (humans + agents) |
 | **4** | Platform: Cilium, Argo CD, NFS CSI → scarif, Envoy + cert-manager, **Tailscale operator** (take over subnet router from homelab02) |
 | **5** | 1Password Connect + ESO; throwaway app; confirm GitOps + `https://*.lab` on LAN and tailnet |
 
@@ -148,6 +149,7 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [ ] API endpoint: **`k8s.lab.jacobdrury.com`** (OpenTofu record → yavin)  
 - [ ] Generate cluster secrets once; store in `infrastructure/talos/prd/` for join configs  
 - [ ] `talosctl bootstrap` on yavin; **`allowSchedulingOnControlPlanes: true`**  
+- [ ] **`connect/`** — `cd connect/prd` (direnv) + `moon run connect:sync`  
 - [ ] etcd snapshot cadence (single-node DR until expansion)  
 - [ ] `infrastructure/talos/prd` + Argo → `clusters/prd`  
 - [ ] Cilium, NFS CSI (→ scarif), iSCSI CSI when needed, Envoy, cert-manager  

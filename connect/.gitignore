@@ -1,0 +1,4 @@
+# Cluster credentials — never commit (repo is public)
+**/kubeconfig
+**/talosconfig
+**/*.bak

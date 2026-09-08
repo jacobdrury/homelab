@@ -2,7 +2,9 @@ projects:
   sources:
     root: '.'
   globs:
+    - 'connect/moon.yml'
     - 'infrastructure/*/moon.yml'
+    - 'infrastructure/talos/*/moon.yml'
 
 vcs:
   defaultBranch: 'main'

@@ -4,8 +4,13 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 CILIUM_VERSION="${CILIUM_VERSION:-1.19.7}"
-KUBECONFIG="${KUBECONFIG:-${HOME}/.kube/homelab-prd.yaml}"
+ROOT_REPO="$(cd "${ROOT}/../../.." && pwd)"
+KUBECONFIG="${KUBECONFIG:-${ROOT_REPO}/connect/prd/kubeconfig}"
 export KUBECONFIG
+if [[ ! -f "${KUBECONFIG}" ]]; then
+  echo "missing ${KUBECONFIG} — run: moon run connect:sync" >&2
+  exit 1
+fi
 
 helm repo add cilium https://helm.cilium.io >/dev/null 2>&1 || true
 helm repo update cilium >/dev/null

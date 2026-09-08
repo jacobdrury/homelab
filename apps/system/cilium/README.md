@@ -7,7 +7,8 @@ Talos already has `cluster.network.cni.name: none` and `cluster.proxy.disabled: 
 ## Bootstrap (until Argo owns this)
 
 ```bash
-export KUBECONFIG=~/.kube/homelab-prd.yaml
+source connect/env.sh   # or: cd connect/prd (direnv)
+
 ./install.sh
 ```
 

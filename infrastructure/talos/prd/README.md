@@ -44,7 +44,9 @@ Node installs, reboots to `192.168.5.11`. Then:
 ```bash
 talosctl --talosconfig generated/talosconfig config endpoint 192.168.5.11
 talosctl --talosconfig generated/talosconfig bootstrap -n 192.168.5.11
-talosctl --talosconfig generated/talosconfig kubeconfig -n 192.168.5.11
+# Client configs for daily use (repo root):
+moon run connect:sync
+cd connect/prd && direnv allow   # or: source connect/env.sh
 kubectl get nodes
 ```
 

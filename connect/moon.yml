@@ -1,0 +1,41 @@
+id: 'connect'
+layer: 'tool'
+stack: 'infrastructure'
+tags:
+  - 'cluster'
+  - 'connect'
+
+project:
+  name: 'connect'
+  description: 'Local kubectl / talosctl / k9s credentials (connect/<cluster>)'
+
+tasks:
+  sync:
+    script: |
+      exec ./sync.sh
+    inputs:
+      - 'sync.sh'
+    options:
+      cache: false
+
+  check:
+    script: |
+      exec ./check.sh
+    inputs:
+      - 'check.sh'
+      - 'env.sh'
+    options:
+      cache: false
+
+  k9s:
+    script: |
+      # shellcheck source=env.sh
+      source ./env.sh
+      if [[ ! -f "${KUBECONFIG}" ]]; then
+        echo "missing kubeconfig — run: moon run connect:sync" >&2
+        exit 1
+      fi
+      exec k9s
+    options:
+      cache: false
+      interactive: true

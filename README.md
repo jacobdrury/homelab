@@ -37,7 +37,7 @@ proto install                 # or: moon run root:tools-install
 moon run root:check
 ```
 
-Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/setup/local-tools.md).
+Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/setup/local-tools.md). Cluster CLIs: [`connect/`](connect/README.md) (`moon run connect:sync`).
 
 ## Status
 

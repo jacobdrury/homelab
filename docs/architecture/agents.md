@@ -27,11 +27,11 @@ flowchart LR
 |------|------|
 | Tailscale on agent host | Primary remote path — **split DNS** for `lab.jacobdrury.com` + **subnet routes** to Homelab |
 | `*.lab.jacobdrury.com` | Same URLs: LAN via Pi-hole → Cloudflare; away via split DNS → **Cloudflare direct** |
-| kubeconfig / talosconfig | Local paths; CLIs via proto/moon |
+| **`connect/<cluster>/`** | In-repo kubeconfig + talosconfig — `cd connect/prd` (direnv) or `source connect/env.sh`; `moon run connect:sync` |
 | `op` | Secrets — never in Git |
 | MCP (optional) | k8s / HA structured tools when shell is painful |
 
-Details: [networking](networking.md#tailscale) (split DNS, subnet router timeline, HTTPS).
+Details: [networking](networking.md#tailscale) (split DNS, subnet router timeline, HTTPS) · [connect/README](../../connect/README.md).
 
 ## Operating model
 
@@ -45,7 +45,7 @@ Details: [networking](networking.md#tailscale) (split DNS, subnet router timelin
 | Phase | What |
 |-------|------|
 | **Now** | Tailscale IaC applied; **homelab02** interim subnet router; `http://*.lab` remote via split DNS → Cloudflare |
-| **2** | **Tailscale operator** on `prd` (subnet router); Envoy + cert-manager → `https://*.lab` |
+| **2** | **`connect/`** for kubectl/talosctl/k9s; **Tailscale operator** on `prd` (subnet router); Envoy + cert-manager → `https://*.lab` |
 | **2** | Stable kubectl over Tailscale; Argo on `*.lab` |
 | **3+** | Remove homelab02 subnet routes before pc (black) retires; retire legacy `*.homelab.com` Pi-hole records |
 | **5** | Agent RBAC, optional MCP, `.cursor` rules |

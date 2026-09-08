@@ -2,9 +2,17 @@
 .moon/cache/
 .moon/docker/
 
+# direnv local overrides (cluster .envrc files under connect/ are committed)
+.envrc.local
+connect/**/.envrc.local
+
 # Talos secrets + generated machine configs (PKI)
 infrastructure/talos/**/*/secrets.yaml
 infrastructure/talos/**/*/generated/
+
+# Cluster client configs (also covered by connect/.gitignore)
+connect/**/kubeconfig
+connect/**/talosconfig
 
 # OpenTofu / Terraform (local state on workstation — not committed)
 **/.terraform/
