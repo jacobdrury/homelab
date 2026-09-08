@@ -10,7 +10,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; `http://scarif.lab` works home + away |
-| **2** Talos on yavin | **In progress** | Cluster up; next NFS → **naboo** worker → secrets → Argo |
+| **2** Talos on yavin | **In progress** | Housekeeping (incl. SSH) → NFS → **naboo** → secrets → Argo |
 | **3–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -26,7 +26,7 @@ Talos + Cilium + **`connect/`** are up on **yavin**. Remaining platform work (or
 
 | Step | Action |
 |------|--------|
-| **1** | Housekeeping — 1Password backup of Talos secrets; commit in-repo bootstrap work |
+| **1** | Housekeeping — 1Password backup of Talos secrets; commit bootstrap work; **SSH/sudo hygiene** ([below](#phase-2-housekeeping--ssh--credentials)) |
 | **2** | **NFS CSI → scarif** |
 | **3** | **naboo** — Talos **worker** VM on scarif (Unraid KVM); join `prd` for RAM/CPU headroom |
 | **4** | **1Password Connect + ESO** |
@@ -154,7 +154,7 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [x] Cluster secrets + `infrastructure/talos/prd/`; bootstrap; **`allowSchedulingOnControlPlanes: true`**  
 - [x] Cilium  
 - [x] **`connect/`** — `cd connect/prd` (direnv) + `moon run connect:sync`  
-- [ ] Housekeeping — 1Password backup of secrets; commit bootstrap work  
+- [ ] **Housekeeping** — see [SSH & credentials](#phase-2-housekeeping--ssh--credentials)  
 - [ ] NFS CSI (→ scarif); iSCSI CSI when needed  
 - [ ] **naboo** — Unraid KVM Talos **worker** on scarif (`192.168.5.14`); SSD disk; join existing cluster (not a CP)  
 - [ ] 1Password Connect + ESO; seed once  
@@ -166,6 +166,36 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [ ] Confirm GitOps + NFS + **`https://`** on LAN and away via Tailscale  
 
 **Defer:** Prometheus / Grafana / Discord alerts → [Phase 5](#phase-5--hardening). Bootstrap troubleshooting: **`connect/`**, k9s, talosctl (no early metrics stack on 16 GB yavin).
+
+### Phase 2 housekeeping — SSH & credentials
+
+Do this **before NFS / naboo** so break-glass + migration SSH is predictable. Scope is **light** — not Tailscale SSH or a full IdM.
+
+**Hosts (SSH Host entries + 1Password items):**
+
+| Host | Address | Notes |
+|------|---------|--------|
+| **scarif** | `192.168.5.10` | Unraid root / UI |
+| **homelab02** | `192.168.1.12` | Proxmox |
+| **arr** | `192.168.1.9` | VM 101 — media stack configs (Phase 3 migrate) |
+| **home-assistant** | `192.168.2.8` | VM 105 — HA OS (VLAN 2) |
+| **pihole** | `192.168.1.11` | LXC 106 |
+| **discord-bots** | `192.168.1.18` | VM 103 (optional but include) |
+
+Skip Talos (**yavin** / **naboo**) — use `talosctl` via `connect/prd`.
+
+**Checklist:**
+
+- [ ] 1Password **Homelab** vault: backup Talos `secrets.yaml` + `talosconfig`; commit in-repo bootstrap work when ready  
+- [ ] Create / refresh 1Password items for every host above (SSH user, UI passwords, notes)  
+- [ ] **Rotate sudo/admin password** to one shared lab admin secret in 1Password; set that password on each host so sudo is in sync (stop relying on forgotten per-box passwords)  
+- [ ] **1Password SSH agent** + one lab pubkey; install on those hosts; prefer key auth for login  
+- [ ] `connect/ssh/config` — committed Host entries for the table above (no private keys in Git); document Include / usage in `connect/README`  
+- [ ] Disable password SSH where keys work (keep the 1Password admin password for sudo + break-glass until verified)  
+
+**sudo policy (locked):** password required; stored in **1Password** (shared lab admin secret rotated onto hosts). Not NOPASSWD for now.
+
+**Later / optional:** Tailscale SSH; per-host sudo secrets if shared admin becomes uncomfortable; Phase 5 harden further.
 
 **Exit:** `prd` GitOps-reachable on Tailscale + VLAN; **`https://*.lab`** works home and away; NFS CSI talks to scarif; **naboo** worker online; Homepage + Uptime Kuma on GitOps; cluster ready to accept CP joins.
 
