@@ -73,6 +73,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). Community provide
 | `k8s.lab.jacobdrury.com` | `192.168.5.11` | Kubernetes API (same node until VIP) |
 | `hoth.lab.jacobdrury.com` | `192.168.5.12` | Talos CP #2 (Phase 4) |
 | `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
+| `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker VM on scarif (Phase 2 interim) |
 
 **Apps (Phase 2–3):** `jellyfin.lab`, `qbittorrent.lab`, `argocd.lab`, etc. — A records → **Envoy** on yavin (`.11` or VIP `.20`); created by **external-dns** from HTTPRoutes (or OpenTofu until external-dns is live).
 

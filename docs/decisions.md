@@ -6,6 +6,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 |------|----------|
 | Sequence | **1)** Unraid owns 24TB → **1.5)** homelab VLAN + OpenTofu → **2)** bare-metal Talos on yavin → **3)** migrate apps (Pi-hole **last**) → **4)** expand to **3 CPs** |
 | Compute (bootstrap) | **Bare-metal Talos** on Mac Mini (**yavin**) — single-node `prd`; **`allowSchedulingOnControlPlanes: true`** |
+| Compute (interim worker) | **naboo** — Talos **worker** VM on **scarif** (Unraid KVM); Homelab `.14`; SSD-backed; **not** a CP; drain when hoth/endor arrive |
 | Compute (steady) | **3 bare-metal Talos control planes**: **yavin** + **hoth** + **endor**; all schedule workloads |
 | Cluster scale-out | **Expand in place** (join CPs to existing etcd) when mini PCs arrive — **not** a full cluster rebuild |
 | Cluster API endpoint | **`k8s.lab.jacobdrury.com`** — stable DNS from first bootstrap; VIP or DNS update at 3 CPs |
@@ -17,7 +18,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Talos extensions (yavin) | `intel-ucode`, `i915`; `realtek-firmware` optional; `iscsi-tools` when block PVCs needed |
 | Compute (exit) | **pc (black)** → personal gaming **after** workloads leave; **retain during transition** |
 | NAS | **Unraid bare metal on pc (white)**; USB boot + license; GTX 780 **removed** |
-| Apps vs NAS | Unraid is **storage only**; apps go to k8s/GitOps (no Unraid Docker as intermediate) |
+| Apps vs NAS | Unraid is **storage only** for apps (no Unraid Docker). **Exception:** interim Talos worker VM **naboo** on scarif for k8s compute headroom |
 | Array start | **24TB via Unassigned Devices** (keep filesystem; **no new large drive**); array/parity only when a second large disk or free space exists |
 | 2TB HDD | **Out of Unraid plan** for now |
 | Appdata | Existing **NVMe/SATA SSDs** on pc (white) |
@@ -38,7 +39,8 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; **LAN ad blocking**; `*.lab` stays in Cloudflare |
 | Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` on k8s |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
-| Apps (migrate order) | *arr + qBit → Jellyfin → Homepage → HA → **Pi-hole last** |
+| Apps (migrate order) | *arr + qBit → Jellyfin → HA → **Pi-hole last** (Homepage + Uptime Kuma land in Phase 2 after Argo) |
+| Observability timing | Bootstrap: **`connect/`** + k9s + talosctl. **Homepage + Uptime Kuma** after Argo. **Prometheus/Grafana** Phase 5 (defer on 16 GB yavin) |
 | Games (ATM10) | **Phase 6** — after core platform stable; **itzg/minecraft-server** on k8s; iSCSI block PVC; pin to beefiest node — [games](architecture/games.md) |
 | Friend remote access | **Tailscale per-service expose** (`*.ts.net`); `group:friends` → `tag:shared` only (Jellyfin + Minecraft); **no** subnet routes for friends — [games](architecture/games.md#friend-access--tailscale) |
 | Friend Jellyfin HTTPS | **Tailscale L7 Ingress** (`ingressClassName: tailscale`) — LE cert on `https://jellyfin.<tailnet>.ts.net`; not L3 Service expose (self-signed) |
@@ -52,4 +54,4 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Dep updates | **Renovate later**; no Dependabot version updates |
 | CI / OpenTofu | **Manual apply** (`moon` on Mac) until Phase 2b; then **GitHub Actions** — cloud runners for `dns/`, **ARC runners in `prd`** for `unifi/` + `pihole/`; public repo → no fork PRs with secrets — [roadmap Phase 2b](roadmap.md#phase-2b--opentofu-ci-github-actions) |
 | Agents | **First-class**: Tailscale + kubeconfig + lab HTTPS + `op`; GitOps preferred |
-| Host naming | **Star Wars planets** for physical hosts + Talos nodes; Unraid NAS = **`scarif`** — [naming](architecture/naming.md) |
+| Host naming | **Star Wars planets** for physical hosts + Talos nodes; Unraid = **`scarif`**; interim worker = **`naboo`** — [naming](architecture/naming.md) |

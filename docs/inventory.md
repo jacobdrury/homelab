@@ -13,6 +13,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
 | **Mini PC #1** | **hoth** | — | — | `192.168.5.12` | Talos CP #2 — join existing cluster (Phase 4) |
 | **Mini PC #2** | **endor** | — | — | `192.168.5.13` | Talos CP #3 — join existing cluster (Phase 4) |
+| **naboo** (VM) | **naboo** | — | Planned | `192.168.5.14` | Talos **worker** on scarif Unraid KVM — interim until Phase 4 |
 
 **Proxmox (legacy):** **homelab02 only** — single-node cluster (`pvecm expected 1`, corosync config v6, Aug 2026). **homelab03** delnode'd (Mac Mini → Talos); **homelab** (pc white) retired → bare-metal **scarif** (Unraid).
 
@@ -213,10 +214,12 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | IP | Device |
 |----|--------|
 | `.10` | **scarif** (pc white) · Unraid NAS |
-| `.11` | **yavin** (target · Talos Phase 2) |
+| `.11` | **yavin** (Talos CP #1) |
 | `.12` | **hoth** (target · Phase 4) |
 | `.13` | **endor** (target · Phase 4) |
+| `.14` | **naboo** (Talos worker VM on scarif · Phase 2 interim) |
 | `.20` | API VIP (optional · Phase 4) |
+| `.111` | **yavin** onboard 1G fallback |
 
 ### Topology
 

@@ -2,7 +2,7 @@
 
 Phased path from [inventory](inventory.md) → target. Principles and checklists only; leans live in [decisions](decisions.md).
 
-## Current status (2026-08-30)
+## Current status (2026-09-07)
 
 | Phase | State | Notes |
 |-------|--------|--------|
@@ -10,7 +10,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; `http://scarif.lab` works home + away |
-| **2** Talos on yavin | **Next** | Blocked on Mac Mini access — boot-test USB first |
+| **2** Talos on yavin | **In progress** | Cluster up; next NFS → **naboo** worker → secrets → Argo |
 | **3–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -22,20 +22,24 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 
 ## What's next — Phase 2
 
-**Gate:** physical access to **yavin** (Mac Mini). Nothing else blocks bootstrap.
+Talos + Cilium + **`connect/`** are up on **yavin**. Remaining platform work (ordered):
 
 | Step | Action |
 |------|--------|
-| **1** | Boot-test **Talos 1.12.7** metal-amd64 USB on Mac Mini (1.13+ hangs on 2018 Apple EFI) |
-| **2** | Custom image: extensions `intel-ucode`, `i915`; machine config — USB 2.5G primary, onboard 1G secondary, homelab VLAN, `192.168.5.11` |
-| **3** | `infrastructure/talos/prd/` — cluster secrets, Talos configs; `talosctl bootstrap` → **`k8s.lab.jacobdrury.com`** |
-| **3b** | **`connect/`** — direnv + moon sync for kubectl / talosctl / k9s (humans + agents) |
-| **4** | Platform: Cilium, Argo CD, NFS CSI → scarif, Envoy + cert-manager, **Tailscale operator** (take over subnet router from homelab02) |
-| **5** | 1Password Connect + ESO; throwaway app; confirm GitOps + `https://*.lab` on LAN and tailnet |
+| **1** | Housekeeping — 1Password backup of Talos secrets; commit in-repo bootstrap work |
+| **2** | **NFS CSI → scarif** |
+| **3** | **naboo** — Talos **worker** VM on scarif (Unraid KVM); join `prd` for RAM/CPU headroom |
+| **4** | **1Password Connect + ESO** |
+| **5** | **Argo CD** + `clusters/prd` app-of-apps |
+| **6** | Envoy Gateway + cert-manager (LE DNS-01); **Tailscale operator** (replace homelab02 subnet router) |
+| **7** | **Homepage + Uptime Kuma** via GitOps (first real apps — after Argo; populate as more services land) |
+| **8** | Throwaway/smoke app if needed; etcd snapshot cadence; confirm `https://*.lab` on LAN + Tailscale |
+
+**Deliberately later:** Prometheus / Grafana / Discord alert wiring — **Phase 5** (yavin is 16 GB; bootstrap debugging uses `connect/` + k9s + talosctl). Do **not** pull full metrics stack forward.
 
 Optional anytime: SSD `appdata` pool on scarif; array/parity ([Phase 1b](#phase-1b--array--parity-when-you-can)).
 
-Tools ready: `proto install talosctl` (1.12.7) · k8s operator preauth key in tfstate → copy to 1Password — [tailscale README](../infrastructure/tailscale/README.md).
+Tools: `cd connect/prd` · `moon run connect:sync` · [tailscale README](../infrastructure/tailscale/README.md).
 
 ## Sequence (locked)
 
@@ -61,7 +65,7 @@ flowchart LR
 
 ## Principles
 
-1. **Unraid = storage only** — NFS/iSCSI to the cluster; apps land on k8s once (minimize redo)  
+1. **Unraid = storage only** — NFS/iSCSI to the cluster; apps land on k8s once (minimize redo). **Exception:** interim Talos worker **naboo** on scarif for compute headroom  
 2. Media on **scarif NFS**; arr VM on pc (black) until `prd` cutover  
 3. GitOps as soon as `prd` exists  
 4. **Bare-metal Talos on yavin first** — retire Mac Mini Proxmox; expand to **3 CPs** when mini PCs arrive  
@@ -143,22 +147,27 @@ Buy **data** drive(s) first; **24TB becomes parity** after library is copied off
 Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to homelab02) — wipe does not affect Pi-hole, discord bots, arr, or HA. Bootstrap **single-node `prd`** designed to **expand to 3 CPs** later.
 
 - [x] Proxmox: **homelab03** delnode'd; **homelab02** standalone single-node (Aug 2026)
-- [ ] Boot-test Talos metal-amd64 USB on Mac Mini (before wipe)  
-- [ ] Custom Talos ISO / image: extensions **`intel-ucode`**, **`i915`** (+ `realtek-firmware` optional)  
-- [ ] Machine config: **USB 2.5G primary** (`enx6c1ff721c616` / RTL8156BG), **onboard 1G secondary** (`enp4s0`); pin by MAC; **homelab VLAN**  
-- [ ] API endpoint: **`k8s.lab.jacobdrury.com`** (OpenTofu record → yavin)  
-- [ ] Generate cluster secrets once; store in `infrastructure/talos/prd/` for join configs  
-- [ ] `talosctl bootstrap` on yavin; **`allowSchedulingOnControlPlanes: true`**  
-- [ ] **`connect/`** — `cd connect/prd` (direnv) + `moon run connect:sync`  
-- [ ] etcd snapshot cadence (single-node DR until expansion)  
-- [ ] `infrastructure/talos/prd` + Argo → `clusters/prd`  
-- [ ] Cilium, NFS CSI (→ scarif), iSCSI CSI when needed, Envoy, cert-manager  
-- [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire homelab02 routes when stable  
+- [x] Boot-test / install Talos **1.12.7** on yavin (1.13+ hangs on 2018 Apple EFI)  
+- [x] Custom image: **`intel-ucode`**, **`i915`**, `realtek-firmware`  
+- [x] Machine config: USB 2.5G primary + onboard 1G secondary; Homelab VLAN; `192.168.5.11` / `.111`  
+- [x] API endpoint: **`k8s.lab.jacobdrury.com`**  
+- [x] Cluster secrets + `infrastructure/talos/prd/`; bootstrap; **`allowSchedulingOnControlPlanes: true`**  
+- [x] Cilium  
+- [x] **`connect/`** — `cd connect/prd` (direnv) + `moon run connect:sync`  
+- [ ] Housekeeping — 1Password backup of secrets; commit bootstrap work  
+- [ ] NFS CSI (→ scarif); iSCSI CSI when needed  
+- [ ] **naboo** — Unraid KVM Talos **worker** on scarif (`192.168.5.14`); SSD disk; join existing cluster (not a CP)  
 - [ ] 1Password Connect + ESO; seed once  
-- [ ] LE for `*.lab.jacobdrury.com` (cert-manager + DNS-01); optional Envoy route **`scarif.lab`** → Unraid HTTP  
-- [ ] Deploy a throwaway app; confirm GitOps + NFS; test **`https://`** on LAN and away via Tailscale  
+- [ ] Argo CD → `clusters/prd`  
+- [ ] Envoy + cert-manager; LE for `*.lab.jacobdrury.com`; optional **`scarif.lab`** → Unraid HTTP  
+- [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire homelab02 routes when stable  
+- [ ] **Homepage + Uptime Kuma** via Argo (after GitOps is live; fill in as services appear)  
+- [ ] etcd snapshot cadence (single-node DR until expansion)  
+- [ ] Confirm GitOps + NFS + **`https://`** on LAN and away via Tailscale  
 
-**Exit:** `prd` GitOps-reachable on Tailscale + VLAN; **`https://*.lab`** works home and away; NFS CSI talks to scarif; cluster ready to accept CP joins.
+**Defer:** Prometheus / Grafana / Discord alerts → [Phase 5](#phase-5--hardening). Bootstrap troubleshooting: **`connect/`**, k9s, talosctl (no early metrics stack on 16 GB yavin).
+
+**Exit:** `prd` GitOps-reachable on Tailscale + VLAN; **`https://*.lab`** works home and away; NFS CSI talks to scarif; **naboo** worker online; Homepage + Uptime Kuma on GitOps; cluster ready to accept CP joins.
 
 ### Phase 2b — OpenTofu CI (GitHub Actions)
 
@@ -221,12 +230,13 @@ Cut over workloads → GitOps on `prd`. All Proxmox guests now on **pc (black)**
 
 1. *arr + qBittorrent (Mullvad peers; UI at `qbittorrent.lab.jacobdrury.com`)  
 2. Jellyfin (library on **scarif NFS**; GPU/QSV **optional** — not needed for typical 720/1080 direct play)  
-3. Homepage  
-4. Home Assistant (downtime OK)  
-5. Discord bots (optional — or leave on Proxmox until black PC retires)  
-6. **Pi-hole** — final cutover from pc (black) LXC → k8s; point LAN at cluster Pi-hole  
+3. Home Assistant (downtime OK)  
+4. Discord bots (optional — or leave on Proxmox until black PC retires)  
+5. **Pi-hole** — final cutover from pc (black) LXC → k8s; point LAN at cluster Pi-hole  
 
-Each: `apps/` → Argo → `*.lab.jacobdrury.com` → retire old guest.
+**Already on cluster from Phase 2 (after Argo):** Homepage, Uptime Kuma — extend config as apps migrate; do not redeploy from scratch here.
+
+Each migrate: `apps/` → Argo → `*.lab.jacobdrury.com` → retire old guest.
 
 pc (black) retained until these are validated; then idle.
 
@@ -243,13 +253,15 @@ Target: **yavin + hoth + endor**, all Talos **control planes**, all schedule pod
 - [ ] Talos machine configs in `infrastructure/talos/prd/` per node  
 - [ ] API endpoint: DNS or VIP survives expansion (no kubeconfig IP churn)  
 - [ ] Validate etcd health + rolling workload placement across CPs  
+- [ ] **Drain + remove naboo** (interim scarif worker VM no longer needed)  
 - [ ] Wipe pc (black) → personal gaming  
 
-**Exit:** 3 Ready CPs; same cluster + GitOps; black out of lab.
+**Exit:** 3 Ready CPs; same cluster + GitOps; naboo gone; black out of lab.
 
 ## Phase 5 — Hardening
 
-- [ ] Prometheus, Grafana, Uptime Kuma → Discord  
+- [ ] Prometheus + Grafana → Discord (full metrics; deferred from Phase 2 — yavin RAM / bootstrap used CLI tooling)  
+- [ ] Wire Uptime Kuma (already deployed post-Argo) alerts → Discord if not done earlier  
 - [ ] Agent workstation Tailscale + kubecontext docs / Cursor rules  
 - [ ] Agent API tokens in 1Password  
 - [ ] Optional MCP  

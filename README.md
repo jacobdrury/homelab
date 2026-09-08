@@ -15,7 +15,7 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | Delivery | Manual guests | Argo CD ← this repo |
 | Secrets | Ad hoc | 1Password → Connect → ESO |
 
-**Next:** Phase **2** — bare-metal Talos on **yavin** (`192.168.5.11` · `k8s.lab.jacobdrury.com`).
+**Next:** Phase **2** — NFS CSI → **naboo** worker → secrets → Argo → Envoy/Tailscale → Homepage + Uptime Kuma. Prometheus/Grafana wait for Phase 5.
 
 ## Docs
 
@@ -41,4 +41,4 @@ Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/se
 
 ## Status
 
-Inventory done. Phase 1 storage **done**. Phase **1.5** (VLAN + IaC + scarif move) **done**. Proxmox **homelab02** standalone (Mini delnode'd). Executing [roadmap](docs/roadmap.md): **Talos `prd` → migrate apps → mini PCs / free black PC**.
+Inventory done. Phase 1 storage **done**. Phase **1.5** (VLAN + IaC + scarif move) **done**. **yavin** Talos + Cilium + `connect/` up. Executing [roadmap](docs/roadmap.md): **NFS → ESO → Argo → apps**.

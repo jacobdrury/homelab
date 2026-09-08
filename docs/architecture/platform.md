@@ -15,16 +15,19 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | Ingress | **Envoy Gateway** | Gateway API / HTTPRoute |
 | Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
-| Monitoring | Prometheus, Grafana, Uptime Kuma | Discord alerts |
+| Monitoring | Prometheus, Grafana (Phase 5); **Uptime Kuma** after Argo | Bootstrap debug: `connect/` + k9s + talosctl — no early metrics stack on 16 GB yavin |
 
 ### Node layout
 
 | Stage | Nodes | Notes |
 |-------|-------|--------|
 | **Bootstrap** | 1× bare-metal CP on Mac Mini (**yavin**) | Single-node `prd`; **`allowSchedulingOnControlPlanes: true`**; **no HA** |
-| **Steady** | **3× bare-metal control planes** — **yavin** + **hoth** + **endor** | Expand **in place**; all CPs schedule workloads; no dedicated workers |
+| **Interim** | **yavin** (CP) + **naboo** (worker VM on scarif) | Extra RAM/CPU until mini PCs; **naboo is never a CP** |
+| **Steady** | **3× bare-metal control planes** — **yavin** + **hoth** + **endor** | Expand **in place**; all CPs schedule workloads; **drain + remove naboo** |
 
-**Scale-out (Phase 4):** when **hoth** and **endor** arrive, **join them as control planes** to the existing cluster (**1→3** etcd members). Use the same cluster secrets and a **stable API endpoint** (DNS or VIP) defined at first bootstrap. Media stays on **scarif NFS** — expansion does not touch library data.
+**Interim worker (Phase 2):** **naboo** — Unraid KVM on **scarif**, Homelab `192.168.5.14`, SSD-backed system disk, fixed RAM slice (leave Unraid headroom). Same cluster secrets / Talos **1.12.x** as yavin; join as **worker**. scarif maintenance takes naboo down — acceptable stopgap. Does **not** replace “Unraid = storage only” for apps (no Unraid Docker).
+
+**Scale-out (Phase 4):** when **hoth** and **endor** arrive, **join them as control planes** to the existing cluster (**1→3** etcd members). Drain workloads off **naboo**, then delete the VM. Use the same cluster secrets and a **stable API endpoint** (DNS or VIP) defined at first bootstrap. Media stays on **scarif NFS** — expansion does not touch library data.
 
 **Bootstrap requirements (day one):**
 
@@ -35,7 +38,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 - **etcd snapshots** on a schedule while single-node  
 - Odd CP count only: **1 → 3**, not 1 → 2  
 
-**Joining mental model:** boot Talos → apply `controlplane` machine config (shared cluster secrets + API endpoint) → node Ready. New pods can land on new nodes; existing pods stay until roll/drain.
+**Joining mental model:** boot Talos → apply machine config (shared cluster secrets + API endpoint) → node Ready. Control planes use `controlplane` config; **naboo** uses **worker**. New pods can land on new nodes; existing pods stay until roll/drain.
 
 ### yavin networking (Mac Mini 2018)
 
@@ -55,11 +58,12 @@ Machine configs live under `infrastructure/talos/prd/`; keep CP patches consiste
 | Jellyfin | k8s | NFS `media/`; GPU worker — [gpu](gpu.md) |
 | Sonarr ×2, Prowlarr, qBittorrent | k8s | NFS downloads; **peers via Mullvad WG**, **UI/API off-VPN** — [media](media.md) |
 | Pi-hole | k8s | Migrate **last** from pc (black) LXC — `.11` until cutover |
-| Homepage | k8s | [gethomepage.dev](https://gethomepage.dev) |
+| Homepage | k8s | After **Argo** (Phase 2); populate as services land — [gethomepage.dev](https://gethomepage.dev) |
 | Home Assistant | k8s | Before Pi-hole; downtime OK; USB passthrough if radio needs it |
 | ATM10 (Minecraft) | k8s | Phase 6 — iSCSI PVC; friend access via Tailscale `.ts.net` — [games](games.md) |
 | Argo CD | k8s | bootstrap once |
-| Monitoring | k8s | Phase 5 |
+| Uptime Kuma | k8s | After **Argo** (Phase 2), with Homepage |
+| Prometheus / Grafana | k8s | **Phase 5** — not during single-node bootstrap |
 
 Migration order: [roadmap Phase 3](../roadmap.md#phase-3--migrate-apps).
 

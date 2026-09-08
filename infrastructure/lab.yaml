@@ -47,6 +47,9 @@ networks:
       endor:
         ip: 192.168.5.13
         role: talos_cp # Phase 4
+      naboo:
+        ip: 192.168.5.14
+        role: talos_worker # Unraid VM on scarif · interim until Phase 4
 
 services:
   pihole:

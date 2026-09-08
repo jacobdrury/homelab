@@ -56,8 +56,8 @@ Host naming: [naming](naming.md).
 - Public internet exposure of the media stack  
 - Ceph/Longhorn as primary storage  
 - Apps on Unraid Docker as a stepping stone to k8s  
-- Dedicated worker-only nodes (all three CPs schedule pods)  
-- Full Talos control plane on Unraid  
+- Dedicated worker-only nodes as the **steady** design (all three CPs schedule pods). **Interim OK:** **naboo** worker VM on scarif until hoth/endor  
+- Full Talos **control plane** on Unraid (worker VM only)  
 - Running `stg` until you explicitly want a second cluster  
 - Dependabot version updates (Renovate later)  
 - Buying a second large drive before Unraid is useful (UD path instead)  
