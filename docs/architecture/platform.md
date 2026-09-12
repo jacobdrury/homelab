@@ -25,7 +25,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | **Interim** | **yavin** (CP) + **naboo** (worker VM on scarif) | Extra RAM/CPU until mini PCs; **naboo is never a CP** |
 | **Steady** | **3× bare-metal control planes** — **yavin** + **hoth** + **endor** | Expand **in place**; all CPs schedule workloads; **drain + remove naboo** |
 
-**Interim worker (Phase 2):** **naboo** — Unraid KVM on **scarif**, Homelab `192.168.5.14`, SSD-backed system disk, fixed RAM slice (leave Unraid headroom). Same cluster secrets / Talos **1.12.x** as yavin; join as **worker**. scarif maintenance takes naboo down — acceptable stopgap. Does **not** replace “Unraid = storage only” for apps (no Unraid Docker).
+**Interim worker (Phase 2):** **naboo** — **live** on `prd` (Sep 2026). Unraid KVM on **scarif**, Homelab `192.168.5.14`, 6 vCPU / 20 GB, SSD vdisk on `/mnt/disks/naboo-ssd`. Same cluster secrets / Talos **1.12.7** as yavin; **worker** only (ROLE `<none>` in k8s is expected). scarif maintenance takes naboo down — acceptable stopgap. Does **not** replace “Unraid = storage only” for apps (no Unraid Docker).
 
 **Scale-out (Phase 4):** when **hoth** and **endor** arrive, **join them as control planes** to the existing cluster (**1→3** etcd members). Drain workloads off **naboo**, then delete the VM. Use the same cluster secrets and a **stable API endpoint** (DNS or VIP) defined at first bootstrap. Media stays on **scarif NFS** — expansion does not touch library data.
 

@@ -6,14 +6,14 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 
 | Host | Codename (target) | Node / name (today) | Role today | IP | Notes |
 |------|-------------------|---------------------|------------|-----|-------|
-| **Mac Mini** | **yavin** | `homelab03` | Proxmox (idle, **off cluster**) → **Talos CP** | `192.168.1.15` | Removed from Proxmox cluster Aug 2026 · no guests · ready for Phase 2 wipe |
+| **Mac Mini** | **yavin** | `yavin` | Talos **control-plane** | `192.168.5.11` | Bare-metal Talos 1.12.7 · Cilium · `allowSchedulingOnControlPlanes` |
 | **pc (black)** | — | `homelab02` | Proxmox (**sole node**) | `192.168.1.12` | arr + HA + Pi-hole + discord bots; **leaving lab** → gaming |
-| **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.5.10` | NAS · Homelab VLAN 5 · 24TB UD + NFS · 10G **eth1** |
+| **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.5.10` | NAS · Homelab VLAN 5 · 24TB UD + NFS · hosts **naboo** VM |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
 | **Mini PC #1** | **hoth** | — | — | `192.168.5.12` | Talos CP #2 — join existing cluster (Phase 4) |
 | **Mini PC #2** | **endor** | — | — | `192.168.5.13` | Talos CP #3 — join existing cluster (Phase 4) |
-| **naboo** (VM) | **naboo** | — | Planned | `192.168.5.14` | Talos **worker** on scarif Unraid KVM — interim until Phase 4 |
+| **naboo** (VM) | **naboo** | `naboo` | Talos **worker** | `192.168.5.14` | Unraid KVM on scarif · 6 vCPU / 20 GB · Ready on `prd` (Sep 2026) |
 
 **Proxmox (legacy):** **homelab02 only** — single-node cluster (`pvecm expected 1`, corosync config v6, Aug 2026). **homelab03** delnode'd (Mac Mini → Talos); **homelab** (pc white) retired → bare-metal **scarif** (Unraid).
 
@@ -36,14 +36,13 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Item | Value |
 |------|-------|
 | Model | Apple Mac mini 2018 (`Macmini8,1`) · serial `C07Y30G3JYVY` |
-| Today | Proxmox 8.4.0 · kernel 6.8.12-9-pve · **removed from cluster** (Aug 2026) |
-| Target | **Bare-metal Talos** CP #1 — single-node `prd` → expand to 3 CPs |
+| Today | **Bare-metal Talos 1.12.7** · CP #1 on `prd` · `192.168.5.11` / `.111` |
+| Target | Expand to 3 CPs with **hoth** / **endor** (Phase 4) |
 | Boot | Apple `AP0128M` 128 GB NVMe |
 | GPU | UHD 630 · Talos extension **`i915`** (+ **`intel-ucode`**) |
-| LAN (target) | **Primary:** USB 2.5G → Pro Max **Port 13** (`192.168.5.11`) · **Secondary:** onboard 1G → Pro Max **Port 5** (`192.168.5.111`) — both Homelab VLAN 5 |
-| LAN (today) | USB Ethernet active; onboard `enp4s0` down |
+| LAN | **Primary:** USB 2.5G → Pro Max **Port 13** (`192.168.5.11`) · **Secondary:** onboard 1G → Pro Max **Port 5** (`192.168.5.111`) — both Homelab VLAN 5 |
 
-**Guests:** none — all migrated to **homelab02**. Stale LVM from old VM 105 may remain on disk. Power off / wipe when installing Talos.
+**Guests:** none (Proxmox retired Aug 2026).
 
 ---
 
@@ -105,16 +104,17 @@ Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
 | OS | **Unraid** · hostname **`scarif`** |
 | Boot | Samsung USB flash 128 GB (`sda`) |
 | GPU | — (GTX 780 removed Aug 2025) |
-| LAN | **eth1** Intel 82599 **10G DAC** → Aggregation **SFP+ 2** (**Homelab** VLAN 5) · `192.168.5.10` static · DNS `192.168.1.11` · bonding/bridging **off** · **eth0** (1G) unused · UI: `http://scarif.lab.jacobdrury.com` (HTTP only) |
+| LAN | **bond0** (`eth0`+`eth1`) + **br0** · Homelab VLAN 5 · `192.168.5.10` static · DNS `192.168.1.11` · UI: `http://scarif.lab.jacobdrury.com` (HTTP only) |
 | Array | **Started** · no data or parity disks assigned |
 | Plugins | **Unassigned Devices** (mount + NFS share) |
+| VMs | **naboo** — Talos worker · libvirt + domains on `/mnt/disks/naboo-ssd/` (array `/mnt/user` empty) |
 
 ### Disks
 
 | Device | ID | Role today | Notes |
 |--------|-----|------------|-------|
-| Seagate 24TB | `sdb` / `ZXA0VZBA` | **UD** · media | XFS UUID `0a63c59e-eb76-4c76-b559-ce379e340311` · **8.7 TB** used · Automount + Share |
-| Samsung 970 EVO 500 GB | `nvme0n1` | UD · idle | NTFS leftover · candidate **cache pool** |
+| Seagate 24TB | `sdb` / `ZXA0VZBA` | **UD** · media | XFS · **8.7 TB** used · Automount + NFS Share |
+| Samsung 970 EVO 500 GB | `nvme0n1` | **UD** · naboo | XFS at `/mnt/disks/naboo-ssd` — libvirt, domains, Talos ISO |
 | Seagate 240 GB + WD 500 GB SATA | — | unused | optional array member or pool expand |
 | USB flash | `sda` | Unraid boot | |
 
@@ -128,12 +128,22 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 
 ### Not yet
 
-- Cache pool / `appdata` share (500 GB NVMe available anytime — no array required)
+- Cache / `appdata` pool (NVMe currently holds **naboo**; iSCSI LUNs still needed in Phase 2 housekeeping)
 - Tailscale on Unraid
 - iSCSI target
 - Phase 1b: buy **~12 TB** data drive → copy library → repurpose 24TB as **parity** ([storage](architecture/storage.md#phase-1b--array--parity))
 
----
+### naboo (Talos worker VM)
+
+| Item | Value |
+|------|--------|
+| Host | scarif Unraid KVM |
+| Node | `naboo` · Ready worker on `prd` (Sep 2026) |
+| IP | `192.168.5.14` |
+| Specs | 6 vCPU (unpinned) · 20 GB RAM · 32 GB VirtIO disk |
+| Disk path | `/mnt/disks/naboo-ssd/domains/naboo/vdisk1.img` |
+| Autostart | On |
+| Role | Interim compute until **hoth** / **endor** (Phase 4) — never a control plane |
 
 ## Laptop (Precision)
 
@@ -217,7 +227,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | `.11` | **yavin** (Talos CP #1) |
 | `.12` | **hoth** (target · Phase 4) |
 | `.13` | **endor** (target · Phase 4) |
-| `.14` | **naboo** (Talos worker VM on scarif · Phase 2 interim) |
+| `.14` | **naboo** (Talos worker · Ready on `prd`) |
 | `.20` | API VIP (optional · Phase 4) |
 | `.111` | **yavin** onboard 1G fallback |
 

@@ -44,7 +44,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 - Codify static reservations for scarif, yavin, and `k8s.lab` target  
 - Don’t IaC every Wi‑Fi tweak on day one  
 
-**Prerequisite:** enable ZBF on the UDM ([Ubiquiti migration guide](https://help.ui.com/hc/en-us/articles/28223082254743-Migrating-to-Zone-Based-Firewalls-in-UniFi)), then `moon run unifi:apply`. After cutover, disable leftover classic **Traffic Rules** / **Block Inter-VLAN** so only Git-owned policies apply.
+**Prerequisite:** ~~enable ZBF on the UDM~~ **Done** (Sep 2026). Zones + policies in `infrastructure/unifi/firewall.tf`. After migration, disable leftover classic **Traffic Rules** / broken Internal-zone leftovers in the UI so only Git-owned policies apply. Pi-hole must use `dns.listeningMode=ALL` (`infrastructure/pihole/listening.tf`) so Homelab/Isolated clients are answered.
 
 ## Domain & DNS
 
@@ -78,7 +78,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 | `k8s.lab.jacobdrury.com` | `192.168.5.11` | Kubernetes API (same node until VIP) |
 | `hoth.lab.jacobdrury.com` | `192.168.5.12` | Talos CP #2 (Phase 4) |
 | `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
-| `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker VM on scarif (Phase 2 interim) |
+| `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker on scarif (**live**) |
 
 **Apps (Phase 2):** `jellyfin.lab`, `qbittorrent.lab`, `homepage.lab`, `argocd.lab`, etc. — A records → **Envoy** on yavin (`.11` or VIP `.20`). Initially Envoy may **proxy to legacy VMs** (arr, HA); Phase 3 retargets to in-cluster Services. DNS via OpenTofu and/or external-dns from HTTPRoutes.
 

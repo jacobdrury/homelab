@@ -52,10 +52,12 @@ kubectl get nodes
 
 DNS `k8s.lab.jacobdrury.com` / `yavin.lab.jacobdrury.com` → `192.168.5.11` is already in `infrastructure/dns/` via `lab.yaml`.
 
-## Join **naboo** (Unraid VM on scarif)
+## Join **naboo** (Unraid VM on scarif) — **done** Sep 2026
 
-1. Unraid: bridge Homelab NIC; create VM `naboo` — VirtIO disk on SSD (`/dev/vda` in guest), VirtIO NIC on that bridge, 4 vCPU / 8–12 GB RAM.
-2. Boot factory ISO (`metal-amd64.iso` for schematic + `v1.12.7`) into maintenance mode.
+Worker is **Ready** on `prd` at `192.168.5.14` (6 vCPU / 20 GB; disk on scarif NVMe). Re-join / rebuild notes:
+
+1. Unraid: bridge Homelab NIC (`br0`); VM `naboo` — VirtIO disk on `/mnt/disks/naboo-ssd`, VirtIO NIC on `br0`.
+2. Boot factory ISO (`metal-amd64.iso` for schematic + **v1.12.7**) into maintenance mode. Use **talosctl 1.12.7** (pin in `.prototools`) — newer clients emit docs 1.12 nodes reject.
 3. From repo:
 
 ```bash
@@ -66,7 +68,7 @@ talosctl apply-config --insecure \
   -f generated/worker.yaml
 ```
 
-4. After reboot → `192.168.5.14`; eject ISO; `kubectl get nodes` should show **naboo** Ready.
+4. After reboot → `192.168.5.14`; eject ISO; `kubectl get nodes` shows **naboo** Ready (ROLE `<none>` is normal for workers).
 
 DNS `naboo.lab.jacobdrury.com` → `192.168.5.14` is in `lab.yaml` / Cloudflare.
 

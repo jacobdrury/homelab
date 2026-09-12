@@ -6,16 +6,16 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 
 | | Today | Target |
 |---|--------|--------|
-| Compute | Proxmox **homelab02** only · **scarif = Unraid** · Mini off cluster | Talos `prd`: **bare-metal yavin** → **expand to 3 BM CPs** |
+| Compute | Talos `prd`: **yavin** (CP) + **naboo** (worker on scarif) · Proxmox **homelab02** (legacy apps) | Expand to **3 BM CPs** (hoth/endor); drain naboo |
 | Access | Tailscale IaC live; **`http://scarif.lab`** home + away; homelab02 interim router | Same URLs · **`https://`** via Envoy (Phase 2) · operator replaces homelab02 |
-| Storage | **scarif** — 24TB UD · **NFS** (~8.7 TB used) | Same + optional array/parity · iSCSI when k8s needs it |
+| Storage | **scarif** — 24TB UD · **NFS** (~8.7 TB used) · 500 GB NVMe hosts naboo | Same + optional array/parity · iSCSI when k8s needs it |
 | pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
-| Network | Homelab **VLAN 5** (scarif) + Drury (arr, Pi-hole) | Full lab on VLAN + Tailscale |
+| Network | Homelab **VLAN 5** + UniFi **ZBF** · Drury (arr, Pi-hole) | Full lab on VLAN + Tailscale |
 | Apps | Pi-hole, HA, Jellyfin, *arr, qBit, Prowlarr | Same on k8s + Homepage; HA after media |
 | Delivery | Manual guests | Argo CD ← this repo |
 | Secrets | Ad hoc | 1Password → Connect → ESO |
 
-**Next:** Phase **2** housekeeping → **naboo** → secrets → Argo → Envoy → **transitional `*.lab` proxies** → **Homepage** (first app).
+**Next:** Phase **2** housekeeping (SSH + **NFS/iSCSI CSI**) → secrets → Argo → Envoy → **transitional `*.lab` proxies** → **Homepage** (first app).
 
 ## Docs
 
@@ -41,4 +41,4 @@ Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/se
 
 ## Status
 
-Inventory done. Phase 1 storage **done**. Phase **1.5** (VLAN + IaC + scarif move) **done**. **yavin** Talos + Cilium + `connect/` up. Executing [roadmap](docs/roadmap.md): **NFS → ESO → Argo → apps**.
+Inventory done. Phase 1 storage **done**. Phase **1.5** (VLAN + IaC + scarif move) **done**. **yavin** + **naboo** on Talos `prd` (Cilium + `connect/`). UniFi **ZBF** live. Executing [roadmap](docs/roadmap.md): **CSI → ESO → Argo → apps**.

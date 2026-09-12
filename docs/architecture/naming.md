@@ -12,9 +12,9 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 
 | Codename | Hardware | Role | Status | IP (today) | Legacy name |
 |----------|----------|------|--------|------------|-------------|
-| **scarif** | pc (white) | Unraid NAS — NFS + iSCSI | **Active** (Phase 1.5 done) | `192.168.5.10` | `homelab` |
-| **yavin** | Mac Mini | Bare-metal Talos CP #1 (single-node → 3 CP) | Phase 2 | `192.168.5.11` | `homelab03` (Proxmox · retired) |
-| **naboo** | Unraid VM on **scarif** | Talos **worker** (interim) | Phase 2 (planned) | `192.168.5.14` | — |
+| **scarif** | pc (white) | Unraid NAS — NFS + iSCSI | **Active** | `192.168.5.10` | `homelab` |
+| **yavin** | Mac Mini | Bare-metal Talos CP #1 | **Active** (`prd`) | `192.168.5.11` | `homelab03` (Proxmox · retired) |
+| **naboo** | Unraid VM on **scarif** | Talos **worker** (interim) | **Active** (`prd`, Sep 2026) | `192.168.5.14` | — |
 | **hoth** | Mini PC #1 | Talos CP #2 (bare metal) | Planned (Phase 4) | `192.168.5.12` | — |
 | **endor** | Mini PC #2 | Talos CP #3 (bare metal) | Planned (Phase 4) | `192.168.5.13` | — |
 
@@ -54,7 +54,7 @@ Replace Proxmox-era hostnames as each machine is rebuilt or re-rolled:
 
 1. **scarif** — set at Unraid USB creation (Phase 1); retires `homelab` on pc (white).
 2. **yavin** — set at bare-metal Talos install on the Mac Mini (Phase 2); retires `homelab03`.
-3. **naboo** — Unraid KVM guest on scarif (Phase 2); Talos **worker** only; drain + remove when **hoth**/**endor** take load (Phase 4).
+3. **naboo** — Unraid KVM guest on scarif; Talos **worker** live on `prd` (Sep 2026); drain + remove when **hoth**/**endor** take load (Phase 4).
 4. **hoth** / **endor** — set at first Talos boot on each mini PC (Phase 4).
 
 Update [inventory](../inventory.md) when a rename is done. Prefer DNS/Tailscale names over bare IPs in docs and manifests once stable.

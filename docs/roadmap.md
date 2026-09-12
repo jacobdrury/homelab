@@ -2,7 +2,7 @@
 
 Phased path from [inventory](inventory.md) → target. Principles and checklists only; leans live in [decisions](decisions.md).
 
-## Current status (2026-09-07)
+## Current status (2026-09-12)
 
 | Phase | State | Notes |
 |-------|--------|--------|
@@ -10,7 +10,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; `http://scarif.lab` works home + away |
-| **2** Talos on yavin | **In progress** | Housekeeping (SSH + **NFS/iSCSI CSI**) → **naboo** → secrets → Argo |
+| **2** Talos `prd` | **In progress** | **yavin** + **naboo** Ready · next: housekeeping (SSH + **NFS/iSCSI CSI**) → secrets → Argo |
 | **3–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -22,12 +22,12 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 
 ## What's next — Phase 2
 
-Talos + Cilium + **`connect/`** are up on **yavin**. Remaining platform work (ordered):
+Talos + Cilium + **`connect/`** are up: **yavin** (CP) + **naboo** (worker). UniFi **ZBF** + Homelab→Pi-hole DNS allow live. Remaining platform work (ordered):
 
 | Step | Action |
 |------|--------|
 | **1** | Housekeeping — SSH/sudo + Talos secrets backup + commit ([SSH](#phase-2-housekeeping--ssh--credentials)); **NFS CSI + iSCSI CSI → scarif** ([storage](#phase-2-housekeeping--storage-csi)) |
-| **2** | **naboo** — Talos **worker** VM on scarif (Unraid KVM); join `prd` for RAM/CPU headroom |
+| **2** | ~~**naboo**~~ — **Done** (Sep 2026): Unraid KVM worker on scarif · `192.168.5.14` · 6 vCPU / 20 GB · Ready |
 | **3** | **1Password Connect + ESO** |
 | **4** | **Argo CD** + `clusters/prd` app-of-apps |
 | **5** | Envoy Gateway + cert-manager (LE DNS-01); **Tailscale operator** |
@@ -154,8 +154,9 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [x] Cluster secrets + `infrastructure/talos/prd/`; bootstrap; **`allowSchedulingOnControlPlanes: true`**  
 - [x] Cilium  
 - [x] **`connect/`** — `cd connect/prd` (direnv) + `moon run connect:sync`  
+- [x] **naboo** — Unraid KVM Talos **worker** on scarif (`192.168.5.14`); 500 GB NVMe vdisk; 6 vCPU / 20 GB; joined `prd` (Sep 2026)  
+- [x] UniFi **Zone-Based Firewall** — zones Drury / Homelab / Isolated; Homelab→Drury = Pi-hole DNS only; Pi-hole `listeningMode=ALL`  
 - [ ] **Housekeeping** — [SSH & credentials](#phase-2-housekeeping--ssh--credentials) + [storage CSI](#phase-2-housekeeping--storage-csi)  
-- [ ] **naboo** — Unraid KVM Talos **worker** on scarif (`192.168.5.14`); SSD disk; join existing cluster (not a CP)  
 - [ ] 1Password Connect + ESO; seed once  
 - [ ] Argo CD → `clusters/prd`  
 - [ ] Envoy + cert-manager; LE for `*.lab.jacobdrury.com`  
@@ -169,7 +170,7 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 
 ### Phase 2 housekeeping — SSH & credentials
 
-Do this **before NFS / naboo** so break-glass + migration SSH is predictable. Scope is **light** — not Tailscale SSH or a full IdM.
+Do this for break-glass + migration SSH predictability. Scope is **light** — not Tailscale SSH or a full IdM. (**naboo** already joined; SSH housekeeping no longer blocks the worker.)
 
 **Hosts (SSH Host entries + 1Password items):**
 
@@ -218,7 +219,7 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 - [ ] Document which class apps use (media → NFS; config/DB → iSCSI) in `apps/` / storage docs  
 - [ ] Confirm no local-path / hostPath provisioner for real apps  
 
-**Exit (housekeeping):** SSH break-glass works; **NFS + iSCSI** StorageClasses ready and smoke-tested; then **naboo** → secrets → Argo → apps.
+**Exit (housekeeping):** SSH break-glass works; **NFS + iSCSI** StorageClasses ready and smoke-tested; then secrets → Argo → apps. (**naboo** already online.)
 
 **Exit (Phase 2):** `prd` GitOps-reachable on Tailscale + VLAN; **`https://*.lab`** works home and away (incl. **proxied** jellyfin/*arr/HA/scarif as needed); storage CSI live; **naboo** worker online; **Homepage** live; cluster ready to accept CP joins.
 
