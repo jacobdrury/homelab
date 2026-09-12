@@ -1,84 +1,148 @@
-# Legacy firewall rules (LAN_IN). Zone-based firewall is not enabled on this controller.
-# If you migrate to ZBF later, replace with unifi_firewall_zone + unifi_firewall_zone_policy.
+# Zone-Based Firewall (UniFi OS 9+). Requires ZBF enabled on the UDM before apply:
+# https://help.ui.com/hc/en-us/articles/28223082254743-Migrating-to-Zone-Based-Firewalls-in-UniFi
+#
+# Policy intent:
+#   Drury → Homelab: allow all (mgmt + NFS)
+#   Homelab → Drury: DNS to Pi-hole only (53/tcp+udp)
+#   Homelab → IoT/Guest/Camera: deny
+#   IoT/Guest/Camera → Pi-hole: DNS only
+#   Homelab → Internet: rely on External zone defaults (allow)
 
-locals {
-  isolated_networks = {
-    iot = {
-      network = data.unifi_network.iot
-      index   = 20009
-    }
-    guest = {
-      network = data.unifi_network.guest
-      index   = 20010
-    }
-    camera = {
-      network = data.unifi_network.camera
-      index   = 20011
-    }
+resource "unifi_firewall_group" "dns" {
+  name    = "DNS"
+  type    = "port-group"
+  members = ["53"]
+}
+
+# Homelab must be its own zone — same zone as Drury would allow unrestricted lateral traffic.
+resource "unifi_firewall_zone" "drury" {
+  name     = "Drury"
+  networks = [data.unifi_network.drury.id]
+}
+
+resource "unifi_firewall_zone" "homelab" {
+  name     = "Homelab"
+  networks = [unifi_network.homelab.id]
+}
+
+resource "unifi_firewall_zone" "isolated" {
+  name = "Isolated"
+  networks = [
+    data.unifi_network.iot.id,
+    data.unifi_network.guest.id,
+    data.unifi_network.camera.id,
+  ]
+}
+
+# Trusted LAN can reach the lab (arr NFS, Proxmox mgmt into Homelab, etc.).
+resource "unifi_firewall_zone_policy" "drury_to_homelab" {
+  name                      = "Allow Drury to Homelab"
+  action                    = "ALLOW"
+  protocol                  = "all"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
+
+  source = {
+    zone_id = unifi_firewall_zone.drury.id
+  }
+
+  destination = {
+    zone_id = unifi_firewall_zone.homelab.id
   }
 }
 
-# DNS / Pi-hole UI from any LAN VLAN (Homelab included). Before network denies.
-resource "unifi_firewall_rule" "any_to_pihole" {
-  name       = "Allow any to Pi-hole"
-  action     = "accept"
-  ruleset    = "LAN_IN"
-  rule_index = 20007
-  protocol   = "all"
-  enabled    = true
+# Homelab initiates almost nothing to Drury — exception: Pi-hole DNS until Pi-hole moves to k8s.
+resource "unifi_firewall_zone_policy" "homelab_to_pihole_dns" {
+  name                      = "Allow Homelab DNS to Pi-hole"
+  action                    = "ALLOW"
+  protocol                  = "tcp_udp"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
+  description               = "Only Homelab→Drury initiation allowed until Pi-hole is on the cluster"
 
-  dst_address      = local.lab.services.pihole.host
-  dst_network_type = "ADDRv4"
+  source = {
+    zone_id = unifi_firewall_zone.homelab.id
+  }
+
+  destination = {
+    zone_id       = unifi_firewall_zone.drury.id
+    ips           = [local.lab.services.pihole.host]
+    port_group_id = unifi_firewall_group.dns.id
+  }
 }
 
-# Guest portal path uses GUEST_IN, not LAN_IN.
-resource "unifi_firewall_rule" "guest_to_pihole" {
-  name       = "Allow Guest to Pi-hole"
-  action     = "accept"
-  ruleset    = "GUEST_IN"
-  rule_index = 20007
-  protocol   = "all"
-  enabled    = true
+# Isolated VLANs still need LAN DNS (ad blocking) via Pi-hole on Drury.
+resource "unifi_firewall_zone_policy" "isolated_to_pihole_dns" {
+  name                      = "Allow Isolated DNS to Pi-hole"
+  action                    = "ALLOW"
+  protocol                  = "tcp_udp"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
 
-  dst_address      = local.lab.services.pihole.host
-  dst_network_type = "ADDRv4"
+  source = {
+    zone_id = unifi_firewall_zone.isolated.id
+  }
+
+  destination = {
+    zone_id       = unifi_firewall_zone.drury.id
+    ips           = [local.lab.services.pihole.host]
+    port_group_id = unifi_firewall_group.dns.id
+  }
 }
 
-# Homelab needs Drury for Pi-hole (.11) and other lab services on pc (black).
-resource "unifi_firewall_rule" "homelab_to_drury" {
-  name       = "Allow Homelab to Drury"
-  action     = "accept"
-  ruleset    = "LAN_IN"
-  rule_index = 20100
-  protocol   = "all"
-  enabled    = true
+resource "unifi_firewall_zone_policy" "homelab_to_isolated_block" {
+  name        = "Block Homelab to Isolated"
+  action      = "BLOCK"
+  protocol    = "all"
+  enabled     = true
+  ip_version  = "IPV4"
+  description = "Homelab must not initiate to IoT / Guest / Camera"
 
-  src_network_id = unifi_network.homelab.id
-  dst_network_id = data.unifi_network.drury.id
+  source = {
+    zone_id = unifi_firewall_zone.homelab.id
+  }
+
+  destination = {
+    zone_id = unifi_firewall_zone.isolated.id
+  }
 }
 
-resource "unifi_firewall_rule" "drury_to_homelab" {
-  name       = "Allow Drury to Homelab"
-  action     = "accept"
-  ruleset    = "LAN_IN"
-  rule_index = 20008
-  protocol   = "all"
-  enabled    = true
+# Ensure DNS allows evaluate before any broader zone-pair defaults.
+resource "unifi_firewall_zone_policy_order" "homelab_to_drury" {
+  source_zone_id      = unifi_firewall_zone.homelab.id
+  destination_zone_id = unifi_firewall_zone.drury.id
 
-  src_network_id = data.unifi_network.drury.id
-  dst_network_id = unifi_network.homelab.id
+  before_predefined_ids = [
+    unifi_firewall_zone_policy.homelab_to_pihole_dns.id,
+  ]
 }
 
-resource "unifi_firewall_rule" "homelab_to_isolated_deny" {
-  for_each = local.isolated_networks
+resource "unifi_firewall_zone_policy_order" "isolated_to_drury" {
+  source_zone_id      = unifi_firewall_zone.isolated.id
+  destination_zone_id = unifi_firewall_zone.drury.id
 
-  name       = "Deny Homelab to ${each.key}"
-  action     = "drop"
-  ruleset    = "LAN_IN"
-  rule_index = each.value.index
-  protocol   = "all"
-  enabled    = true
+  before_predefined_ids = [
+    unifi_firewall_zone_policy.isolated_to_pihole_dns.id,
+  ]
+}
 
-  src_network_id = unifi_network.homelab.id
-  dst_network_id = each.value.network.id
+resource "unifi_firewall_zone_policy_order" "drury_to_homelab" {
+  source_zone_id      = unifi_firewall_zone.drury.id
+  destination_zone_id = unifi_firewall_zone.homelab.id
+
+  before_predefined_ids = [
+    unifi_firewall_zone_policy.drury_to_homelab.id,
+  ]
+}
+
+resource "unifi_firewall_zone_policy_order" "homelab_to_isolated" {
+  source_zone_id      = unifi_firewall_zone.homelab.id
+  destination_zone_id = unifi_firewall_zone.isolated.id
+
+  before_predefined_ids = [
+    unifi_firewall_zone_policy.homelab_to_isolated_block.id,
+  ]
 }

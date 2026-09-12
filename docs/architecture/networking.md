@@ -33,13 +33,18 @@ Example scheme (pick numbers that fit your UniFi site): see table above. **scari
 
 ### UniFi IaC
 
-OpenTofu under `infrastructure/unifi/` (API key in 1Password). Community providers can manage networks and firewall (legacy rules vs zone policies depend on UniFi Network version — pin the provider).
+OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Firewall** (UniFi OS 9+) via `unifi_firewall_zone` + `unifi_firewall_zone_policy` — not legacy LAN_IN.
 
-- **Required before Phase 2:** homelab VLAN/network + DHCP range + baseline firewall  
-- **Drury (VLAN 1) → Homelab:** allow all (Phase 1.5; tighten later)  
-- Deny **Homelab → IoT / Guest / Camera** by default  
+- **Zones:** `Drury` · `Homelab` · `Isolated` (IoT + Guest + Camera) — Homelab is **not** in the same zone as Drury  
+- **Drury → Homelab:** allow all (mgmt + NFS); return traffic auto-allowed  
+- **Homelab → Drury:** **Pi-hole DNS only** (`192.168.1.11` port 53 tcp/udp) until Pi-hole is on the cluster  
+- **Homelab → Isolated:** deny  
+- **Isolated → Pi-hole:** DNS only  
+- **Homelab → Internet:** External zone defaults (allow)  
 - Codify static reservations for scarif, yavin, and `k8s.lab` target  
 - Don’t IaC every Wi‑Fi tweak on day one  
+
+**Prerequisite:** enable ZBF on the UDM ([Ubiquiti migration guide](https://help.ui.com/hc/en-us/articles/28223082254743-Migrating-to-Zone-Based-Firewalls-in-UniFi)), then `moon run unifi:apply`. After cutover, disable leftover classic **Traffic Rules** / **Block Inter-VLAN** so only Git-owned policies apply.
 
 ## Domain & DNS
 
