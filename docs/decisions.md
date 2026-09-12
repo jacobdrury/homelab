@@ -22,7 +22,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Array start | **24TB via Unassigned Devices** (keep filesystem; **no new large drive**); array/parity only when a second large disk or free space exists |
 | 2TB HDD | **Out of Unraid plan** for now |
 | Appdata | Existing **NVMe/SATA SSDs** on pc (white) |
-| k8s storage | **NFS + iSCSI → Unraid** (NFS for media/shared; iSCSI for block/RWO). Not Longhorn/Ceph primary |
+| k8s storage | **NFS + iSCSI → Unraid** (both CSI in Phase 2 housekeeping). **NFS RWX** = media/shared; **iSCSI RWO** = config/SQLite/DBs (**one PVC per replica**). No node-local app data; pods stay movable. Not Longhorn/Ceph primary |
 | Clusters | **`prd` first**; keep `stg` paths for later; hostnames `*.lab` vs `*.stg.lab` |
 | CNI | **Cilium** |
 | GitOps | **Argo CD** + this GitHub repo |
@@ -40,8 +40,9 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; **LAN ad blocking**; `*.lab` stays in Cloudflare |
 | Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` on k8s |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
-| Apps (migrate order) | *arr + qBit → Jellyfin → HA → **Pi-hole last** (Homepage + Uptime Kuma land in Phase 2 after Argo) |
-| Observability timing | Bootstrap: **`connect/`** + k9s + talosctl. **Homepage + Uptime Kuma** after Argo. **Prometheus/Grafana** Phase 5 (defer on 16 GB yavin) |
+| Apps (migrate order) | *arr + qBit → Jellyfin → HA → **Pi-hole last**. **URLs first:** Envoy transitional routes to today’s VMs; then move backends. **Homepage** = first GitOps app after Envoy |
+| Observability timing | Bootstrap: **`connect/`** + k9s + talosctl. **Homepage** first after Envoy (Uptime Kuma with/after it). **Prometheus/Grafana** Phase 5 |
+| Transitional ingress | After Envoy: `jellyfin.lab` (etc.) → **current** backends on arr/HA/scarif; swap to k8s Services at cutover with **no DNS/URL change** |
 | Games (ATM10) | **Phase 6** — after core platform stable; **itzg/minecraft-server** on k8s; iSCSI block PVC; pin to beefiest node — [games](architecture/games.md) |
 | Friend remote access | **Tailscale per-service expose** (`*.ts.net`); `group:friends` → `tag:shared` only (Jellyfin + Minecraft); **no** subnet routes for friends — [games](architecture/games.md#friend-access--tailscale) |
 | Friend Jellyfin HTTPS | **Tailscale L7 Ingress** (`ingressClassName: tailscale`) — LE cert on `https://jellyfin.<tailnet>.ts.net`; not L3 Service expose (self-signed) |

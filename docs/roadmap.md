@@ -10,7 +10,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; `http://scarif.lab` works home + away |
-| **2** Talos on yavin | **In progress** | Housekeeping (incl. SSH) → NFS → **naboo** → secrets → Argo |
+| **2** Talos on yavin | **In progress** | Housekeeping (SSH + **NFS/iSCSI CSI**) → **naboo** → secrets → Argo |
 | **3–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -26,18 +26,18 @@ Talos + Cilium + **`connect/`** are up on **yavin**. Remaining platform work (or
 
 | Step | Action |
 |------|--------|
-| **1** | Housekeeping — 1Password backup of Talos secrets; commit bootstrap work; **SSH/sudo hygiene** ([below](#phase-2-housekeeping--ssh--credentials)) |
-| **2** | **NFS CSI → scarif** |
-| **3** | **naboo** — Talos **worker** VM on scarif (Unraid KVM); join `prd` for RAM/CPU headroom |
-| **4** | **1Password Connect + ESO** |
-| **5** | **Argo CD** + `clusters/prd` app-of-apps |
-| **6** | Envoy Gateway + cert-manager (LE DNS-01); **Tailscale operator** (replace homelab02 subnet router) |
-| **7** | **Homepage + Uptime Kuma** via GitOps (first real apps — after Argo; populate as more services land) |
-| **8** | Throwaway/smoke app if needed; etcd snapshot cadence; confirm `https://*.lab` on LAN + Tailscale |
+| **1** | Housekeeping — SSH/sudo + Talos secrets backup + commit ([SSH](#phase-2-housekeeping--ssh--credentials)); **NFS CSI + iSCSI CSI → scarif** ([storage](#phase-2-housekeeping--storage-csi)) |
+| **2** | **naboo** — Talos **worker** VM on scarif (Unraid KVM); join `prd` for RAM/CPU headroom |
+| **3** | **1Password Connect + ESO** |
+| **4** | **Argo CD** + `clusters/prd` app-of-apps |
+| **5** | Envoy Gateway + cert-manager (LE DNS-01); **Tailscale operator** |
+| **6** | **Transitional `*.lab` routes** — Envoy → **today’s** backends (e.g. `jellyfin.lab` → arr VM); consumers cut over URLs before k8s migrate ([below](#phase-2--transitional-lab-routes)) |
+| **7** | **Homepage** — **first** GitOps app; tiles point at `*.lab` URLs (Uptime Kuma right after or with it) |
+| **8** | etcd snapshot cadence; confirm `https://*.lab` on LAN + Tailscale |
 
 **Deliberately later:** Prometheus / Grafana / Discord alert wiring — **Phase 5** (yavin is 16 GB; bootstrap debugging uses `connect/` + k9s + talosctl). Do **not** pull full metrics stack forward.
 
-Optional anytime: SSD `appdata` pool on scarif; array/parity ([Phase 1b](#phase-1b--array--parity-when-you-can)).
+Optional anytime: SSD `appdata` pool on scarif is **in housekeeping** if not done (needed for iSCSI LUNs); array/parity ([Phase 1b](#phase-1b--array--parity-when-you-can)).
 
 Tools: `cd connect/prd` · `moon run connect:sync` · [tailscale README](../infrastructure/tailscale/README.md).
 
@@ -102,7 +102,7 @@ Details: [storage](architecture/storage.md) · [networking](architecture/network
 - [x] Move **24TB** from pc (black) into pc (white) — **Unassigned Devices**, keep XFS, **not** in array  
 - [x] NFS export UD mount (`/mnt/disks/ZXA0VZBA`)  
 - [x] Smoke-test: arr VM + LAN mount; library readable  
-- [ ] iSCSI target plugin + SSD/pool LUNs (can wait until cluster needs block PVCs)  
+- [ ] iSCSI target plugin + SSD/pool LUNs — **do in Phase 2 housekeeping** (with NFS CSI)  
 
 **Exit:** ~~Unraid is the NAS; 24TB exported.~~ **Done Aug 2025.** arr VM on NFS; black PC no longer holds the disk.
 
@@ -154,16 +154,16 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [x] Cluster secrets + `infrastructure/talos/prd/`; bootstrap; **`allowSchedulingOnControlPlanes: true`**  
 - [x] Cilium  
 - [x] **`connect/`** — `cd connect/prd` (direnv) + `moon run connect:sync`  
-- [ ] **Housekeeping** — see [SSH & credentials](#phase-2-housekeeping--ssh--credentials)  
-- [ ] NFS CSI (→ scarif); iSCSI CSI when needed  
+- [ ] **Housekeeping** — [SSH & credentials](#phase-2-housekeeping--ssh--credentials) + [storage CSI](#phase-2-housekeeping--storage-csi)  
 - [ ] **naboo** — Unraid KVM Talos **worker** on scarif (`192.168.5.14`); SSD disk; join existing cluster (not a CP)  
 - [ ] 1Password Connect + ESO; seed once  
 - [ ] Argo CD → `clusters/prd`  
-- [ ] Envoy + cert-manager; LE for `*.lab.jacobdrury.com`; optional **`scarif.lab`** → Unraid HTTP  
+- [ ] Envoy + cert-manager; LE for `*.lab.jacobdrury.com`  
 - [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire homelab02 routes when stable  
-- [ ] **Homepage + Uptime Kuma** via Argo (after GitOps is live; fill in as services appear)  
+- [ ] **Transitional HTTPRoutes** — Envoy proxies to current VMs/LXCs (`jellyfin.lab` → arr, etc.); DNS A → Envoy; swap backend to k8s Service later with **no client URL change**  
+- [ ] **Homepage** via Argo — **first** app; catalog `*.lab` links (Uptime Kuma next)  
 - [ ] etcd snapshot cadence (single-node DR until expansion)  
-- [ ] Confirm GitOps + NFS + **`https://`** on LAN and away via Tailscale  
+- [ ] Confirm GitOps + CSI + **`https://*.lab`** (incl. proxied legacy backends) on LAN and away via Tailscale  
 
 **Defer:** Prometheus / Grafana / Discord alerts → [Phase 5](#phase-5--hardening). Bootstrap troubleshooting: **`connect/`**, k9s, talosctl (no early metrics stack on 16 GB yavin).
 
@@ -197,7 +197,47 @@ Skip Talos (**yavin** / **naboo**) — use `talosctl` via `connect/prd`.
 
 **Later / optional:** Tailscale SSH; per-host sudo secrets if shared admin becomes uncomfortable; Phase 5 harden further.
 
-**Exit:** `prd` GitOps-reachable on Tailscale + VLAN; **`https://*.lab`** works home and away; NFS CSI talks to scarif; **naboo** worker online; Homepage + Uptime Kuma on GitOps; cluster ready to accept CP joins.
+### Phase 2 housekeeping — storage (CSI)
+
+Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs RWO from day one. Node-local disks are **not** for app state — pods stay movable across **yavin** / **naboo**.
+
+| Class | Backend | Access | Use |
+|-------|---------|--------|-----|
+| NFS CSI | scarif export (UD media today) | **RWX** | Libraries, downloads, shared files |
+| iSCSI CSI | scarif **SSD pool** LUNs | **RWO** | SQLite/config (*arr), Postgres per-replica, Pi-hole per-replica, games |
+
+**Multi-replica rule:** one **RWO PVC per pod** (StatefulSet) — not one shared disk for 3 Pi-hole / 3 Postgres. Replication is app-level; NFS is not for concurrent SQLite.
+
+**Checklist:**
+
+- [ ] scarif: SSD pool / cache for `appdata` + iSCSI LUNs (500 GB NVMe) if not already  
+- [ ] scarif: **iSCSI target** plugin; export path ready for CSI  
+- [ ] Talos: `iscsi-tools` (or equivalent) on nodes that will attach block PVCs (**yavin** now; **naboo** when joined)  
+- [ ] Install **NFS CSI** → StorageClass; smoke Pod mounts media export; `touch` as uid `99` / gid `100`  
+- [ ] Install **iSCSI CSI** → StorageClass; smoke Pod with small RWO PVC (create/write/delete)  
+- [ ] Document which class apps use (media → NFS; config/DB → iSCSI) in `apps/` / storage docs  
+- [ ] Confirm no local-path / hostPath provisioner for real apps  
+
+**Exit (housekeeping):** SSH break-glass works; **NFS + iSCSI** StorageClasses ready and smoke-tested; then **naboo** → secrets → Argo → apps.
+
+**Exit (Phase 2):** `prd` GitOps-reachable on Tailscale + VLAN; **`https://*.lab`** works home and away (incl. **proxied** jellyfin/*arr/HA/scarif as needed); storage CSI live; **naboo** worker online; **Homepage** live; cluster ready to accept CP joins.
+
+### Phase 2 — transitional `*.lab` routes
+
+**Goal:** lock consumer URLs **before** apps move to k8s. Envoy terminates TLS; backends stay on pc (black) / Unraid until Phase 3 cutover.
+
+| Hostname | Initial backend (today) | Later (Phase 3) |
+|----------|-------------------------|-----------------|
+| `jellyfin.lab.jacobdrury.com` | arr VM `192.168.1.9:8096` | Jellyfin Service in cluster |
+| `qbittorrent.lab…` | arr / Gluetun UI port | qBit in cluster |
+| `sonarr` / `prowlarr` / … | arr VM ports as needed | *arr in cluster |
+| `homeassistant.lab…` (or chosen name) | HA `192.168.2.8` | HA in cluster |
+| `scarif.lab…` | Unraid `192.168.5.10:80` | same (NAS stays) |
+| `argocd.lab…` / `homepage.lab…` | in-cluster from the start | — |
+
+**Pattern:** Cloudflare A → Envoy (`.11` / VIP) → HTTPRoute → **ExternalName / Endpoints / Service** pointing at the legacy IP:port. When the app lands on k8s, retarget the route only — bookmarks and clients unchanged.
+
+Populate **Homepage** from these names as soon as routes exist.
 
 ### Phase 2b — OpenTofu CI (GitHub Actions)
 
@@ -264,7 +304,7 @@ Cut over workloads → GitOps on `prd`. All Proxmox guests now on **pc (black)**
 4. Discord bots (optional — or leave on Proxmox until black PC retires)  
 5. **Pi-hole** — final cutover from pc (black) LXC → k8s; point LAN at cluster Pi-hole  
 
-**Already on cluster from Phase 2 (after Argo):** Homepage, Uptime Kuma — extend config as apps migrate; do not redeploy from scratch here.
+**Already on cluster from Phase 2:** Homepage (+ Uptime Kuma); **`*.lab` URLs** already point at Envoy (legacy backends or in-cluster). Phase 3 cutover = retarget HTTPRoutes / move pods — not new consumer hostnames.
 
 Each migrate: `apps/` → Argo → `*.lab.jacobdrury.com` → retire old guest.
 

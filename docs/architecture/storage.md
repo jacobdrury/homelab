@@ -103,11 +103,10 @@ This is **not Docker-specific** — it is Unraid NFS + matching process UID/GID.
 | Export (today) | Use |
 |----------------|-----|
 | `/mnt/disks/ZXA0VZBA` | Jellyfin / *arr libraries via `media/` |
-| `appdata/` (future) | *arr config on SSD pool |
 | `downloads/` | qBittorrent (pool or UD as you prefer) |
 | `backups/` | App dumps / future backup tooling |
 
-Cluster: **NFS CSI** (ReadWriteMany where needed). Point CSI at whatever export serves media (UD path is fine initially).
+Cluster: **NFS CSI** (ReadWriteMany). Point CSI at the media export (UD path is fine initially). **Not** for Sonarr/Postgres SQLite — use iSCSI.
 
 **k8s must use the same UID model** as above — CSI mounts the export; it does not remap Unraid squash. For media Pods / charts:
 
@@ -123,12 +122,16 @@ Validate with a throwaway Pod that mounts the PVC and `touch`es a file under `me
 
 | Use | Notes |
 |-----|--------|
-| Postgres / other DBs | Prefer over NFS if latency becomes an issue |
+| *arr / Prowlarr **config** (SQLite) | RWO on SSD pool — **not** NFS |
+| Postgres / other DBs | One RWO PVC **per** replica (StatefulSet / CNPG) |
+| Pi-hole (multi-replica) | One RWO PVC **per** pod — not one shared volume |
 | Single-writer app disks | Classic RWO block PVC |
 
-Cluster: **iSCSI CSI** (Talos workers need initiator support). One node per LUN unless you add a clustered filesystem (out of scope).
+Cluster: **iSCSI CSI** (Talos needs initiator / `iscsi-tools`). One node attaches a given LUN at a time; pods **can reschedule** (detach/attach). Do not share one LUN across replicas.
 
 **Don’t** put the Jellyfin library on iSCSI — keep large shared libraries on NFS (UD or array).
+
+Phase 2: stand up **NFS + iSCSI CSI together** in housekeeping — [roadmap](../roadmap.md#phase-2-housekeeping--storage-csi).
 
 ## Backups
 

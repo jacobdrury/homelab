@@ -15,7 +15,7 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | Delivery | Manual guests | Argo CD ← this repo |
 | Secrets | Ad hoc | 1Password → Connect → ESO |
 
-**Next:** Phase **2** — NFS CSI → **naboo** worker → secrets → Argo → Envoy/Tailscale → Homepage + Uptime Kuma. Prometheus/Grafana wait for Phase 5.
+**Next:** Phase **2** housekeeping → **naboo** → secrets → Argo → Envoy → **transitional `*.lab` proxies** → **Homepage** (first app).
 
 ## Docs
 

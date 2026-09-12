@@ -75,7 +75,18 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). Community provide
 | `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
 | `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker VM on scarif (Phase 2 interim) |
 
-**Apps (Phase 2–3):** `jellyfin.lab`, `qbittorrent.lab`, `argocd.lab`, etc. — A records → **Envoy** on yavin (`.11` or VIP `.20`); created by **external-dns** from HTTPRoutes (or OpenTofu until external-dns is live).
+**Apps (Phase 2):** `jellyfin.lab`, `qbittorrent.lab`, `homepage.lab`, `argocd.lab`, etc. — A records → **Envoy** on yavin (`.11` or VIP `.20`). Initially Envoy may **proxy to legacy VMs** (arr, HA); Phase 3 retargets to in-cluster Services. DNS via OpenTofu and/or external-dns from HTTPRoutes.
+
+### Transitional reverse-proxy (strangler)
+
+Before apps run on k8s, publish the **final** hostnames:
+
+```text
+Client → https://jellyfin.lab.jacobdrury.com → Envoy → http://192.168.1.9:8096  (arr VM today)
+                                      later → Jellyfin Service in prd
+```
+
+Same for other UIs you care about. Homepage links only to `*.lab` names. Cutover = change the HTTPRoute backend, not everyone’s bookmarks.
 
 **Resolving names on LAN**
 
@@ -141,7 +152,8 @@ Single-node: Tofu A record → **yavin** on homelab VLAN. At 3 CPs: same name �
 
 | Scope | How |
 |-------|-----|
-| **k8s apps** (`jellyfin.lab`, `argocd.lab`, …) | cert-manager Certificate on Gateway or wildcard **`*.lab.jacobdrury.com`** |
+| **k8s apps** (`homepage.lab`, `argocd.lab`, …) | cert-manager Certificate on Gateway or wildcard **`*.lab.jacobdrury.com`** |
+| **Legacy UIs during migrate** (`jellyfin.lab`, …) | Same wildcard; Envoy → VM/LXC IP until cutover |
 | **ACME** | DNS-01 TXT in Cloudflare (ephemeral; not in OpenTofu) |
 | **scarif** (Unraid) | **Envoy reverse-proxy** → `http://192.168.5.10:80` — LE cert on Envoy; Unraid stays HTTP internally. **Today (pre-cluster):** use `http://scarif.lab` over Tailscale; **Phase 2:** same hostname → `https://` (DNS unchanged) |
 | **Not used** | Cloudflare proxy (orange cloud), Cloudflare Tunnel, Tailscale certs for `*.lab` names |
@@ -153,7 +165,7 @@ Same hostname and certificate in both places — e.g. **`https://jellyfin.lab.ja
 1. DNS → Pi-hole (LAN) or Cloudflare (Tailscale split DNS) → same RFC1918 A record
 2. **LAN:** direct route to Envoy `:443`
 3. **Away:** split DNS → Cloudflare (same answer) + subnet router → Envoy `:443`
-4. Envoy → HTTPRoute → pod (or HTTP backend for scarif)
+4. Envoy → HTTPRoute → pod **or** legacy VM/Unraid HTTP (transitional)
 
 ```mermaid
 flowchart LR
@@ -162,7 +174,7 @@ flowchart LR
   CF[Cloudflare records]
   Envoy[Envoy :443]
   CM[cert-manager LE]
-  App[Pod or scarif HTTP]
+  App[Pod or legacy VM / scarif]
 
   Client --> DNS --> CF
   CF -->|A record| Envoy

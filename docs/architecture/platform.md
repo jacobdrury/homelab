@@ -11,7 +11,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | CNI | **Cilium** | |
 | GitOps | **Argo CD** | Root → `clusters/prd` |
 | Secrets | **1Password** + Connect + ESO | [secrets](secrets.md) |
-| Storage | **NFS CSI + iSCSI → Unraid** | [storage](storage.md) — NFS media/shared; iSCSI block |
+| Storage | **NFS CSI + iSCSI CSI → Unraid** | Both in Phase 2 housekeeping — [storage](storage.md) |
 | Ingress | **Envoy Gateway** | Gateway API / HTTPRoute |
 | Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
@@ -58,11 +58,11 @@ Machine configs live under `infrastructure/talos/prd/`; keep CP patches consiste
 | Jellyfin | k8s | NFS `media/`; GPU worker — [gpu](gpu.md) |
 | Sonarr ×2, Prowlarr, qBittorrent | k8s | NFS downloads; **peers via Mullvad WG**, **UI/API off-VPN** — [media](media.md) |
 | Pi-hole | k8s | Migrate **last** from pc (black) LXC — `.11` until cutover |
-| Homepage | k8s | After **Argo** (Phase 2); populate as services land — [gethomepage.dev](https://gethomepage.dev) |
+| Homepage | k8s | **First** GitOps app after Envoy; tiles use `*.lab` (incl. transitional proxies) — [gethomepage.dev](https://gethomepage.dev) |
 | Home Assistant | k8s | Before Pi-hole; downtime OK; USB passthrough if radio needs it |
 | ATM10 (Minecraft) | k8s | Phase 6 — iSCSI PVC; friend access via Tailscale `.ts.net` — [games](games.md) |
 | Argo CD | k8s | bootstrap once |
-| Uptime Kuma | k8s | After **Argo** (Phase 2), with Homepage |
+| Uptime Kuma | k8s | With/right after Homepage |
 | Prometheus / Grafana | k8s | **Phase 5** — not during single-node bootstrap |
 
 Migration order: [roadmap Phase 3](../roadmap.md#phase-3--migrate-apps).
