@@ -17,43 +17,55 @@ fi
 
 mkdir -p generated
 
+# Default --install-disk is yavin's NVMe; naboo patch overrides to /dev/vda for the worker.
 talosctl gen config prd "https://k8s.lab.jacobdrury.com:6443" \
   --with-secrets secrets.yaml \
   --install-disk /dev/nvme0n1 \
   --install-image "$INSTALL_IMAGE" \
-  --additional-sans k8s.lab.jacobdrury.com,yavin.lab.jacobdrury.com,192.168.5.11 \
+  --additional-sans k8s.lab.jacobdrury.com,yavin.lab.jacobdrury.com,naboo.lab.jacobdrury.com,192.168.5.11,192.168.5.14 \
   --config-patch @"${ROOT}/patches/cluster.yaml" \
   --config-patch-control-plane @"${ROOT}/patches/yavin.yaml" \
+  --config-patch-worker @"${ROOT}/patches/naboo.yaml" \
   --with-docs=false \
   --with-examples=false \
-  -t controlplane,talosconfig \
+  -t controlplane,worker,talosconfig \
   -o generated/ \
   --force
 
-# Talos 1.12+: replace generated HostnameConfig (auto: stable) with static yavin
+# Talos 1.12+: replace generated HostnameConfig (auto: stable) with static names
 python3 - <<'PY'
 from pathlib import Path
-path = Path("generated/controlplane.yaml")
-parts = path.read_text().split("\n---\n")
-out = []
-for part in parts:
-    if "kind: HostnameConfig" in part:
-        out.append(
-            "apiVersion: v1alpha1\n"
-            "kind: HostnameConfig\nauto: off\nhostname: yavin\n"
-        )
-    else:
-        out.append(part.rstrip("\n"))
-path.write_text("\n---\n".join(out).rstrip() + "\n")
+
+hosts = {
+    "generated/controlplane.yaml": "yavin",
+    "generated/worker.yaml": "naboo",
+}
+
+for path_str, hostname in hosts.items():
+    path = Path(path_str)
+    parts = path.read_text().split("\n---\n")
+    out = []
+    for part in parts:
+        if "kind: HostnameConfig" in part:
+            out.append(
+                "apiVersion: v1alpha1\n"
+                f"kind: HostnameConfig\nauto: off\nhostname: {hostname}\n"
+            )
+        else:
+            out.append(part.rstrip("\n"))
+    path.write_text("\n---\n".join(out).rstrip() + "\n")
 PY
 
 talosctl validate -c generated/controlplane.yaml --mode metal
+talosctl validate -c generated/worker.yaml --mode metal
 
-# Maintenance endpoint (DHCP); after install switch to .11
-ENDPOINT="${TALOS_ENDPOINT:-192.168.5.128}"
+# Cluster is up — default to yavin; override TALOS_ENDPOINT for maintenance apply.
+ENDPOINT="${TALOS_ENDPOINT:-192.168.5.11}"
 talosctl --talosconfig generated/talosconfig config endpoint "$ENDPOINT"
 talosctl --talosconfig generated/talosconfig config node 192.168.5.11
 
 echo "OK — installer ${INSTALL_IMAGE} (${VERSION})"
-echo "     config: generated/controlplane.yaml"
-echo "     apply:  talosctl apply-config --insecure -n ${ENDPOINT} -f generated/controlplane.yaml"
+echo "     CP:     generated/controlplane.yaml  (yavin)"
+echo "     worker: generated/worker.yaml        (naboo)"
+echo "     apply naboo (maintenance IP):"
+echo "       talosctl apply-config --insecure -n <maint-ip> -f generated/worker.yaml"

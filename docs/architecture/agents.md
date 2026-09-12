@@ -37,7 +37,7 @@ Details: [networking](networking.md#tailscale) (split DNS, subnet router timelin
 
 1. **Prefer Git** — edit this repo → PR → Argo  
 2. **Break-glass shell** — diagnose / restart; avoid permanent snowflake applies  
-3. **In-repo agent docs** — Cursor rules/skills: context, hostnames ([naming](naming.md)), “no secrets in Git”  
+3. **In-repo agent docs** — `AGENTS.md` / `.agents/skills`: context, hostnames ([naming](naming.md)), “no secrets in Git”  
 4. **Least privilege later** — optional agent Tailscale identity + limited RBAC  
 
 ## Buildout
@@ -48,6 +48,6 @@ Details: [networking](networking.md#tailscale) (split DNS, subnet router timelin
 | **2** | **`connect/`** for kubectl/talosctl/k9s; **Tailscale operator** on `prd` (subnet router); Envoy + cert-manager → `https://*.lab` |
 | **2** | Stable kubectl over Tailscale; Argo on `*.lab` |
 | **3+** | Remove homelab02 subnet routes before pc (black) retires; retire legacy `*.homelab.com` Pi-hole records |
-| **5** | Agent RBAC, optional MCP, `.cursor` rules |
+| **5** | Agent RBAC, optional MCP, `AGENTS.md` / skills |
 
 **Non-goal:** public kube API or Unraid for agents. Agents use the **tailnet**.

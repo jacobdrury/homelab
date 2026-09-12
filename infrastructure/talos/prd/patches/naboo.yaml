@@ -1,0 +1,27 @@
+# Interim Talos worker VM on scarif (Unraid KVM). Not a control plane.
+machine:
+  kubelet:
+    nodeIP:
+      validSubnets:
+        - 192.168.5.14/32
+  network:
+    interfaces:
+      # Single VirtIO NIC on Homelab bridge — pin by MAC in Unraid if you add NICs later.
+      - deviceSelector:
+          driver: virtio_net
+        dhcp: false
+        addresses:
+          - 192.168.5.14/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.5.1
+            metric: 100
+    nameservers:
+      - 192.168.1.11
+      - 1.1.1.1
+  install:
+    disk: /dev/vda
+    wipe: false
+  nodeLabels:
+    node.kubernetes.io/instance-type: unraid-vm
+    topology.kubernetes.io/zone: naboo

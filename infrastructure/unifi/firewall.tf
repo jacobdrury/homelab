@@ -18,6 +18,45 @@ locals {
   }
 }
 
+# DNS / Pi-hole UI from any LAN VLAN (Homelab included). Before network denies.
+resource "unifi_firewall_rule" "any_to_pihole" {
+  name       = "Allow any to Pi-hole"
+  action     = "accept"
+  ruleset    = "LAN_IN"
+  rule_index = 20007
+  protocol   = "all"
+  enabled    = true
+
+  dst_address      = local.lab.services.pihole.host
+  dst_network_type = "ADDRv4"
+}
+
+# Guest portal path uses GUEST_IN, not LAN_IN.
+resource "unifi_firewall_rule" "guest_to_pihole" {
+  name       = "Allow Guest to Pi-hole"
+  action     = "accept"
+  ruleset    = "GUEST_IN"
+  rule_index = 20007
+  protocol   = "all"
+  enabled    = true
+
+  dst_address      = local.lab.services.pihole.host
+  dst_network_type = "ADDRv4"
+}
+
+# Homelab needs Drury for Pi-hole (.11) and other lab services on pc (black).
+resource "unifi_firewall_rule" "homelab_to_drury" {
+  name       = "Allow Homelab to Drury"
+  action     = "accept"
+  ruleset    = "LAN_IN"
+  rule_index = 20100
+  protocol   = "all"
+  enabled    = true
+
+  src_network_id = unifi_network.homelab.id
+  dst_network_id = data.unifi_network.drury.id
+}
+
 resource "unifi_firewall_rule" "drury_to_homelab" {
   name       = "Allow Drury to Homelab"
   action     = "accept"

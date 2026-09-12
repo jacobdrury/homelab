@@ -1,16 +1,16 @@
-# Talos `prd` — bare-metal bootstrap on **yavin**
+# Talos `prd` — **yavin** (CP) + **naboo** (worker)
 
-Single-node control plane (`allowSchedulingOnControlPlanes: true`), CNI/kube-proxy disabled for **Cilium**. Talos **v1.12.7** (Mac Mini Apple EFI — do not use 1.13+ on yavin yet).
+Control plane on Mac Mini; interim worker VM on scarif. CNI/kube-proxy disabled for **Cilium**. Talos **v1.12.7** (Mac Mini Apple EFI — do not use 1.13+ on yavin yet).
 
 ## Layout
 
 | Path | Commit? | Role |
 |------|---------|------|
 | `schematic.yaml` / `schematic.id` | yes | Image Factory extensions (`intel-ucode`, `i915`, `realtek-firmware`) |
-| `patches/` | yes | Cluster + yavin network/install (no secrets) |
+| `patches/` | yes | Cluster + yavin (CP) + naboo (worker) — no secrets |
 | `gen.sh` | yes | Regenerate `generated/` from secrets + patches |
 | `secrets.yaml` | **no** | Cluster PKI — generate once; store a copy in 1Password |
-| `generated/` | **no** | `controlplane.yaml` + `talosconfig` |
+| `generated/` | **no** | `controlplane.yaml` + `worker.yaml` + `talosconfig` |
 
 ## One-time secrets
 
@@ -51,6 +51,24 @@ kubectl get nodes
 ```
 
 DNS `k8s.lab.jacobdrury.com` / `yavin.lab.jacobdrury.com` → `192.168.5.11` is already in `infrastructure/dns/` via `lab.yaml`.
+
+## Join **naboo** (Unraid VM on scarif)
+
+1. Unraid: bridge Homelab NIC; create VM `naboo` — VirtIO disk on SSD (`/dev/vda` in guest), VirtIO NIC on that bridge, 4 vCPU / 8–12 GB RAM.
+2. Boot factory ISO (`metal-amd64.iso` for schematic + `v1.12.7`) into maintenance mode.
+3. From repo:
+
+```bash
+cd infrastructure/talos/prd
+./gen.sh
+talosctl apply-config --insecure \
+  -n <naboo-maintenance-ip> \
+  -f generated/worker.yaml
+```
+
+4. After reboot → `192.168.5.14`; eject ISO; `kubectl get nodes` should show **naboo** Ready.
+
+DNS `naboo.lab.jacobdrury.com` → `192.168.5.14` is in `lab.yaml` / Cloudflare.
 
 ## Networking (yavin)
 
