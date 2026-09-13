@@ -26,6 +26,7 @@ dns:
     homeassistant: 192.168.5.21
     pihole: 192.168.5.21
     scarif: 192.168.5.21 # HTTPS UI via Envoy; NFS/iSCSI use scarif-nfs.lab
+    proxmox: 192.168.5.21 # homelab02 Proxmox UI
 
 
 networks:
@@ -74,6 +75,8 @@ services:
     host: 192.168.1.11 # LXC on homelab02 · network: drury · migrates to k8s last
   homeassistant:
     host: 192.168.2.8 # VM 105 · IoT VLAN · migrates to k8s later
+  proxmox:
+    host: 192.168.1.12 # homelab02 · Proxmox UI :8006 · hosts arr / Pi-hole / HA
   # gateway: 192.168.1.1  # UDM Pro — add when needed for IaC
 
 tailscale:

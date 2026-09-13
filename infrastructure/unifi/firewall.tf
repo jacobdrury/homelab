@@ -39,6 +39,12 @@ resource "unifi_firewall_group" "homeassistant_http" {
   members = ["8123"]
 }
 
+resource "unifi_firewall_group" "proxmox_https" {
+  name    = "Proxmox HTTPS"
+  type    = "port-group"
+  members = ["8006"]
+}
+
 # Homelab must be its own zone — same zone as Drury would allow unrestricted lateral traffic.
 resource "unifi_firewall_zone" "drury" {
   name     = "Drury"
@@ -138,6 +144,26 @@ resource "unifi_firewall_zone_policy" "homelab_to_arr_http" {
   }
 }
 
+resource "unifi_firewall_zone_policy" "homelab_to_proxmox" {
+  name                      = "Allow Homelab HTTPS to Proxmox"
+  action                    = "ALLOW"
+  protocol                  = "tcp"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
+  description               = "Envoy transitional https://proxmox.lab → homelab02 :8006"
+
+  source = {
+    zone_id = unifi_firewall_zone.homelab.id
+  }
+
+  destination = {
+    zone_id       = unifi_firewall_zone.drury.id
+    ips           = [local.lab.services.proxmox.host]
+    port_group_id = unifi_firewall_group.proxmox_https.id
+  }
+}
+
 # Isolated VLANs still need LAN DNS (ad blocking) via Pi-hole on Drury.
 resource "unifi_firewall_zone_policy" "isolated_to_pihole_dns" {
   name                      = "Allow Isolated DNS to Pi-hole"
@@ -205,6 +231,7 @@ resource "unifi_firewall_zone_policy_order" "homelab_to_drury" {
     unifi_firewall_zone_policy.homelab_to_pihole_dns.id,
     unifi_firewall_zone_policy.homelab_to_pihole_http.id,
     unifi_firewall_zone_policy.homelab_to_arr_http.id,
+    unifi_firewall_zone_policy.homelab_to_proxmox.id,
   ]
 }
 
