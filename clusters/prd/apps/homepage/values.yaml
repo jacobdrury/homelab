@@ -116,11 +116,10 @@ config:
             href: https://scarif.lab.jacobdrury.com
             description: Unraid NAS
             icon: unraid.png
-            siteMonitor: http://scarif-nfs.lab.jacobdrury.com
+            siteMonitor: https://scarif.lab.jacobdrury.com/login
             widget:
               type: unraid
-              # GraphQL direct to Unraid (scarif.lab is Envoy HTTPS UI).
-              url: http://scarif-nfs.lab.jacobdrury.com
+              url: https://scarif.lab.jacobdrury.com
               key: "{{HOMEPAGE_VAR_UNRAID_API_KEY}}"
               # ZFS appdata pool on scarif (array may be empty).
               pool1: scarif-ssd
@@ -133,10 +132,10 @@ config:
             href: https://pihole.lab.jacobdrury.com/admin/
             description: DNS / adblock (transitional)
             icon: pi-hole.png
-            siteMonitor: http://pihole-lxc.lab.jacobdrury.com/admin/
+            siteMonitor: https://pihole.lab.jacobdrury.com/admin/
             widget:
               type: pihole
-              url: http://pihole-lxc.lab.jacobdrury.com
+              url: https://pihole.lab.jacobdrury.com
               version: 6
               key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"
 
