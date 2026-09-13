@@ -23,8 +23,8 @@ dns:
     argocd: 192.168.5.21
     jellyfin: 192.168.5.21
     qbittorrent: 192.168.5.21
-    sonarr: 192.168.5.21
-    sonarr-anime: 192.168.5.21
+    sonarr: 192.168.5.21 # anime (primary)
+    sonarr-tv: 192.168.5.21
     prowlarr: 192.168.5.21
     homeassistant: 192.168.5.21
     pihole: 192.168.5.21

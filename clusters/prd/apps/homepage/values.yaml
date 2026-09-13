@@ -92,13 +92,13 @@ config:
             href: https://qbittorrent.lab.jacobdrury.com
             description: Downloads (transitional → arr)
             icon: qbittorrent.png
-        - Sonarr TV:
-            href: https://sonarr.lab.jacobdrury.com
-            description: TV (transitional → arr)
-            icon: sonarr.png
         - Sonarr Anime:
-            href: https://sonarr-anime.lab.jacobdrury.com
+            href: https://sonarr.lab.jacobdrury.com
             description: Anime (transitional → arr)
+            icon: sonarr.png
+        - Sonarr TV:
+            href: https://sonarr-tv.lab.jacobdrury.com
+            description: TV (transitional → arr)
             icon: sonarr.png
         - Prowlarr:
             href: https://prowlarr.lab.jacobdrury.com
