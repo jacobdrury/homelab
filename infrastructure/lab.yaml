@@ -11,12 +11,23 @@ dns:
   cloudflare_resolvers:
     - 1.1.1.1
     - 1.0.0.1
-  # Pre-k8s *.lab aliases (Drury guests). Retire when apps cut over to Envoy / external-dns.
+  # Legacy guest IPs (firewall / inventory). DNS for UIs is app_hosts → Envoy.
   transitional_hosts:
-    arr: 192.168.1.9 # VM 101 · same as arr.homelab.com (Pi-hole local)
-  # In-cluster app frontends → Envoy VIP (Cilium L2 LB).
+    arr: 192.168.1.9 # VM 101 · jellyfin/*arr via Envoy
+  # Direct A records (not via Envoy) — NFS/iSCSI must not follow scarif.lab (HTTPS UI).
+  direct_hosts:
+    scarif-nfs: 192.168.5.10
+  # App / transitional UI frontends → Envoy VIP (Cilium L2 LB).
   app_hosts:
     argocd: 192.168.5.21
+    jellyfin: 192.168.5.21
+    qbittorrent: 192.168.5.21
+    sonarr: 192.168.5.21
+    sonarr-anime: 192.168.5.21
+    prowlarr: 192.168.5.21
+    homeassistant: 192.168.5.21
+    pihole: 192.168.5.21
+    scarif: 192.168.5.21 # HTTPS UI; NFS uses scarif-nfs.lab
 
 networks:
   # Primary trusted LAN (UniFi VLAN 1). Pi-hole, Proxmox, arr VM, IoT gateway path.
@@ -38,6 +49,7 @@ networks:
       scarif:
         ip: 192.168.5.10
         role: unraid # NAS · NFS/iSCSI
+        dns: false # A record is app_hosts scarif → Envoy; use scarif-nfs for storage
       yavin:
         ip: 192.168.5.11
         role: talos_cp # Mac Mini · bootstrap CP #1
@@ -60,6 +72,8 @@ networks:
 services:
   pihole:
     host: 192.168.1.11 # LXC on homelab02 · network: drury · migrates to k8s last
+  homeassistant:
+    host: 192.168.2.8 # VM 105 · IoT VLAN · migrates to k8s later
   # gateway: 192.168.1.1  # UDM Pro — add when needed for IaC
 
 tailscale:

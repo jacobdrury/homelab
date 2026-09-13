@@ -14,6 +14,31 @@ resource "unifi_firewall_group" "dns" {
   members = ["53"]
 }
 
+# Envoy (Homelab) → legacy UIs until Phase 3 cutover.
+resource "unifi_firewall_group" "arr_http" {
+  name = "arr HTTP"
+  type = "port-group"
+  members = [
+    "8096", # jellyfin
+    "8085", # qbittorrent (gluetun)
+    "8989", # sonarr-tv
+    "8990", # sonarr-anime
+    "9696", # prowlarr
+  ]
+}
+
+resource "unifi_firewall_group" "pihole_http" {
+  name    = "Pi-hole HTTP"
+  type    = "port-group"
+  members = ["80"]
+}
+
+resource "unifi_firewall_group" "homeassistant_http" {
+  name    = "Home Assistant HTTP"
+  type    = "port-group"
+  members = ["8123"]
+}
+
 # Homelab must be its own zone — same zone as Drury would allow unrestricted lateral traffic.
 resource "unifi_firewall_zone" "drury" {
   name     = "Drury"
@@ -52,7 +77,7 @@ resource "unifi_firewall_zone_policy" "drury_to_homelab" {
   }
 }
 
-# Homelab initiates almost nothing to Drury — exception: Pi-hole DNS until Pi-hole moves to k8s.
+# Homelab → Drury: Pi-hole DNS + transitional Envoy proxy targets (arr / Pi-hole UI).
 resource "unifi_firewall_zone_policy" "homelab_to_pihole_dns" {
   name                      = "Allow Homelab DNS to Pi-hole"
   action                    = "ALLOW"
@@ -60,7 +85,7 @@ resource "unifi_firewall_zone_policy" "homelab_to_pihole_dns" {
   enabled                   = true
   auto_allow_return_traffic = true
   ip_version                = "IPV4"
-  description               = "Only Homelab→Drury initiation allowed until Pi-hole is on the cluster"
+  description               = "Cluster DNS until Pi-hole is on Homelab / k8s"
 
   source = {
     zone_id = unifi_firewall_zone.homelab.id
@@ -70,6 +95,46 @@ resource "unifi_firewall_zone_policy" "homelab_to_pihole_dns" {
     zone_id       = unifi_firewall_zone.drury.id
     ips           = [local.lab.services.pihole.host]
     port_group_id = unifi_firewall_group.dns.id
+  }
+}
+
+resource "unifi_firewall_zone_policy" "homelab_to_pihole_http" {
+  name                      = "Allow Homelab HTTP to Pi-hole"
+  action                    = "ALLOW"
+  protocol                  = "tcp"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
+  description               = "Envoy transitional https://pihole.lab → LXC :80"
+
+  source = {
+    zone_id = unifi_firewall_zone.homelab.id
+  }
+
+  destination = {
+    zone_id       = unifi_firewall_zone.drury.id
+    ips           = [local.lab.services.pihole.host]
+    port_group_id = unifi_firewall_group.pihole_http.id
+  }
+}
+
+resource "unifi_firewall_zone_policy" "homelab_to_arr_http" {
+  name                      = "Allow Homelab HTTP to arr"
+  action                    = "ALLOW"
+  protocol                  = "tcp"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
+  description               = "Envoy transitional *.lab → arr VM media stack"
+
+  source = {
+    zone_id = unifi_firewall_zone.homelab.id
+  }
+
+  destination = {
+    zone_id       = unifi_firewall_zone.drury.id
+    ips           = [local.lab.dns.transitional_hosts.arr]
+    port_group_id = unifi_firewall_group.arr_http.id
   }
 }
 
@@ -90,6 +155,27 @@ resource "unifi_firewall_zone_policy" "isolated_to_pihole_dns" {
     zone_id       = unifi_firewall_zone.drury.id
     ips           = [local.lab.services.pihole.host]
     port_group_id = unifi_firewall_group.dns.id
+  }
+}
+
+# Envoy → Home Assistant on IoT (before Homelab→Isolated block).
+resource "unifi_firewall_zone_policy" "homelab_to_homeassistant" {
+  name                      = "Allow Homelab HTTP to Home Assistant"
+  action                    = "ALLOW"
+  protocol                  = "tcp"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
+  description               = "Envoy transitional https://homeassistant.lab → HA OS :8123"
+
+  source = {
+    zone_id = unifi_firewall_zone.homelab.id
+  }
+
+  destination = {
+    zone_id       = unifi_firewall_zone.isolated.id
+    ips           = [local.lab.services.homeassistant.host]
+    port_group_id = unifi_firewall_group.homeassistant_http.id
   }
 }
 
@@ -117,6 +203,8 @@ resource "unifi_firewall_zone_policy_order" "homelab_to_drury" {
 
   before_predefined_ids = [
     unifi_firewall_zone_policy.homelab_to_pihole_dns.id,
+    unifi_firewall_zone_policy.homelab_to_pihole_http.id,
+    unifi_firewall_zone_policy.homelab_to_arr_http.id,
   ]
 }
 
@@ -143,6 +231,7 @@ resource "unifi_firewall_zone_policy_order" "homelab_to_isolated" {
   destination_zone_id = unifi_firewall_zone.isolated.id
 
   before_predefined_ids = [
+    unifi_firewall_zone_policy.homelab_to_homeassistant.id,
     unifi_firewall_zone_policy.homelab_to_isolated_block.id,
   ]
 }

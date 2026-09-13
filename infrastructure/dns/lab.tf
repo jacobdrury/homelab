@@ -26,6 +26,19 @@ resource "cloudflare_dns_record" "lab_transitional" {
   comment = "Transitional *.lab — ${each.key} (pre-k8s)"
 }
 
+# Direct-to-host records (storage, etc.) — not via Envoy.
+resource "cloudflare_dns_record" "lab_direct" {
+  for_each = local.direct_lab_hosts
+
+  zone_id = data.cloudflare_zone.jacobdrury.id
+  name    = "${each.key}.lab"
+  type    = "A"
+  content = each.value
+  proxied = false
+  ttl     = 1
+  comment = "Homelab direct — ${each.key}"
+}
+
 # App frontends on Envoy VIP (Homelab VLAN).
 resource "cloudflare_dns_record" "lab_app" {
   for_each = local.app_lab_hosts

@@ -1,0 +1,26 @@
+# Transitional HTTPS frontends — Envoy → legacy VMs/LXC/Unraid until Phase 3.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: transitional
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jacobdrury/homelab.git
+    targetRevision: main
+    path: clusters/prd/apps/transitional
+    directory:
+      include: resources.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: transitional
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
