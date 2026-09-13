@@ -1,37 +1,17 @@
 # Phase 2 transitional routes: TLS on Envoy, backends stay on legacy hosts.
-# DNS A records → 192.168.5.21 (see infrastructure/lab.yaml dns.app_hosts).
-# Cut over later by retargeting Backend EndpointSlices to in-cluster Services.
+# DNS A records → 192.168.5.21 (infrastructure/lab.yaml dns.app_hosts).
+# Uses Envoy Gateway Backend CRD (Argo excludes EndpointSlice by default).
 ---
-# --- helpers: Service + EndpointSlice (IPv4) for each legacy backend ---
-apiVersion: v1
-kind: Service
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
   name: jellyfin
   namespace: transitional
 spec:
-  ports:
-    - name: http
-      port: 8096
-      targetPort: 8096
-      protocol: TCP
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: jellyfin
-  namespace: transitional
-  labels:
-    kubernetes.io/service-name: jellyfin
-addressType: IPv4
-ports:
-  - name: http
-    protocol: TCP
-    port: 8096
-endpoints:
-  - addresses:
-      - "192.168.1.9"
-    conditions:
-      ready: true
+  endpoints:
+    - ip:
+        address: 192.168.1.9
+        port: 8096
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -53,38 +33,20 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: jellyfin
-          port: 8096
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: jellyfin
 ---
-apiVersion: v1
-kind: Service
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
   name: qbittorrent
   namespace: transitional
 spec:
-  ports:
-    - name: http
-      port: 8085
-      targetPort: 8085
-      protocol: TCP
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: qbittorrent
-  namespace: transitional
-  labels:
-    kubernetes.io/service-name: qbittorrent
-addressType: IPv4
-ports:
-  - name: http
-    protocol: TCP
-    port: 8085
-endpoints:
-  - addresses:
-      - "192.168.1.9"
-    conditions:
-      ready: true
+  endpoints:
+    - ip:
+        address: 192.168.1.9
+        port: 8085
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -106,38 +68,20 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: qbittorrent
-          port: 8085
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: qbittorrent
 ---
-apiVersion: v1
-kind: Service
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
   name: sonarr
   namespace: transitional
 spec:
-  ports:
-    - name: http
-      port: 8989
-      targetPort: 8989
-      protocol: TCP
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: sonarr
-  namespace: transitional
-  labels:
-    kubernetes.io/service-name: sonarr
-addressType: IPv4
-ports:
-  - name: http
-    protocol: TCP
-    port: 8989
-endpoints:
-  - addresses:
-      - "192.168.1.9"
-    conditions:
-      ready: true
+  endpoints:
+    - ip:
+        address: 192.168.1.9
+        port: 8989
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -159,38 +103,20 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: sonarr
-          port: 8989
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: sonarr
 ---
-apiVersion: v1
-kind: Service
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
   name: sonarr-anime
   namespace: transitional
 spec:
-  ports:
-    - name: http
-      port: 8990
-      targetPort: 8990
-      protocol: TCP
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: sonarr-anime
-  namespace: transitional
-  labels:
-    kubernetes.io/service-name: sonarr-anime
-addressType: IPv4
-ports:
-  - name: http
-    protocol: TCP
-    port: 8990
-endpoints:
-  - addresses:
-      - "192.168.1.9"
-    conditions:
-      ready: true
+  endpoints:
+    - ip:
+        address: 192.168.1.9
+        port: 8990
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -212,38 +138,20 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: sonarr-anime
-          port: 8990
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: sonarr-anime
 ---
-apiVersion: v1
-kind: Service
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
   name: prowlarr
   namespace: transitional
 spec:
-  ports:
-    - name: http
-      port: 9696
-      targetPort: 9696
-      protocol: TCP
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: prowlarr
-  namespace: transitional
-  labels:
-    kubernetes.io/service-name: prowlarr
-addressType: IPv4
-ports:
-  - name: http
-    protocol: TCP
-    port: 9696
-endpoints:
-  - addresses:
-      - "192.168.1.9"
-    conditions:
-      ready: true
+  endpoints:
+    - ip:
+        address: 192.168.1.9
+        port: 9696
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -265,38 +173,20 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: prowlarr
-          port: 9696
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: prowlarr
 ---
-apiVersion: v1
-kind: Service
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
   name: homeassistant
   namespace: transitional
 spec:
-  ports:
-    - name: http
-      port: 8123
-      targetPort: 8123
-      protocol: TCP
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: homeassistant
-  namespace: transitional
-  labels:
-    kubernetes.io/service-name: homeassistant
-addressType: IPv4
-ports:
-  - name: http
-    protocol: TCP
-    port: 8123
-endpoints:
-  - addresses:
-      - "192.168.2.8"
-    conditions:
-      ready: true
+  endpoints:
+    - ip:
+        address: 192.168.2.8
+        port: 8123
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -318,38 +208,20 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: homeassistant
-          port: 8123
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: homeassistant
 ---
-apiVersion: v1
-kind: Service
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
   name: pihole
   namespace: transitional
 spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 80
-      protocol: TCP
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: pihole
-  namespace: transitional
-  labels:
-    kubernetes.io/service-name: pihole
-addressType: IPv4
-ports:
-  - name: http
-    protocol: TCP
-    port: 80
-endpoints:
-  - addresses:
-      - "192.168.1.11"
-    conditions:
-      ready: true
+  endpoints:
+    - ip:
+        address: 192.168.1.11
+        port: 80
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -371,40 +243,22 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: pihole
-          port: 80
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: pihole
 ---
 # scarif Unraid UI — LE on Envoy; Unraid stays HTTP on :80.
 # NFS clients must use scarif-nfs.lab.jacobdrury.com (not scarif.lab).
-apiVersion: v1
-kind: Service
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
   name: scarif
   namespace: transitional
 spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 80
-      protocol: TCP
----
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: scarif
-  namespace: transitional
-  labels:
-    kubernetes.io/service-name: scarif
-addressType: IPv4
-ports:
-  - name: http
-    protocol: TCP
-    port: 80
-endpoints:
-  - addresses:
-      - "192.168.5.10"
-    conditions:
-      ready: true
+  endpoints:
+    - ip:
+        address: 192.168.5.10
+        port: 80
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -426,5 +280,6 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: scarif
-          port: 80
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: scarif

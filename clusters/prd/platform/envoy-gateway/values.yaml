@@ -15,3 +15,17 @@ certgen:
 topologyInjector:
   annotations:
     argocd.argoproj.io/sync-options: Prune=false
+
+# Required for transitional HTTPRoutes to legacy IPs (Backend CRD).
+# https://gateway.envoyproxy.io/docs/tasks/traffic/backend/
+config:
+  envoyGateway:
+    gateway:
+      controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    provider:
+      type: Kubernetes
+    logging:
+      level:
+        default: info
+    extensionApis:
+      enableBackend: true
