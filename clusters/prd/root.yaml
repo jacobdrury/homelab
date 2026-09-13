@@ -10,10 +10,12 @@ spec:
   source:
     repoURL: https://github.com/jacobdrury/homelab.git
     targetRevision: main
-    path: clusters/prd/applications
+    path: clusters/prd/platform
     directory:
       recurse: true
-      include: '{*.yaml,*.yml}'
+      # Every platform component owns its values and resources beside
+      # application.yaml; only Application manifests are rendered here.
+      include: application.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
