@@ -151,25 +151,25 @@ Single-node: Tofu A record → **yavin** on homelab VLAN. At 3 CPs: same name �
 
 ## HTTPS
 
-**Envoy Gateway** on the Homelab VLAN terminates TLS for k8s apps and selected backends. **cert-manager + Let’s Encrypt DNS-01** via Cloudflare (API token in 1Password) — no public HTTP ingress required.
+**Envoy Gateway** on Homelab VLAN VIP **`192.168.5.21`** (Cilium L2 LB) terminates TLS. **cert-manager + Let’s Encrypt DNS-01** via Cloudflare — wildcard **`*.lab.jacobdrury.com`** Secret `lab-wildcard-tls` on `Gateway/lab`.
 
 ### Certificates
 
 | Scope | How |
 |-------|-----|
-| **k8s apps** (`homepage.lab`, `argocd.lab`, …) | cert-manager Certificate on Gateway or wildcard **`*.lab.jacobdrury.com`** |
-| **Legacy UIs during migrate** (`jellyfin.lab`, …) | Same wildcard; Envoy → VM/LXC IP until cutover |
+| **k8s apps** (`argocd.lab`, `homepage.lab`, …) | Wildcard Certificate → Envoy HTTPS listener |
+| **Legacy UIs during migrate** (`jellyfin.lab`, …) | Same wildcard; HTTPRoute → VM/LXC IP until cutover |
 | **ACME** | DNS-01 TXT in Cloudflare (ephemeral; not in OpenTofu) |
-| **scarif** (Unraid) | **Envoy reverse-proxy** → `http://192.168.5.10:80` — LE cert on Envoy; Unraid stays HTTP internally. **Today (pre-cluster):** use `http://scarif.lab` over Tailscale; **Phase 2:** same hostname → `https://` (DNS unchanged) |
+| **scarif** (Unraid) | **Envoy reverse-proxy** → `http://192.168.5.10:80` — LE on Envoy; Unraid stays HTTP internally. **Today:** `http://scarif.lab` still works; **next:** HTTPRoute → `https://scarif.lab` |
 | **Not used** | Cloudflare proxy (orange cloud), Cloudflare Tunnel, Tailscale certs for `*.lab` names |
 
 ### Access (LAN and Tailscale)
 
-Same hostname and certificate in both places — e.g. **`https://jellyfin.lab.jacobdrury.com`**:
+Same hostname and certificate — e.g. **`https://argocd.lab.jacobdrury.com`** (verified Sep 2026):
 
-1. DNS → Pi-hole (LAN) or Cloudflare (Tailscale split DNS) → same RFC1918 A record
-2. **LAN:** direct route to Envoy `:443`
-3. **Away:** split DNS → Cloudflare (same answer) + subnet router → Envoy `:443`
+1. DNS → Pi-hole (LAN) or Cloudflare (Tailscale split DNS) → **`192.168.5.21`**
+2. **LAN:** route to Envoy VIP `:443`
+3. **Away:** split DNS → Cloudflare + subnet router → Envoy `:443`
 4. Envoy → HTTPRoute → pod **or** legacy VM/Unraid HTTP (transitional)
 
 ```mermaid

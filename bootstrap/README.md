@@ -1,12 +1,18 @@
 # Bootstrap (one-time)
 
-Chicken-and-egg installs before GitOps can own them.
+Chicken-and-egg installs before GitOps can own them. After first install, **Argo** owns most charts via `clusters/prd/applications/`.
 
-| Step | Path |
-|------|------|
-| Cilium | `apps/system/cilium/install.sh` |
-| NFS / iSCSI CSI | `apps/system/nfs-csi/`, `iscsi-csi/` |
-| 1Password Connect + ESO | `apps/system/onepassword-connect/`, `external-secrets/` |
-| **Argo CD** | `apps/system/argocd/install.sh` → applies `clusters/prd/root.yaml` |
+| Step | Path | Argo? |
+|------|------|-------|
+| Cilium (+ L2 LB) | `apps/system/cilium/` | **No** — leave Helm/`install.sh` |
+| NFS CSI | `apps/system/nfs-csi/` | **Yes** — `nfs-csi` |
+| iSCSI CSI | `apps/system/iscsi-csi/` | **Not yet** — SSH key still bootstrap |
+| 1Password Connect | `apps/system/onepassword-connect/` | **Yes** — Secret `op-credentials` seeded once |
+| ESO | `apps/system/external-secrets/` | **Yes** — token Secret seeded once |
+| **Argo CD** | `apps/system/argocd/install.sh` | **No** — chicken-egg |
+| cert-manager | `apps/system/cert-manager/` | **Yes** |
+| Envoy Gateway | `apps/system/envoy-gateway/` | **Yes** |
 
-After Argo is up, new workloads go in `apps/` + an `Application` under `clusters/prd/applications/`. Platform charts above can stay out of Argo until you choose to adopt them.
+Bootstrap Secrets (never commit): `op-credentials`, `onepassword-connect-token` — annotated `Prune=false`. Re-seed with the app `install.sh` if lost.
+
+New workloads: `apps/` + `Application` under `clusters/prd/applications/`.

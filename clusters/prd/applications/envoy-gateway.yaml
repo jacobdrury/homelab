@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: envoy-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: oci://docker.io/envoyproxy/gateway-helm
+      targetRevision: v1.9.1
+      helm:
+        releaseName: eg
+        valueFiles:
+          - $values/apps/system/envoy-gateway/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      path: apps/system/envoy-gateway
+      directory:
+        include: '{gateway.yaml,httproute-argocd.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: envoy-gateway-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

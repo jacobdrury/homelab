@@ -14,6 +14,9 @@ dns:
   # Pre-k8s *.lab aliases (Drury guests). Retire when apps cut over to Envoy / external-dns.
   transitional_hosts:
     arr: 192.168.1.9 # VM 101 · same as arr.homelab.com (Pi-hole local)
+  # In-cluster app frontends → Envoy VIP (Cilium L2 LB).
+  app_hosts:
+    argocd: 192.168.5.21
 
 networks:
   # Primary trusted LAN (UniFi VLAN 1). Pi-hole, Proxmox, arr VM, IoT gateway path.
@@ -50,6 +53,9 @@ networks:
       naboo:
         ip: 192.168.5.14
         role: talos_worker # Unraid VM on scarif · interim until Phase 4
+      envoy:
+        ip: 192.168.5.21
+        role: envoy_vip # Cilium L2 LoadBalancer for Gateway/lab
 
 services:
   pihole:

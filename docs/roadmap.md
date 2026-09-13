@@ -10,7 +10,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; `http://scarif.lab` works home + away |
-| **2** Talos `prd` | **In progress** | **yavin** + **naboo** · CSI + Connect/ESO + **Argo** · next: **Envoy** |
+| **2** Talos `prd` | **In progress** | CSI + Connect/ESO + Argo + **Envoy/cert-manager** · next: transitional routes / Tailscale op |
 | **3–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -30,7 +30,7 @@ Talos + Cilium + **`connect/`** are up: **yavin** (CP) + **naboo** (worker). Uni
 | **2** | ~~**naboo**~~ — **Done** (Sep 2026): Unraid KVM worker on scarif · `192.168.5.14` · 6 vCPU / 20 GB · Ready |
 | **3** | ~~**1Password Connect + ESO**~~ **done** (`ClusterSecretStore/onepassword`; smoke synced) |
 | **4** | ~~**Argo CD**~~ **done** (`clusters/prd` app-of-apps root; UI via port-forward until Envoy) |
-| **5** | Envoy Gateway + cert-manager (LE DNS-01); **Tailscale operator** |
+| **5** | ~~Envoy Gateway + cert-manager~~ **done** (VIP `.21`, wildcard LE, `https://argocd.lab`); **Tailscale operator** still open |
 | **6** | **Transitional `*.lab` routes** — Envoy → **today’s** backends (e.g. `jellyfin.lab` → arr VM); consumers cut over URLs before k8s migrate ([below](#phase-2--transitional-lab-routes)) |
 | **7** | **Homepage** — **first** GitOps app; tiles point at `*.lab` URLs (Uptime Kuma right after or with it) |
 | **8** | etcd snapshot cadence; confirm `https://*.lab` on LAN + Tailscale |
@@ -158,8 +158,8 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [x] UniFi **Zone-Based Firewall** — zones Drury / Homelab / Isolated; Homelab→Drury = Pi-hole DNS only; Pi-hole `listeningMode=ALL`  
 - [x] **Housekeeping storage** — NFS + iSCSI CSI (`scarif-nfs`, `scarif-iscsi`); SSH deferred  
 - [x] 1Password Connect + ESO; seed once (`onepassword` + `external-secrets`)  
-- [x] Argo CD → `clusters/prd` (app-of-apps root; UI port-forward until Envoy)  
-- [ ] Envoy + cert-manager; LE for `*.lab.jacobdrury.com`  
+- [x] Argo CD → `clusters/prd` (app-of-apps root; UI now `https://argocd.lab`)  
+- [x] Envoy + cert-manager; LE wildcard `*.lab.jacobdrury.com` (VIP `192.168.5.21`)  
 - [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire homelab02 routes when stable  
 - [ ] **Transitional HTTPRoutes** — Envoy proxies to current VMs/LXCs (`jellyfin.lab` → arr, etc.); DNS A → Envoy; swap backend to k8s Service later with **no client URL change**  
 - [ ] **Homepage** via Argo — **first** app; catalog `*.lab` links (Uptime Kuma next)  

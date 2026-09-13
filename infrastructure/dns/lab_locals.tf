@@ -6,4 +6,6 @@ locals {
   }
 
   transitional_lab_hosts = try(local.lab.dns.transitional_hosts, {})
+
+  app_lab_hosts = try(local.lab.dns.app_hosts, {})
 }

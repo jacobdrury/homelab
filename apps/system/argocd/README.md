@@ -16,13 +16,15 @@ cd connect/prd
 bash apps/system/argocd/install.sh
 ```
 
-## UI (until Envoy)
+## UI
 
 ```bash
-kubectl -n argocd port-forward svc/argocd-server 8080:80
-# https://localhost:8080  (or http — server.insecure)
+open https://argocd.lab.jacobdrury.com
+# admin password:
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
 ```
+
+(Port-forward still works as break-glass: `kubectl -n argocd port-forward svc/argocd-server 8080:80`.)
 
 ## Adding apps
 
@@ -30,4 +32,5 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.pas
 2. `Application` YAML under `clusters/prd/applications/`
 3. Merge to `main` → root app syncs the new Application → Argo syncs the workload
 
-Already-bootstrapped platform (Cilium, CSI, Connect, ESO) stays Helm/`install.sh` until optionally adopted later.
+**Argo-managed platform today:** Connect, ESO, cert-manager, Envoy Gateway, NFS CSI.  
+**Still bootstrap `install.sh`:** Cilium, Argo itself, iSCSI CSI (SSH key).

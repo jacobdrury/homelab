@@ -2,11 +2,15 @@
 
 What Argo on **prd** syncs. Contract: merge to `main` → Applications here reconcile.
 
-| Path | Role |
-|------|------|
-| `root.yaml` | Bootstrap Application → `clusters/prd/applications` |
-| `applications/` | Child `Application` manifests (add one per workload) |
+| Application | Chart / path |
+|-------------|--------------|
+| `root` | This directory (app-of-apps) |
+| `onepassword-connect` | Connect 2.4.1 |
+| `external-secrets` | ESO 2.10.0 + ClusterSecretStore |
+| `cert-manager` | cert-manager v1.21.2 + issuer |
+| `envoy-gateway` | Gateway helm v1.9.1 + Gateway/HTTPRoute |
+| `nfs-csi` | csi-driver-nfs 4.13.4 + StorageClass |
 
-Repo: `https://github.com/jacobdrury/homelab.git` · revision `main`.
+**Not in Argo yet:** Cilium, Argo CD itself, iSCSI CSI.
 
 Install Argo once: `bash apps/system/argocd/install.sh` (applies `root.yaml`).

@@ -45,8 +45,8 @@ Details: [networking](networking.md#tailscale) (split DNS, subnet router timelin
 | Phase | What |
 |-------|------|
 | **Now** | Tailscale IaC; **homelab02** interim subnet router; `http://*.lab` remote via split DNS → Cloudflare |
-| **2 (done)** | **`connect/`**; CSI; Connect + ESO; **Argo CD** (UI: port-forward until Envoy) |
-| **2 (next)** | **Tailscale operator** on `prd`; Envoy + cert-manager → `https://*.lab` · Argo on `argocd.lab` |
+| **2 (done)** | **`connect/`**; CSI; Connect + ESO; **Argo CD**; **Envoy** + LE wildcard (`argocd.lab`) |
+| **2 (next)** | Transitional HTTPRoutes; **Tailscale operator**; Homepage |
 | **3+** | Remove homelab02 subnet routes before pc (black) retires; retire legacy `*.homelab.com` Pi-hole records |
 | **5** | Agent RBAC, optional MCP, `AGENTS.md` / skills |
 

@@ -9,3 +9,7 @@ output "lab_host_fqdns" {
 output "lab_transitional_fqdns" {
   value = { for k, r in cloudflare_dns_record.lab_transitional : k => r.name }
 }
+
+output "lab_app_fqdns" {
+  value = { for k, r in cloudflare_dns_record.lab_app : k => r.name }
+}

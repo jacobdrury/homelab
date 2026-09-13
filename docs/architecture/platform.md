@@ -9,10 +9,10 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | OS | **Talos Linux** | Immutable, API-driven |
 | Bootstrap | `talosctl` + configs in Git | Under `infrastructure/talos/prd/` |
 | CNI | **Cilium** | |
-| GitOps | **Argo CD** | Live on `prd` — root → `clusters/prd/applications`; UI port-forward until Envoy |
+| GitOps | **Argo CD** | Live — `https://argocd.lab.jacobdrury.com`; root → `clusters/prd/applications` |
 | Secrets | **1Password** + Connect + ESO | Live — [secrets](secrets.md) |
 | Storage | **NFS CSI + iSCSI CSI → Unraid** | Live — `scarif-nfs`, `scarif-iscsi` — [storage](storage.md) |
-| Ingress | **Envoy Gateway** | **Next** — Gateway API / HTTPRoute |
+| Ingress | **Envoy Gateway** | Live — VIP **`192.168.5.21`**, wildcard LE — [networking](networking.md#https) |
 | Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
 | Monitoring | Prometheus, Grafana (Phase 5); **Uptime Kuma** after Argo | Bootstrap debug: `connect/` + k9s + talosctl — no early metrics stack on 16 GB yavin |

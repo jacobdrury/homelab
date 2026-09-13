@@ -1,16 +1,18 @@
 # Apps
 
-New workloads: add manifests under `apps/` + an Argo `Application` in `clusters/prd/applications/`. Platform chicken-egg pieces still use `install.sh` (Cilium, CSI, Connect, ESO, Argo itself) — see [bootstrap](../bootstrap/README.md).
+GitOps: Argo Applications in [`clusters/prd/applications/`](../clusters/prd/applications/). Chicken-egg pieces stay on `install.sh` — [bootstrap](../bootstrap/README.md).
 
-| Path | Role |
-|------|------|
-| `system/cilium/` | CNI + kube-proxy replacement |
-| `system/nfs-csi/` | RWX media on scarif NFS (`scarif-nfs`) |
-| `system/iscsi-csi/` | RWO block on scarif ZFS/iSCSI (`scarif-iscsi`) |
-| `system/onepassword-connect/` | 1Password Connect API |
-| `system/external-secrets/` | ESO + `ClusterSecretStore/onepassword` |
-| `system/argocd/` | Argo CD |
-| `system/` (next) | cert-manager, Envoy Gateway, Tailscale operator |
-| `media/`, `home/`, `games/`, `network/` | Workloads (Phase 3+) |
+| Path | Role | Owner |
+|------|------|-------|
+| `system/cilium/` | CNI + L2 LB VIP `.21` | `install.sh` |
+| `system/nfs-csi/` | `scarif-nfs` | Argo `nfs-csi` |
+| `system/iscsi-csi/` | `scarif-iscsi` | `install.sh` (SSH key) |
+| `system/onepassword-connect/` | Connect API | Argo (+ seeded Secret) |
+| `system/external-secrets/` | ESO + `ClusterSecretStore/onepassword` | Argo (+ seeded token) |
+| `system/argocd/` | Argo CD | `install.sh` |
+| `system/cert-manager/` | LE DNS-01 | Argo |
+| `system/envoy-gateway/` | Gateway VIP `.21` · `*.lab` TLS | Argo |
+| `system/` (next) | Tailscale operator | — |
+| `media/`, `home/`, `games/`, `network/` | Workloads (Phase 3+) | Argo when added |
 
 App-of-apps: `clusters/prd/` (root → `applications/`).

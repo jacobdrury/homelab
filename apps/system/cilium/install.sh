@@ -22,6 +22,9 @@ helm upgrade --install cilium cilium/cilium \
   --wait \
   --timeout 10m
 
-echo "OK — Cilium ${CILIUM_VERSION}"
+kubectl apply -f "${ROOT}/l2-lb.yaml"
+
+echo "OK — Cilium ${CILIUM_VERSION} (L2 LB pool 192.168.5.21)"
 kubectl -n kube-system get pods -l app.kubernetes.io/part-of=cilium -o wide
+kubectl get ciliumloadbalancerippool,ciliuml2announcementpolicy
 kubectl get nodes -o wide

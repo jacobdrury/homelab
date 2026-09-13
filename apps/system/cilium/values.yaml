@@ -42,6 +42,15 @@ bpf:
 operator:
   replicas: 1
 
+# L2 announcements for LoadBalancer Services (Envoy VIP on Homelab VLAN).
+# Rate limits sized for lease churn on a small cluster — see Cilium L2 docs.
+l2announcements:
+  enabled: true
+
+k8sClientRateLimit:
+  qps: 50
+  burst: 100
+
 # Keep lean until Hubble is wanted in Phase 5.
 hubble:
   enabled: false

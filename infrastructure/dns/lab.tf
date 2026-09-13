@@ -25,3 +25,16 @@ resource "cloudflare_dns_record" "lab_transitional" {
   ttl     = 1
   comment = "Transitional *.lab — ${each.key} (pre-k8s)"
 }
+
+# App frontends on Envoy VIP (Homelab VLAN).
+resource "cloudflare_dns_record" "lab_app" {
+  for_each = local.app_lab_hosts
+
+  zone_id = data.cloudflare_zone.jacobdrury.id
+  name    = "${each.key}.lab"
+  type    = "A"
+  content = each.value
+  proxied = false
+  ttl     = 1
+  comment = "Homelab app via Envoy — ${each.key}"
+}

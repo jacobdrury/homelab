@@ -7,15 +7,15 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | | Today | Target |
 |---|--------|--------|
 | Compute | Talos `prd`: **yavin** (CP) + **naboo** (worker on scarif) · Proxmox **homelab02** (legacy apps) | Expand to **3 BM CPs** (hoth/endor); drain naboo |
-| Access | Tailscale IaC live; **`http://scarif.lab`** home + away; homelab02 interim router | Same URLs · **`https://`** via Envoy (Phase 2) · operator replaces homelab02 |
+| Access | Tailscale + **`https://argocd.lab`** via Envoy `.21`; scarif still HTTP | Same URLs · more `https://*.lab` routes · operator replaces homelab02 |
 | Storage | **scarif** — 24TB UD · **NFS** + **iSCSI** (`scarif-nfs` / `scarif-iscsi`) · naboo on NVMe | Same + optional array/parity |
 | pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
 | Network | Homelab **VLAN 5** + UniFi **ZBF** · Drury (arr, Pi-hole) | Full lab on VLAN + Tailscale |
 | Apps | Pi-hole, HA, Jellyfin, *arr, qBit, Prowlarr | Same on k8s + Homepage; HA after media |
-| Delivery | **Argo CD** live (`clusters/prd`) · UI port-forward until Envoy | Same + `argocd.lab` |
+| Delivery | **Argo CD** · `https://argocd.lab.jacobdrury.com` | Same |
 | Secrets | **1Password** → Connect → ESO (`ClusterSecretStore/onepassword`) | Same |
 
-**Next:** Phase **2** — **Envoy** + cert-manager → **transitional `*.lab` proxies** → **Homepage** (first GitOps app).
+**Next:** Phase **2** — **transitional `*.lab` routes** (+ Tailscale operator) → **Homepage** (first GitOps app).
 
 ## Docs
 
@@ -41,4 +41,4 @@ Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/se
 
 ## Status
 
-Inventory done. Phase 1 storage **done**. Phase **1.5** (VLAN + IaC + scarif move) **done**. **yavin** + **naboo** on Talos `prd` (Cilium + CSI + Connect/ESO + Argo). UniFi **ZBF** live. Executing [roadmap](docs/roadmap.md): **Envoy → apps**.
+Inventory done. Phase 1 storage **done**. Phase **1.5** **done**. **yavin** + **naboo** on Talos `prd` (Cilium L2 + CSI + Connect/ESO + Argo + Envoy). UniFi **ZBF** live. Executing [roadmap](docs/roadmap.md): **transitional routes → Homepage**.
