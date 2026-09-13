@@ -46,17 +46,13 @@ config:
     statusStyle: dot
     layout:
       Platform:
-        style: row
-        columns: 4
+        style: column
       Media:
-        style: row
-        columns: 4
+        style: column
       Home:
-        style: row
-        columns: 3
+        style: column
       Infrastructure:
-        style: row
-        columns: 3
+        style: column
 
   services:
     - Platform:
@@ -114,11 +110,7 @@ config:
             description: DNS / adblock (transitional)
             icon: pi-hole.png
 
-  widgets:
-    # kubernetes CPU/mem widget needs metrics-server (Phase 5) — omit until then.
-    - search:
-        provider: duckduckgo
-        target: _blank
+  widgets: []
 
   bookmarks: []
   docker: {}
