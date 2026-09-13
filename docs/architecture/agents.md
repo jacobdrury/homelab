@@ -42,35 +42,38 @@ Details: [networking](networking.md#tailscale) (split DNS, subnet router timelin
 
 ## Bootstrap scripts (`install.sh`) vs Argo
 
-**Argo owns the cluster once it exists.** Manifests live under `clusters/<env>/` with an `application.yaml`; merge to `main` and let sync do the work.
+**Rule:** leave `install.sh` only for components that **must** be installed manually **before Argo exists**. Anything Argo can own entirely from Git must **never** get an install script.
 
-`install.sh` is **not** a parallel install path for day-to-day or for new apps. It exists only for the **chicken-and-egg** steps on a **fresh cluster** (or total DR) **before** Argo can take over — typically seeding secrets with `op` and installing Argo itself (and whatever Argo needs underneath: CNI, Connect, ESO).
+| Has `install.sh` (pre-Argo chicken-and-egg) | No script — Git / Argo only |
+|--------------------------------------------|-----------------------------|
+| Cilium, NFS/iSCSI CSI, Connect, ESO, Argo (+ root) | cert-manager, Envoy, CNPG, Authentik, Homepage, … |
+
+Steady state: manifests under `clusters/<env>/` with `application.yaml`; merge to `main`; Argo syncs. Scripts are not a parallel deploy path.
 
 | Do | Don't |
 |----|--------|
-| Add `application.yaml` + values/resources in Git for new platform/apps | Add `install.sh` for Authentik, Homepage, CNPG Clusters, Envoy routes, etc. |
-| Seed 1Password items agents/`op` need; document titles in README | `helm upgrade --install` a workload Argo already manages |
-| Run platform bootstrap only when standing up / recovering a cluster with **no** working Argo | Treat `install.sh` as “how we deploy this normally” |
-| After Argo is up: commit → push/`main` → wait for sync (or `argocd app sync`) | Leave cluster state that only exists from a local helm apply |
+| Add `application.yaml` + values/resources for anything Argo can manage | Add `install.sh` because “it was handy for first install” |
+| Seed 1Password items; wire `ExternalSecret`; document titles | `helm upgrade` a workload Argo already owns |
+| On a fresh cluster: run the pre-Argo scripts through Argo + root, then **stop** | Keep or restore scripts for cert-manager / Envoy / apps |
 
-**Fresh `prd` handoff (mental model):**
+**Fresh `prd` handoff:**
 
 ```text
 Talos + connect/
-  → platform install.sh only as far as Argo + root Application
+  → install.sh only through Argo + root Application
   → Argo discovers clusters/prd/**/application.yaml from Git
-  → everything else (CSI if not yet in, cert-manager, Envoy, CNPG, apps…) from Git only
+  → everything else from Git only
 ```
 
-Order and which scripts are still needed for that handoff: [platform README](../../clusters/prd/platform/README.md). Secrets seeding: [secrets](secrets.md).
+Order: [platform README](../../clusters/prd/platform/README.md) · [bootstrap/README](../../bootstrap/README.md). Secrets: [secrets](secrets.md).
 
 **Agent checklist when adding a component**
 
-1. Can Argo sync it from Git after Connect/ESO exist? → **Git only** (`application.yaml`). No `install.sh`.  
-2. Does it need a 1Password item first? → create the item; wire `ExternalSecret`; document the title — still no app `install.sh`.  
-3. Is Argo (or its prerequisites) missing on a brand-new cluster? → use the **platform** bootstrap scripts, then stop.  
+1. Would Argo already be running when this lands? → **Git only**. No `install.sh`.  
+2. Needs a 1Password item? → create it + `ExternalSecret`; still no install script.  
+3. Brand-new cluster with no Argo yet? → use the existing **platform** pre-Argo scripts only, then stop.
 
-If you already applied something with Helm for urgency, get the same config into Git and let Argo adopt it — do not keep a second install script around.
+If you helm-applied something in a pinch, get it into Git and let Argo adopt it — do not leave a second install script around.
 
 ## Buildout
 

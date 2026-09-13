@@ -43,5 +43,5 @@ Details: `connect/README.md`
 
 ## GitOps / bootstrap
 
-Argo owns cluster state from Git (`clusters/<env>/`). Do **not** add `install.sh` for apps or for platform pieces Argo can sync. Bootstrap scripts exist only for fresh-cluster chicken-and-egg (CNI, `op` secret seeding, Argo + root). Full rule: `docs/architecture/agents.md` (§ Bootstrap scripts).
+**Leave `install.sh` only for what must be installed before Argo exists** (CNI, CSI, Connect/`op` seeding, ESO, Argo + root). Anything Argo can own entirely from Git must never get an install script. Details: `docs/architecture/agents.md` (§ Bootstrap scripts).
 
