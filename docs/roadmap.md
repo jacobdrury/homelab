@@ -235,7 +235,7 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 | `sonarr` / `prowlarr` / … | arr VM ports as needed | *arr in cluster |
 | `homeassistant.lab…` (or chosen name) | HA `192.168.2.8` | HA in cluster |
 | `scarif.lab…` | Unraid `192.168.5.10:80` | same (NAS stays) |
-| `argocd.lab…` / `homepage.lab…` | in-cluster from the start | — |
+| `argocd.lab…` / `home.lab…` | in-cluster from the start | — |
 
 **Pattern:** Cloudflare A → Envoy (`.11` / VIP) → HTTPRoute → **ExternalName / Endpoints / Service** pointing at the legacy IP:port. When the app lands on k8s, retarget the route only — bookmarks and clients unchanged.
 

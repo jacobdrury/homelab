@@ -23,7 +23,7 @@ ingress:
 
 env:
   - name: HOMEPAGE_ALLOWED_HOSTS
-    value: homepage.lab.jacobdrury.com
+    value: home.lab.jacobdrury.com
   - name: TZ
     value: America/Chicago
 
@@ -61,7 +61,7 @@ config:
             icon: argocd.png
             siteMonitor: https://argocd.lab.jacobdrury.com
         - Homepage:
-            href: https://homepage.lab.jacobdrury.com
+            href: https://home.lab.jacobdrury.com
             description: This dashboard
             icon: homepage.png
 

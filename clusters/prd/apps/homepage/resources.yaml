@@ -17,7 +17,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - homepage.lab.jacobdrury.com
+    - home.lab.jacobdrury.com
   rules:
     - matches:
         - path:
