@@ -1,0 +1,54 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: scarif-iscsi-democratic-csi-driver-config
+  namespace: democratic-csi
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: scarif-iscsi-democratic-csi-driver-config
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        driver-config-file.yaml: |
+          driver: zfs-generic-iscsi
+          sshConnection:
+            host: 192.168.5.10
+            port: 22
+            username: root
+            privateKey: |
+              {{ .privateKey | nindent 8 }}
+          zfs:
+            datasetParentName: scarif-ssd/k8s/vols
+            detachedSnapshotsDatasetParentName: scarif-ssd/k8s/snaps
+            zvolEnableReservation: false
+            zvolCompression: ""
+            zvolDedup: ""
+            zvolBlocksize: ""
+          iscsi:
+            shareStrategy: targetCli
+            shareStrategyTargetCli:
+              basename: iqn.2026-09.com.jacobdrury.scarif
+              tpg:
+                attributes:
+                  authentication: 0
+                  generate_node_acls: 1
+                  cache_dynamic_acls: 1
+                  demo_mode_write_protect: 0
+                auth: {}
+              block:
+                attributes:
+                  emulate_tpu: 0
+            targetPortal: 192.168.5.10:3260
+            interface: ""
+            namePrefix: csi-
+            nameSuffix: -prd
+  data:
+    - secretKey: privateKey
+      remoteRef:
+        key: ue5ijk6mlz3qurteiescyw4h2y
+        property: private key

@@ -1,0 +1,17 @@
+# Bootstrap credential Secret op-credentials is seeded by install.sh / op.
+connect:
+  create: true
+  replicas: 1
+  serviceType: ClusterIP
+  credentialsName: op-credentials
+  credentialsKey: 1password-credentials.json
+  api:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+operator:
+  create: false

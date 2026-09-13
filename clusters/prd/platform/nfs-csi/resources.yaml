@@ -1,0 +1,19 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: scarif-nfs
+  labels:
+    homelab.jacobdrury.com/backend: scarif-nfs
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 192.168.5.10
+  share: /mnt/disks/ZXA0VZBA
+  subDir: "${pvc.metadata.namespace}/${pvc.metadata.name}"
+  mountPermissions: "0775"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - nfsvers=4.2
+  - hard
+  - noatime

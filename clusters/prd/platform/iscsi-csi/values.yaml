@@ -1,0 +1,40 @@
+csiDriver:
+  name: org.democratic-csi.iscsi
+
+storageClasses:
+  - name: scarif-iscsi
+    defaultClass: false
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    parameters:
+      fsType: ext4
+    mountOptions: []
+
+volumeSnapshotClasses: []
+
+controller:
+  externalSnapshotter:
+    enabled: false
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+
+node:
+  hostPID: true
+  driver:
+    iscsiDirHostPath: /var/iscsi
+    iscsiDirHostPathType: DirectoryOrCreate
+    extraEnv:
+      - name: PATH
+        value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - name: ISCSIADM_HOST_STRATEGY
+        value: nsenter
+      - name: ISCSIADM_HOST_PATH
+        value: /usr/local/sbin/iscsiadm
+
+driver:
+  existingConfigSecret: scarif-iscsi-democratic-csi-driver-config
+  config:
+    driver: zfs-generic-iscsi
