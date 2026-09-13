@@ -23,3 +23,24 @@ spec:
           name: homepage
           port: 3000
           weight: 1
+---
+# Token: Homelab item "prd Homepage Argo CD API token" (password field).
+# Generated for Argo local account "homepage" (apiKey + role:readonly).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homepage-argocd
+  namespace: homepage
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homepage-argocd
+    creationPolicy: Owner
+  data:
+    - secretKey: api-key
+      remoteRef:
+        key: prd Homepage Argo CD API token
+        property: password

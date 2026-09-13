@@ -7,6 +7,11 @@ configs:
   cm:
     url: https://argocd.lab.jacobdrury.com
     timeout.reconciliation: 120s
+    # Homepage widget — https://gethomepage.dev/widgets/services/argocd/
+    accounts.homepage: apiKey
+  rbac:
+    policy.csv: |
+      g, homepage, role:readonly
 
 server:
   replicas: 1

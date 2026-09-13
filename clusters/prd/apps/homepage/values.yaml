@@ -26,6 +26,11 @@ env:
     value: lab.jacobdrury.com
   - name: TZ
     value: America/Chicago
+  - name: HOMEPAGE_VAR_ARGOCD_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-argocd
+        key: api-key
 
 config:
   kubernetes:
@@ -60,6 +65,15 @@ config:
             description: GitOps
             icon: argocd.png
             siteMonitor: https://argocd.lab.jacobdrury.com
+            widget:
+              type: argocd
+              url: http://argocd-server.argocd.svc
+              key: "{{HOMEPAGE_VAR_ARGOCD_API_KEY}}"
+              fields:
+                - synced
+                - outOfSync
+                - healthy
+                - degraded
 
     - Media:
         - Jellyfin:
