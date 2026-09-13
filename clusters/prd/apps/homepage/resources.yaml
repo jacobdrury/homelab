@@ -65,3 +65,23 @@ spec:
       remoteRef:
         key: 37omp6yhyvdum6g63u6tsfkhk4
         property: password
+---
+# Homelab item "Pi-hole API" (credential field) — same password as OpenTofu pihole provider.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homepage-pihole
+  namespace: homepage
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homepage-pihole
+    creationPolicy: Owner
+  data:
+    - secretKey: api-key
+      remoteRef:
+        key: vezrlczecpu4bkm4tisz5gzqxm
+        property: credential
