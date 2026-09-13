@@ -13,9 +13,9 @@ spec:
     path: clusters/prd/platform
     directory:
       recurse: true
-      # Every platform component owns its values and resources beside
-      # application.yaml; only Application manifests are rendered here.
-      include: application.yaml
+      # Match nested component Applications (platform/<name>/application.yaml).
+      # Plain "application.yaml" only matches the path root and would sync empty.
+      include: '*/application.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
