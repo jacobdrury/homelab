@@ -1,0 +1,138 @@
+image:
+  repository: ghcr.io/gethomepage/homepage
+  tag: v2.3.0
+
+enableRbac: true
+
+serviceAccount:
+  create: true
+  name: homepage
+
+service:
+  main:
+    ports:
+      http:
+        port: 3000
+
+controller:
+  strategy: RollingUpdate
+
+ingress:
+  main:
+    enabled: false
+
+env:
+  - name: HOMEPAGE_ALLOWED_HOSTS
+    value: homepage.lab.jacobdrury.com
+  - name: TZ
+    value: America/Chicago
+
+config:
+  kubernetes:
+    mode: cluster
+    gateway: true
+
+  settingsString: |
+    title: Homelab
+    description: lab.jacobdrury.com
+    headerStyle: boxed
+    target: _blank
+    hideVersion: true
+    statusStyle: dot
+    layout:
+      Platform:
+        style: row
+        columns: 4
+      Media:
+        style: row
+        columns: 4
+      Home:
+        style: row
+        columns: 3
+      Infrastructure:
+        style: row
+        columns: 3
+
+  services:
+    - Platform:
+        - Argo CD:
+            href: https://argocd.lab.jacobdrury.com
+            description: GitOps
+            icon: argocd.png
+            siteMonitor: https://argocd.lab.jacobdrury.com
+        - Homepage:
+            href: https://homepage.lab.jacobdrury.com
+            description: This dashboard
+            icon: homepage.png
+
+    - Media:
+        - Jellyfin:
+            href: https://jellyfin.lab.jacobdrury.com
+            description: Media (transitional → arr)
+            icon: jellyfin.png
+        - qBittorrent:
+            href: https://qbittorrent.lab.jacobdrury.com
+            description: Downloads (transitional → arr)
+            icon: qbittorrent.png
+        - Sonarr TV:
+            href: https://sonarr.lab.jacobdrury.com
+            description: TV (transitional → arr)
+            icon: sonarr.png
+        - Sonarr Anime:
+            href: https://sonarr-anime.lab.jacobdrury.com
+            description: Anime (transitional → arr)
+            icon: sonarr.png
+        - Prowlarr:
+            href: https://prowlarr.lab.jacobdrury.com
+            description: Indexers (transitional → arr)
+            icon: prowlarr.png
+
+    - Home:
+        - Home Assistant:
+            href: https://homeassistant.lab.jacobdrury.com
+            description: Home automation (transitional)
+            icon: home-assistant.png
+
+    - Infrastructure:
+        - scarif:
+            href: https://scarif.lab.jacobdrury.com
+            description: Unraid NAS
+            icon: unraid.png
+            siteMonitor: http://192.168.5.10
+        - Pi-hole:
+            href: https://pihole.lab.jacobdrury.com
+            description: DNS / adblock (transitional)
+            icon: pi-hole.png
+
+  widgets:
+    - search:
+        provider: duckduckgo
+        target: _blank
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: prd
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+
+  bookmarks: []
+  docker: {}
+
+persistence:
+  logs:
+    enabled: true
+    type: emptyDir
+    mountPath: /app/config/logs
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    memory: 256Mi

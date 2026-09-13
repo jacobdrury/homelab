@@ -1,3 +1,4 @@
+# Discover nested Applications under platform/ and apps/.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,15 +8,19 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://github.com/jacobdrury/homelab.git
-    targetRevision: main
-    path: clusters/prd/platform
-    directory:
-      recurse: true
-      # Match nested component Applications (platform/<name>/application.yaml).
-      # Plain "application.yaml" only matches the path root and would sync empty.
-      include: '*/application.yaml'
+  sources:
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      path: clusters/prd/platform
+      directory:
+        recurse: true
+        include: '*/application.yaml'
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      path: clusters/prd/apps
+      directory:
+        recurse: true
+        include: '*/application.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

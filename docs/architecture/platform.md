@@ -83,23 +83,18 @@ homelab/
     pihole/                        # OpenTofu Pi-hole config (API)
     tailscale/                     # OpenTofu Tailscale
   bootstrap/                       # Argo install notes
-  apps/
-    system/                        # cilium, nfs-csi, iscsi, cert-manager, tailscale,
-                                   # 1password-connect, external-secrets, envoy-gateway,
-                                   # actions-runner-controller (Phase 2b)
-    media/                         # jellyfin, *arr, qbittorrent (+ Mullvad WG for peers)
-    home/                          # homeassistant, homepage
-    games/                         # minecraft-atm10 (Phase 6)
-    network/                       # pihole
   clusters/
-    prd/                           # Argo app-of-apps
-    stg/                           # reserved
+    prd/
+      platform/                    # cilium, CSI, Connect/ESO, Argo, cert-manager, Envoy
+      apps/                        # homepage (+ future workloads)
+  apps/                            # optional workload notes (media/home/games)
 ```
 
 | Path | Role |
 |------|------|
 | `connect/` | Local kubectl / talosctl / k9s — [README](../../connect/README.md) |
-| `apps/*` | Shared manifests; env overlays for hostnames |
+| `clusters/prd/platform` | Platform GitOps (CNI, CSI, secrets, ingress) |
+| `clusters/prd/apps` | Workload GitOps (Homepage, …) |
 | `clusters/prd` | What `prd` Argo syncs → `*.lab.jacobdrury.com` |
 | `clusters/stg` | Later → `*.stg.lab.jacobdrury.com` |
 | `infrastructure/talos/prd` | Talos machine configs |

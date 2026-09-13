@@ -1,0 +1,37 @@
+# Homepage — first GitOps workload app.
+# Chart: https://github.com/jameswynn/helm-charts (linked from gethomepage.dev)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homepage
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  sources:
+    - repoURL: https://jameswynn.github.io/helm-charts
+      chart: homepage
+      targetRevision: 2.1.0
+      helm:
+        releaseName: homepage
+        valueFiles:
+          - $values/clusters/prd/apps/homepage/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      path: clusters/prd/apps/homepage
+      directory:
+        include: resources.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homepage
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
