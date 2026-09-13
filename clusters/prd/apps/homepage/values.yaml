@@ -31,6 +31,11 @@ env:
       secretKeyRef:
         name: homepage-argocd
         key: api-key
+  - name: HOMEPAGE_VAR_UNRAID_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-unraid
+        key: api-key
 
 config:
   kubernetes:
@@ -59,7 +64,8 @@ config:
         - Argo CD:
             href: https://argocd.lab.jacobdrury.com
             description: GitOps
-            icon: argocd.png
+            # walkxcode dashboard-icons uses argo-cd.png (argocd.png 404s)
+            icon: argo-cd.png
             siteMonitor: https://argocd.lab.jacobdrury.com
             widget:
               type: argocd
@@ -105,6 +111,17 @@ config:
             description: Unraid NAS
             icon: unraid.png
             siteMonitor: http://192.168.5.10
+            widget:
+              type: unraid
+              url: http://192.168.5.10
+              key: "{{HOMEPAGE_VAR_UNRAID_API_KEY}}"
+              # ZFS appdata pool on scarif (array may be empty).
+              pool1: scarif-ssd
+              fields:
+                - status
+                - cpu
+                - memoryPercent
+                - pool1UsedPercent
         - Pi-hole:
             href: https://pihole.lab.jacobdrury.com
             description: DNS / adblock (transitional)

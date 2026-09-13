@@ -44,3 +44,24 @@ spec:
       remoteRef:
         key: gzuoplg3trd7mm7rpazdwbd5ki
         property: password
+---
+# Create key in Unraid → Settings → Management Access → API Keys (ADMIN),
+# paste into Homelab item "prd Homepage Unraid API key".
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homepage-unraid
+  namespace: homepage
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homepage-unraid
+    creationPolicy: Owner
+  data:
+    - secretKey: api-key
+      remoteRef:
+        key: 37omp6yhyvdum6g63u6tsfkhk4
+        property: password
