@@ -232,7 +232,7 @@ Clients must **accept subnet routes** (Tailscale app → use subnets / `tailscal
 tailscale set --advertise-routes=192.168.1.0/24,192.168.5.0/24
 ```
 
-Operator config (Phase 2) replaces homelab02 advertise/enable; document in `apps/system/tailscale/`. Tailnet DNS stays in `infrastructure/tailscale/`.
+Operator config (Phase 2) replaces homelab02 advertise/enable; document in `clusters/prd/platform/tailscale/` when added. Tailnet DNS stays in `infrastructure/tailscale/`.
 
 Free Personal plan is enough until limits hit. Agents: [agents](agents.md).
 

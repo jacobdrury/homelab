@@ -14,7 +14,7 @@ Locked leans: [decisions](../decisions.md). Apply tooling: [local-tools](../setu
 | Tailscale (policy, DNS, routes, keys, device settings) | **OpenTofu** | `infrastructure/tailscale/` | `moon run tailscale:apply` |
 | Talos machine / cluster config | **OpenTofu** (+ generated YAML) | `infrastructure/talos/prd/` | TBD at Phase 2 |
 | Kubernetes platform + apps | **Helm** via **Argo CD** | `apps/`, `clusters/prd/` | Git push → sync |
-| Dynamic app DNS (`jellyfin.lab`, …) | **external-dns** | Helm values in `apps/system/` | Argo |
+| Dynamic app DNS (`jellyfin.lab`, …) | **external-dns** | Helm values in `clusters/prd/platform/` | Argo |
 | TLS certificates | **cert-manager** | Helm | Argo |
 | Runtime secrets | **1Password** + External Secrets | Not in Git | Connect / ESO |
 
@@ -69,7 +69,7 @@ GitHub Actions replaces Mac apply once the cluster can host runners. **This repo
 - **`apply`** only on `main` (or `workflow_dispatch`) with a protected **Environment** and required approval.
 - Prefer **ephemeral** ARC runners (one pod per job).
 
-**Prerequisites:** remote state, Phase 2 cluster, ESO + 1Password, ARC Helm chart in `apps/system/`.
+**Prerequisites:** remote state, Phase 2 cluster, ESO + 1Password, ARC Helm chart in `clusters/prd/platform/`.
 
 Full checklist: [roadmap Phase 2b](../roadmap.md#phase-2b--opentofu-ci-github-actions).
 

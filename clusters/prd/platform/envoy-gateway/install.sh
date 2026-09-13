@@ -1,19 +1,15 @@
-# Bootstrap Envoy Gateway (disaster recovery). Prefer Argo:
-# clusters/prd/platform/envoy-gateway/ (official docker.io/envoyproxy chart source).
+#!/usr/bin/env bash
+# Bootstrap Envoy Gateway (disaster recovery). Prefer Argo after first install.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=../_bootstrap.sh
+source "${ROOT}/../_bootstrap.sh"
+homelab_kubeconfig
+
 CHART_VERSION="${ENVOY_GATEWAY_VERSION:-v1.9.1}"
-ROOT_REPO="$(cd "${ROOT}/../../.." && pwd)"
-PLATFORM="${ROOT_REPO}/clusters/prd/platform/envoy-gateway"
-KUBECONFIG="${KUBECONFIG:-${ROOT_REPO}/connect/prd/kubeconfig}"
-export KUBECONFIG
 NS=envoy-gateway-system
 
-if [[ ! -f "${KUBECONFIG}" ]]; then
-  echo "missing ${KUBECONFIG} — run: moon run connect:sync" >&2
-  exit 1
-fi
 if ! kubectl get clusterissuer letsencrypt-prod >/dev/null 2>&1; then
   echo "ClusterIssuer/letsencrypt-prod missing — install cert-manager first" >&2
   exit 1
@@ -24,11 +20,11 @@ kubectl create namespace "${NS}" --dry-run=client -o yaml | kubectl apply -f -
 helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
   --version "${CHART_VERSION}" \
   --namespace "${NS}" \
-  --values "${PLATFORM}/values.yaml" \
+  --values "${ROOT}/values.yaml" \
   --wait \
   --timeout 10m
 
-kubectl apply -f "${PLATFORM}/resources.yaml"
+kubectl apply -f "${ROOT}/resources.yaml"
 
 echo "waiting for Certificate lab-wildcard-tls Ready"
 kubectl -n "${NS}" wait --for=condition=Ready certificate/lab-wildcard-tls --timeout=10m

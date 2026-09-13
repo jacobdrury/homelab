@@ -32,6 +32,6 @@ override.tf.json
 terraform.rc
 
 # CSI SSH private keys (public .pub may be committed if desired)
-apps/system/iscsi-csi/secrets/
+clusters/prd/platform/iscsi-csi/secrets/
 
 .DS_Store

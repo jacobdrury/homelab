@@ -6,4 +6,4 @@ What Argo on **prd** syncs. Contract: merge to `main` → Applications here reco
 keeps its environment values and supporting manifests in that same directory; the
 flat `applications/` tree has been retired.
 
-Install Argo once: `bash apps/system/argocd/install.sh` (applies `root.yaml`).
+Install Argo once: `bash clusters/prd/platform/argocd/install.sh` (applies `root.yaml`).

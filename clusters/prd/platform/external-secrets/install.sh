@@ -1,26 +1,23 @@
+#!/usr/bin/env bash
 # Bootstrap External Secrets Operator + ClusterSecretStore (1Password Connect).
-# Token from Homelab item "prd Connect token". Requires Connect already installed.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=../_bootstrap.sh
+source "${ROOT}/../_bootstrap.sh"
+homelab_kubeconfig
+
 CHART_VERSION="${ESO_CHART_VERSION:-2.10.0}"
-ROOT_REPO="$(cd "${ROOT}/../../.." && pwd)"
-KUBECONFIG="${KUBECONFIG:-${ROOT_REPO}/connect/prd/kubeconfig}"
-export KUBECONFIG
 NS=external-secrets
 TOKEN_TMP="$(mktemp)"
 trap 'rm -f "${TOKEN_TMP}"' EXIT
 
-if [[ ! -f "${KUBECONFIG}" ]]; then
-  echo "missing ${KUBECONFIG} — run: moon run connect:sync" >&2
-  exit 1
-fi
 if ! command -v op >/dev/null 2>&1; then
   echo "op CLI required to fetch Connect token" >&2
   exit 1
 fi
 if ! kubectl -n onepassword get svc onepassword-connect >/dev/null 2>&1; then
-  echo "1Password Connect not found — run apps/system/onepassword-connect/install.sh first" >&2
+  echo "1Password Connect not found — run clusters/prd/platform/onepassword-connect/install.sh first" >&2
   exit 1
 fi
 
@@ -47,10 +44,10 @@ helm upgrade --install external-secrets external-secrets/external-secrets \
 kubectl -n "${NS}" create secret generic onepassword-connect-token \
   --from-file=token="${TOKEN_TMP}" \
   --dry-run=client -o yaml | kubectl apply -f -
+homelab_protect_secret "${NS}" onepassword-connect-token
 
-kubectl apply -f "${ROOT}/clustersecretstore.yaml"
+kubectl apply -f "${ROOT}/resources.yaml"
 
-# Wait for store Ready
 echo "waiting for ClusterSecretStore/onepassword Ready"
 for _ in $(seq 1 30); do
   if kubectl get clustersecretstore onepassword -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null | grep -q True; then

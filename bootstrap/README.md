@@ -1,20 +1,22 @@
-# Bootstrap (one-time)
+# Bootstrap (one-time / DR)
 
 Chicken-and-egg installs before GitOps can own them. After first install, **Argo**
-owns all platform charts via `clusters/prd/platform/`.
+owns all platform charts via [`clusters/prd/platform/`](../clusters/prd/platform/).
 
-| Step | Path | Argo? |
-|------|------|-------|
-| Cilium (+ L2 LB) | `apps/system/cilium/` | **Yes** |
-| NFS CSI | `apps/system/nfs-csi/` | **Yes** — `nfs-csi` |
-| iSCSI CSI | `apps/system/iscsi-csi/` | **Yes** — SSH config Secret via ESO |
-| 1Password Connect | `apps/system/onepassword-connect/` | **Yes** — Secret `op-credentials` seeded once |
-| ESO | `apps/system/external-secrets/` | **Yes** — token Secret seeded once |
-| **Argo CD** | `apps/system/argocd/install.sh` | **Yes** — self-managed after bootstrap |
-| cert-manager | `apps/system/cert-manager/` | **Yes** |
-| Envoy Gateway | `apps/system/envoy-gateway/` | **Yes** — local chart wrapper |
+| Step | Path |
+|------|------|
+| Cilium (+ L2 LB) | `clusters/prd/platform/cilium/install.sh` |
+| NFS CSI | `clusters/prd/platform/nfs-csi/install.sh` |
+| iSCSI CSI | `clusters/prd/platform/iscsi-csi/install.sh` |
+| 1Password Connect | `clusters/prd/platform/onepassword-connect/install.sh` |
+| ESO | `clusters/prd/platform/external-secrets/install.sh` |
+| Argo CD | `clusters/prd/platform/argocd/install.sh` |
+| cert-manager | `clusters/prd/platform/cert-manager/install.sh` |
+| Envoy Gateway | `clusters/prd/platform/envoy-gateway/install.sh` |
 
-Bootstrap Secrets (never commit): `op-credentials`, `onepassword-connect-token` — annotated `Prune=false`. Re-seed with the app `install.sh` if lost.
+Bootstrap Secrets (never commit): `op-credentials`, `onepassword-connect-token`,
+and (until ESO owns it) the iSCSI driver-config Secret — scripts annotate
+`Prune=false`. Re-run the matching `install.sh` if lost.
 
-The scripts remain for initial bootstrap and disaster recovery. New workloads live
-in `apps/` and get an `Application` under `clusters/prd/apps/`.
+New workloads live under `apps/` and get an `Application` under
+`clusters/prd/apps/` when that tree is used.

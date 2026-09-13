@@ -106,7 +106,7 @@ This is **not Docker-specific** — it is Unraid NFS + matching process UID/GID.
 | `downloads/` | qBittorrent (pool or UD as you prefer) |
 | `backups/` | App dumps / future backup tooling |
 
-Cluster: **NFS CSI** live — StorageClass **`scarif-nfs`** (`apps/system/nfs-csi/`). Dynamic PVCs land under `${namespace}/${pvc}` on the export. Shared media tree (existing `media/`) can use a static PV later if apps need the root layout. **Not** for Sonarr/Postgres SQLite — use iSCSI.
+Cluster: **NFS CSI** live — StorageClass **`scarif-nfs`** (`clusters/prd/platform/nfs-csi/`). Dynamic PVCs land under `${namespace}/${pvc}` on the export. Shared media tree (existing `media/`) can use a static PV later if apps need the root layout. **Not** for Sonarr/Postgres SQLite — use iSCSI.
 
 **k8s must use the same UID model** as above — CSI mounts the export; it does not remap Unraid squash. For media Pods / charts:
 
@@ -116,7 +116,7 @@ Cluster: **NFS CSI** live — StorageClass **`scarif-nfs`** (`apps/system/nfs-cs
 | `runAsGroup` / `fsGroup` / `PGID` | `100` |
 | scarif tree | `nobody:users` + group-writable (`ug+rwX`) |
 
-Validated (Sep 2026): throwaway Pod mounted `scarif-nfs` and `touch`ed as `99:100`. Re-run via `apps/system/nfs-csi/smoke-test.yaml` before *arr cutover if unsure.
+Validated (Sep 2026): throwaway Pod mounted `scarif-nfs` and `touch`ed as `99:100`. Re-run via `clusters/prd/platform/nfs-csi/smoke-test.yaml` before *arr cutover if unsure.
 
 ## iSCSI → cluster
 
@@ -127,7 +127,7 @@ Validated (Sep 2026): throwaway Pod mounted `scarif-nfs` and `touch`ed as `99:10
 | Pi-hole (multi-replica) | One RWO PVC **per** pod — not one shared volume |
 | Single-writer app disks | Classic RWO block PVC |
 
-Cluster: **iSCSI CSI** live — StorageClass **`scarif-iscsi`** (`apps/system/iscsi-csi/`); Talos **`iscsi-tools`**; backend ZFS pool **`scarif-ssd`** on scarif. One node attaches a given LUN at a time; pods **can reschedule** (detach/attach). Do not share one LUN across replicas.
+Cluster: **iSCSI CSI** live — StorageClass **`scarif-iscsi`** (`clusters/prd/platform/iscsi-csi/`); Talos **`iscsi-tools`**; backend ZFS pool **`scarif-ssd`** on scarif. One node attaches a given LUN at a time; pods **can reschedule** (detach/attach). Do not share one LUN across replicas.
 
 **Don’t** put the Jellyfin library on iSCSI — keep large shared libraries on NFS (UD or array).
 

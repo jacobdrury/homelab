@@ -23,10 +23,10 @@ flowchart LR
 
 | App | Path |
 |-----|------|
-| Connect | `apps/system/onepassword-connect/` → ns `onepassword` |
-| ESO | `apps/system/external-secrets/` → `ClusterSecretStore/onepassword` |
+| Connect | `clusters/prd/platform/onepassword-connect/` → ns `onepassword` |
+| ESO | `clusters/prd/platform/external-secrets/` → `ClusterSecretStore/onepassword` |
 
-Homelab items: **`prd Connect credentials`** (document), **`prd Connect token`** (password). `install.sh` pulls them with `op`. Connect/ESO remain bootstrap Helm for now; app secrets use `ExternalSecret` → this store. Re-seed Connect Secrets only if lost.
+Homelab items: **`prd Connect credentials`** (document), **`prd Connect token`** (password). Platform `install.sh` scripts pull them with `op` for bootstrap/DR. Steady-state: Argo owns Connect/ESO; app secrets use `ExternalSecret` → this store. Re-seed Connect Secrets only if lost.
 
 ## Host shell access (SSH / sudo)
 

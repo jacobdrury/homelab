@@ -211,11 +211,11 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 
 **Checklist:**
 
-- [x] Install **NFS CSI** → `scarif-nfs` (`apps/system/nfs-csi/`); smoke Pod `touch` as uid `99` / gid `100` (Sep 2026)  
+- [x] Install **NFS CSI** → `scarif-nfs` (`clusters/prd/platform/nfs-csi/`); smoke Pod `touch` as uid `99` / gid `100` (Sep 2026)  
 - [x] scarif: ZFS pool **`scarif-ssd`** (500 GB SATA) + `k8s/vols` / `k8s/snaps` (Sep 2026)  
 - [x] scarif: **iSCSI Target** plugin (targetcli)  
 - [x] Talos: `iscsi-tools` on **yavin** + **naboo** (schematic `b61bec70…`)  
-- [x] Install **iSCSI CSI** → `scarif-iscsi` (`apps/system/iscsi-csi/`); smoke Pod RWO write/delete (Sep 2026)  
+- [x] Install **iSCSI CSI** → `scarif-iscsi` (`clusters/prd/platform/iscsi-csi/`); smoke Pod RWO write/delete (Sep 2026)  
 - [ ] Document which class apps use (media → NFS; config/DB → iSCSI) in `apps/` / storage docs  
 - [ ] Confirm no local-path / hostPath provisioner for real apps  
 - [ ] SSH/sudo break-glass — **deferred** (optional before pc black leaves)  
@@ -272,7 +272,7 @@ flowchart LR
 
 #### In-cluster runners (ARC)
 
-- [ ] Deploy **Actions Runner Controller** (or official scale-set chart) via Argo — `apps/system/`  
+- [ ] Deploy **Actions Runner Controller** (or official scale-set chart) via Argo — `clusters/prd/platform/`  
 - [ ] Runner image with **OpenTofu 1.9.x** (+ `git`)  
 - [ ] Runner scale set labeled **`homelab`** — ephemeral pod per job  
 - [ ] **NetworkPolicy:** egress to Cloudflare API, `192.168.1.1` (UniFi), `192.168.1.11` (Pi-hole → cluster later), state backend  

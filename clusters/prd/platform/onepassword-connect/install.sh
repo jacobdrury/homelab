@@ -1,20 +1,17 @@
-# Bootstrap 1Password Connect onto prd. Idempotent.
-# Credentials come from Homelab vault document "prd Connect credentials" (never committed).
+#!/usr/bin/env bash
+# Bootstrap 1Password Connect. Credentials from Homelab document (never committed).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=../_bootstrap.sh
+source "${ROOT}/../_bootstrap.sh"
+homelab_kubeconfig
+
 CHART_VERSION="${OP_CONNECT_CHART_VERSION:-2.4.1}"
-ROOT_REPO="$(cd "${ROOT}/../../.." && pwd)"
-KUBECONFIG="${KUBECONFIG:-${ROOT_REPO}/connect/prd/kubeconfig}"
-export KUBECONFIG
 NS=onepassword
 CREDS_TMP="$(mktemp)"
 trap 'rm -f "${CREDS_TMP}"' EXIT
 
-if [[ ! -f "${KUBECONFIG}" ]]; then
-  echo "missing ${KUBECONFIG} — run: moon run connect:sync" >&2
-  exit 1
-fi
 if ! command -v op >/dev/null 2>&1; then
   echo "op CLI required to fetch Connect credentials" >&2
   exit 1
@@ -39,6 +36,8 @@ helm upgrade --install onepassword-connect 1password/connect \
   --set-file connect.credentials="${CREDS_TMP}" \
   --wait \
   --timeout 5m
+
+homelab_protect_secret "${NS}" op-credentials
 
 kubectl -n "${NS}" get pods,svc -o wide
 echo "OK — 1Password Connect ${CHART_VERSION} (http://onepassword-connect.${NS}.svc:8080)"

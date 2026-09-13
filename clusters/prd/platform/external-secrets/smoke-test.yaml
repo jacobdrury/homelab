@@ -1,5 +1,5 @@
 # Smoke: sync Homelab item "ESO smoke test" → Secret eso-smoke
-# Cleanup: kubectl delete -f apps/system/external-secrets/smoke-test.yaml
+# Cleanup: kubectl delete -f clusters/prd/platform/external-secrets/smoke-test.yaml
 apiVersion: v1
 kind: Namespace
 metadata:

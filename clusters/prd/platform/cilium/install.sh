@@ -3,14 +3,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=../_bootstrap.sh
+source "${ROOT}/../_bootstrap.sh"
+homelab_kubeconfig
+
 CILIUM_VERSION="${CILIUM_VERSION:-1.19.7}"
-ROOT_REPO="$(cd "${ROOT}/../../.." && pwd)"
-KUBECONFIG="${KUBECONFIG:-${ROOT_REPO}/connect/prd/kubeconfig}"
-export KUBECONFIG
-if [[ ! -f "${KUBECONFIG}" ]]; then
-  echo "missing ${KUBECONFIG} — run: moon run connect:sync" >&2
-  exit 1
-fi
 
 helm repo add cilium https://helm.cilium.io >/dev/null 2>&1 || true
 helm repo update cilium >/dev/null
@@ -22,7 +19,7 @@ helm upgrade --install cilium cilium/cilium \
   --wait \
   --timeout 10m
 
-kubectl apply -f "${ROOT}/l2-lb.yaml"
+kubectl apply -f "${ROOT}/resources.yaml"
 
 echo "OK — Cilium ${CILIUM_VERSION} (L2 LB pool 192.168.5.21)"
 kubectl -n kube-system get pods -l app.kubernetes.io/part-of=cilium -o wide
