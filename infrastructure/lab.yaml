@@ -14,9 +14,10 @@ dns:
   # Legacy guest IPs (firewall / inventory). DNS for UIs is app_hosts → Envoy.
   transitional_hosts:
     arr: 192.168.1.9 # VM 101 · jellyfin/*arr via Envoy
-  # Direct A records (not via Envoy) — NFS/iSCSI must not follow scarif.lab (HTTPS UI).
+  # Direct A records (not via Envoy) — storage + widget backends.
   direct_hosts:
-    scarif-nfs: 192.168.5.10
+    scarif-nfs: 192.168.5.10 # NFS/iSCSI + Unraid GraphQL
+    pihole-lxc: 192.168.1.11 # Pi-hole API from Homelab (UI is pihole.lab → Envoy)
   # App / transitional UI frontends → Envoy VIP (Cilium L2 LB).
   app_hosts:
     argocd: 192.168.5.21

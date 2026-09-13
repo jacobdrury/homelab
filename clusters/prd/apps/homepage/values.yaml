@@ -116,7 +116,7 @@ config:
             href: https://scarif.lab.jacobdrury.com
             description: Unraid NAS
             icon: unraid.png
-            siteMonitor: https://scarif.lab.jacobdrury.com
+            siteMonitor: http://scarif-nfs.lab.jacobdrury.com
             widget:
               type: unraid
               # GraphQL direct to Unraid (scarif.lab is Envoy HTTPS UI).
@@ -133,9 +133,10 @@ config:
             href: https://pihole.lab.jacobdrury.com/admin/
             description: DNS / adblock (transitional)
             icon: pi-hole.png
-            siteMonitor: https://pihole.lab.jacobdrury.com/admin/            widget:
+            siteMonitor: http://pihole-lxc.lab.jacobdrury.com/admin/
+            widget:
               type: pihole
-              url: https://pihole.lab.jacobdrury.com
+              url: http://pihole-lxc.lab.jacobdrury.com
               version: 6
               key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"
 
