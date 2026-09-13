@@ -45,7 +45,8 @@ config:
   settingsString: |
     title: Homelab
     description: lab.jacobdrury.com
-    headerStyle: boxed
+    # Empty info-widgets strip is from headerStyle boxed; none removes it.
+    headerStyle: none
     target: _blank
     hideVersion: true
     statusStyle: dot
@@ -127,7 +128,8 @@ config:
             description: DNS / adblock (transitional)
             icon: pi-hole.png
 
-  widgets: []
+  # Empty list is truthy in Helm and still mounts a widgets.yaml (leaves the top bar).
+  widgetsString: ""
 
   bookmarks: []
   docker: {}
