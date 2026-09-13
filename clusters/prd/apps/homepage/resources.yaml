@@ -15,9 +15,9 @@ spec:
       kind: Gateway
       name: lab
       namespace: envoy-gateway-system
-      sectionName: https
+      sectionName: https-apex
   hostnames:
-    - home.lab.jacobdrury.com
+    - lab.jacobdrury.com
   rules:
     - matches:
         - path:

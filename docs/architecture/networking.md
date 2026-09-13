@@ -80,7 +80,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 | `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
 | `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker on scarif (**live**) |
 
-**Apps (Phase 2):** `jellyfin.lab`, `qbittorrent.lab`, `home.lab`, `argocd.lab`, etc. — A records → **Envoy** on yavin (`.11` or VIP `.20`). Initially Envoy may **proxy to legacy VMs** (arr, HA); Phase 3 retargets to in-cluster Services. DNS via OpenTofu and/or external-dns from HTTPRoutes.
+**Apps (Phase 2):** `jellyfin.lab`, `qbittorrent.lab`, `lab.jacobdrury.com` (Homepage), `argocd.lab`, etc. — A records → **Envoy** on yavin (`.11` or VIP `.20`). Initially Envoy may **proxy to legacy VMs** (arr, HA); Phase 3 retargets to in-cluster Services. DNS via OpenTofu and/or external-dns from HTTPRoutes.
 
 ### Transitional reverse-proxy (strangler)
 
@@ -157,7 +157,7 @@ Single-node: Tofu A record → **yavin** on homelab VLAN. At 3 CPs: same name �
 
 | Scope | How |
 |-------|-----|
-| **k8s apps** (`argocd.lab`, `home.lab`, …) | Wildcard Certificate → Envoy HTTPS listener |
+| **k8s apps** (`argocd.lab`, apex `lab.jacobdrury.com` Homepage, …) | Wildcard Certificate → Envoy HTTPS listener |
 | **Legacy UIs during migrate** (`jellyfin.lab`, …) | Same wildcard; HTTPRoute → VM/LXC IP until cutover |
 | **ACME** | DNS-01 TXT in Cloudflare (ephemeral; not in OpenTofu) |
 | **scarif** (Unraid) | **Envoy reverse-proxy** → `http://192.168.5.10:80` — LE on Envoy; Unraid stays HTTP internally. **Today:** `http://scarif.lab` still works; **next:** HTTPRoute → `https://scarif.lab` |
