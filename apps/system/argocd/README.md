@@ -32,5 +32,5 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.pas
 2. `Application` YAML under `clusters/prd/applications/`
 3. Merge to `main` → root app syncs the new Application → Argo syncs the workload
 
-**Argo-managed platform today:** Connect, ESO, cert-manager, Envoy Gateway, NFS CSI.  
-**Still bootstrap `install.sh`:** Cilium, Argo itself, iSCSI CSI (SSH key).
+**Argo-managed platform today:** Connect, ESO, cert-manager, NFS CSI.  
+**Still bootstrap `install.sh`:** Cilium, Argo itself, iSCSI CSI, Envoy Gateway.

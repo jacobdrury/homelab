@@ -11,7 +11,7 @@ Chicken-and-egg installs before GitOps can own them. After first install, **Argo
 | ESO | `apps/system/external-secrets/` | **Yes** — token Secret seeded once |
 | **Argo CD** | `apps/system/argocd/install.sh` | **No** — chicken-egg |
 | cert-manager | `apps/system/cert-manager/` | **Yes** |
-| Envoy Gateway | `apps/system/envoy-gateway/` | **Partial** — Helm via `install.sh`; Gateway YAMLs via Argo |
+| Envoy Gateway | `apps/system/envoy-gateway/` | **No** — `install.sh` (OCI/prune issues) |
 
 Bootstrap Secrets (never commit): `op-credentials`, `onepassword-connect-token` — annotated `Prune=false`. Re-seed with the app `install.sh` if lost.
 
