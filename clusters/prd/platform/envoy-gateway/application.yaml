@@ -1,5 +1,9 @@
 # Official Envoy Gateway → Argo CD install pattern:
 # https://gateway.envoyproxy.io/docs/install/install-argocd/
+#
+# Chart source matches upstream (docker.io/envoyproxy / gateway-helm / SSA).
+# Extra Git sources: Helm values + Gateway/Certificate/HTTPRoutes (GitOps stand-in
+# for kubectl apply of quickstart.yaml).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -20,7 +24,6 @@ spec:
     - repoURL: https://github.com/jacobdrury/homelab.git
       targetRevision: main
       ref: values
-    # Gateway / Certificate / HTTPRoutes (quickstart equivalent, GitOps)
     - repoURL: https://github.com/jacobdrury/homelab.git
       targetRevision: main
       path: clusters/prd/platform/envoy-gateway
@@ -36,23 +39,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-  # Helm certgen PreSync hooks linger in the resource tree after sync.
-  ignoreDifferences:
-    - group: ""
-      kind: ServiceAccount
-      name: eg-gateway-helm-certgen
-    - group: rbac.authorization.k8s.io
-      kind: Role
-      name: eg-gateway-helm-certgen
-    - group: rbac.authorization.k8s.io
-      kind: RoleBinding
-      name: eg-gateway-helm-certgen
-    - group: rbac.authorization.k8s.io
-      kind: ClusterRole
-      name: eg-gateway-helm-certgen:envoy-gateway-system
-    - group: rbac.authorization.k8s.io
-      kind: ClusterRoleBinding
-      name: eg-gateway-helm-certgen:envoy-gateway-system
-    - group: admissionregistration.k8s.io
-      kind: MutatingWebhookConfiguration
-      name: envoy-gateway-topology-injector.envoy-gateway-system

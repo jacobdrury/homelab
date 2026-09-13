@@ -1,3 +1,17 @@
 # Helm values for docker.io/envoyproxy/gateway-helm (official Argo source).
-# Keep lean; Gateway/HTTPRoute live in resources.yaml.
-{}
+# https://gateway.envoyproxy.io/docs/install/install-argocd/
+#
+# Chart marks certgen + topology injector as Helm pre-install hooks without a
+# delete policy. Argo then tries to prune them every sync (OutOfSync / stuck
+# ops). Keep them, but never prune.
+certgen:
+  job:
+    annotations:
+      argocd.argoproj.io/sync-options: Prune=false
+  rbac:
+    annotations:
+      argocd.argoproj.io/sync-options: Prune=false
+
+topologyInjector:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false

@@ -63,7 +63,8 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: lab-wildcard-tls
       allowedRoutes:
         namespaces:
@@ -75,7 +76,8 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: lab-wildcard-tls
       allowedRoutes:
         namespaces:
@@ -88,10 +90,16 @@ metadata:
   namespace: envoy-gateway-system
 spec:
   parentRefs:
-    - name: lab
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: lab
       sectionName: http
   rules:
-    - filters:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
         - type: RequestRedirect
           requestRedirect:
             scheme: https
@@ -104,7 +112,9 @@ metadata:
   namespace: argocd
 spec:
   parentRefs:
-    - name: lab
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: lab
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
@@ -115,5 +125,8 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: argocd-server
+        - group: ""
+          kind: Service
+          name: argocd-server
           port: 80
+          weight: 1
