@@ -1,4 +1,4 @@
-# Discover nested Applications under platform/ and apps/.
+# App-of-apps root — self-managed: first source syncs this file so Git owns root.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -9,6 +9,13 @@ metadata:
 spec:
   project: default
   sources:
+    # Own this Application (clusters/prd/root.yaml). Bootstrap still applies once;
+    # after that, merge to main updates root without kubectl.
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      path: clusters/prd
+      directory:
+        include: root.yaml
     - repoURL: https://github.com/jacobdrury/homelab.git
       targetRevision: main
       path: clusters/prd/platform
