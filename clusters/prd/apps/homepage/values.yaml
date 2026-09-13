@@ -36,6 +36,11 @@ env:
       secretKeyRef:
         name: homepage-unraid
         key: api-key
+  - name: HOMEPAGE_VAR_PIHOLE_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-pihole
+        key: api-key
 
 config:
   kubernetes:
@@ -127,9 +132,15 @@ config:
             href: https://pihole.lab.jacobdrury.com
             description: DNS / adblock (transitional)
             icon: pi-hole.png
+            siteMonitor: http://192.168.1.11
+            widget:
+              type: pihole
+              url: http://192.168.1.11
+              version: 6
+              key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"
 
-  # Empty list is truthy in Helm and still mounts a widgets.yaml (leaves the top bar).
-  widgetsString: ""
+  # Chart defaults include search/resources widgets; null disables them (empty [] is truthy in Helm).
+  widgets: null
 
   bookmarks: []
   docker: {}
