@@ -36,3 +36,23 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+  # Helm certgen PreSync hooks linger in the resource tree after sync.
+  ignoreDifferences:
+    - group: ""
+      kind: ServiceAccount
+      name: eg-gateway-helm-certgen
+    - group: rbac.authorization.k8s.io
+      kind: Role
+      name: eg-gateway-helm-certgen
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+      name: eg-gateway-helm-certgen
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: eg-gateway-helm-certgen:envoy-gateway-system
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: eg-gateway-helm-certgen:envoy-gateway-system
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      name: envoy-gateway-topology-injector.envoy-gateway-system
