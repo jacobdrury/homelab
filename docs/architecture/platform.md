@@ -13,6 +13,8 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | Secrets | **1Password** + Connect + ESO | Live — [secrets](secrets.md) |
 | Storage | **NFS CSI + iSCSI CSI → Unraid** | Live — `scarif-nfs`, `scarif-iscsi` — [storage](storage.md) |
 | Ingress | **Envoy Gateway** | Live — VIP **`192.168.5.21`**, wildcard LE — [networking](networking.md#https) |
+| Identity | **Authentik** | Live path — `auth.lab.jacobdrury.com`; OIDC for Argo/Grafana/etc.; CNPG Postgres |
+| Postgres | **CloudNativePG** | Operator in `platform/cloudnative-pg/`; app `Cluster`s on `scarif-iscsi` |
 | Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
 | Monitoring | Prometheus, Grafana (Phase 5); **Uptime Kuma** after Argo | Bootstrap debug: `connect/` + k9s + talosctl — no early metrics stack on 16 GB yavin |
@@ -59,6 +61,7 @@ Machine configs live under `infrastructure/talos/prd/`; keep CP patches consiste
 | Sonarr ×2, Prowlarr, qBittorrent | k8s | NFS downloads; **peers via Mullvad WG**, **UI/API off-VPN** — [media](media.md) |
 | Pi-hole | k8s | Migrate **last** from pc (black) LXC — `.11` until cutover |
 | Homepage | k8s | **First** GitOps app after Envoy; tiles use `*.lab` (incl. transitional proxies) — [gethomepage.dev](https://gethomepage.dev) |
+| Authentik | k8s | SSO IdP — wire apps as they land (Argo OIDC next) |
 | Home Assistant | k8s | Before Pi-hole; downtime OK; USB passthrough if radio needs it |
 | ATM10 (Minecraft) | k8s | Phase 6 — iSCSI PVC; friend access via Tailscale `.ts.net` — [games](games.md) |
 | Argo CD | k8s | bootstrap once |
@@ -85,8 +88,8 @@ homelab/
   bootstrap/                       # Argo install notes
   clusters/
     prd/
-      platform/                    # cilium, CSI, Connect/ESO, Argo, cert-manager, Envoy
-      apps/                        # homepage (+ future workloads)
+      platform/                    # cilium, CSI, Connect/ESO, Argo, cert-manager, Envoy, CNPG
+      apps/                        # homepage, authentik (+ future workloads)
   apps/                            # optional workload notes (media/home/games)
 ```
 

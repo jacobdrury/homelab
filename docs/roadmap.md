@@ -33,6 +33,7 @@ Talos + Cilium + **`connect/`** are up: **yavin** (CP) + **naboo** (worker). Uni
 | **5** | ~~Envoy Gateway + cert-manager~~ **done** (VIP `.21`, wildcard LE, `https://argocd.lab`); **Tailscale operator** still open |
 | **6** | **Transitional `*.lab` routes** — Envoy → **today’s** backends (e.g. `jellyfin.lab` → arr VM); consumers cut over URLs before k8s migrate ([below](#phase-2--transitional-lab-routes)) |
 | **7** | **Homepage** — **first** GitOps app; tiles point at `*.lab` URLs (Uptime Kuma right after or with it) |
+| **7b** | **Authentik** — SSO IdP at `auth.lab` (CNPG Postgres); wire Argo OIDC next |
 | **8** | etcd snapshot cadence; confirm `https://*.lab` on LAN + Tailscale |
 
 **Deliberately later:** Prometheus / Grafana / Discord alert wiring — **Phase 5** (yavin is 16 GB; bootstrap debugging uses `connect/` + k9s + talosctl). Do **not** pull full metrics stack forward.

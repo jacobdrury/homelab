@@ -40,3 +40,8 @@ source connect/env.sh              # default prd
 | stg | `connect/stg/` (future) |
 
 Details: `connect/README.md`
+
+## GitOps / bootstrap
+
+Argo owns cluster state from Git (`clusters/<env>/`). Do **not** add `install.sh` for apps or for platform pieces Argo can sync. Bootstrap scripts exist only for fresh-cluster chicken-and-egg (CNI, `op` secret seeding, Argo + root). Full rule: `docs/architecture/agents.md` (§ Bootstrap scripts).
+

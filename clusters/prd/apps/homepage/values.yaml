@@ -82,6 +82,11 @@ config:
                 - outOfSync
                 - healthy
                 - degraded
+        - Authentik:
+            href: https://auth.lab.jacobdrury.com
+            description: SSO / IdP
+            icon: authentik.png
+            siteMonitor: https://auth.lab.jacobdrury.com
 
     - Media:
         - Jellyfin:
@@ -112,11 +117,6 @@ config:
             icon: home-assistant.png
 
     - Infrastructure:
-        - Proxmox:
-            href: https://proxmox.lab.jacobdrury.com
-            description: homelab02 (arr host)
-            icon: proxmox.png
-            siteMonitor: https://proxmox.lab.jacobdrury.com
         - Pi-hole:
             href: https://pihole.lab.jacobdrury.com/admin/
             description: DNS / adblock (transitional)
@@ -143,6 +143,11 @@ config:
                 - cpu
                 - memoryPercent
                 - pool1UsedPercent
+        - Proxmox:
+            href: https://proxmox.lab.jacobdrury.com
+            description: homelab02 (arr host)
+            icon: proxmox.png
+            siteMonitor: https://proxmox.lab.jacobdrury.com
 
   # Chart defaults include search/resources widgets; null disables them (empty [] is truthy in Helm).
   widgets: null

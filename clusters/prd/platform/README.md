@@ -1,22 +1,30 @@
 # Platform (prd) — GitOps + bootstrap
 
-Single tree for cluster platform components. Argo owns them via
-`application.yaml`; `install.sh` is for first install and disaster recovery only.
+Single tree for cluster platform components. **Argo owns them** via
+`application.yaml` once the app-of-apps root is applied.
 
-| Component | Dir | Bootstrap |
-|-----------|-----|-----------|
-| Cilium (+ L2 LB) | `cilium/` | `./cilium/install.sh` |
-| NFS CSI | `nfs-csi/` | `./nfs-csi/install.sh` |
-| iSCSI CSI | `iscsi-csi/` | `./iscsi-csi/install.sh` |
-| 1Password Connect | `onepassword-connect/` | `./onepassword-connect/install.sh` |
-| External Secrets | `external-secrets/` | `./external-secrets/install.sh` |
-| Argo CD | `argocd/` | `./argocd/install.sh` (also applies `../root.yaml`) |
-| cert-manager | `cert-manager/` | `./cert-manager/install.sh` |
-| Envoy Gateway | `envoy-gateway/` | `./envoy-gateway/install.sh` |
+`install.sh` is **only** for fresh-cluster / total-DR steps that must run
+**before Argo can take over** (CNI, secret seeding with `op`, Argo itself).
+Not a day-to-day deploy path — see
+[agents — bootstrap vs Argo](../../../docs/architecture/agents.md#bootstrap-scripts-installsh-vs-argo).
 
-Each directory holds co-located `values.yaml`, optional `resources.yaml`, and the
-Argo `application.yaml`. Chart versions are pinned in `application.yaml` and
-mirrored as defaults in `install.sh`.
+| Component | Dir | `install.sh`? |
+|-----------|-----|---------------|
+| Cilium (+ L2 LB) | `cilium/` | Yes — CNI |
+| NFS CSI | `nfs-csi/` | Yes — optional before first PVCs |
+| iSCSI CSI | `iscsi-csi/` | Yes — seeds driver Secret from `op` |
+| 1Password Connect | `onepassword-connect/` | Yes — seeds credentials from `op` |
+| External Secrets | `external-secrets/` | Yes — needs Connect token |
+| Argo CD | `argocd/` | Yes — installs Argo + applies `../root.yaml` (**handoff**) |
+| cert-manager | `cert-manager/` | No — Git / Argo only |
+| Envoy Gateway | `envoy-gateway/` | No — Git / Argo only |
+| CloudNativePG | `cloudnative-pg/` | No — Git / Argo only; `Cluster` CRs with apps |
 
-Suggested DR order matches the table top → bottom (CNI → storage → secrets →
-Argo → TLS → gateway).
+Each directory: `application.yaml` + `values.yaml` / optional `resources.yaml`.
+Chart versions are pinned in `application.yaml` (and mirrored in remaining
+bootstrap scripts).
+
+**Handoff:** after `./argocd/install.sh`, merge to `main`; Argo reconciles
+`clusters/prd/**/application.yaml` (platform + apps).
+
+Fresh-cluster order: CNI → storage (if needed) → Connect → ESO → Argo → Git.

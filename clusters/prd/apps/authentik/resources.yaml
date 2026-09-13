@@ -1,0 +1,110 @@
+# Secrets: Homelab vault items "prd Authentik secret key" + "prd Authentik Postgres".
+# Postgres owner secret feeds CNPG bootstrap; Authentik mounts the same for DB auth.
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-creds
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: authentik-creds
+    creationPolicy: Owner
+  data:
+    - secretKey: secret_key
+      remoteRef:
+        key: prd Authentik secret key
+        property: password
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-pg-owner
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: authentik-pg-owner
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      type: kubernetes.io/basic-auth
+      data:
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: prd Authentik Postgres
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: prd Authentik Postgres
+        property: password
+---
+# Single-instance CNPG on scarif-iscsi. Scale instances at Phase 4 (3 CPs).
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: authentik-pg
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.6
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: authentik
+      owner: authentik
+      secret:
+        name: authentik-pg-owner
+  storage:
+    size: 8Gi
+    storageClass: scarif-iscsi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: authentik
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: lab
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - auth.lab.jacobdrury.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: authentik-server
+          port: 80
+          weight: 1

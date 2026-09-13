@@ -1,0 +1,38 @@
+# Authentik — SSO IdP for *.lab apps (OIDC first; forward auth later).
+# Chart: https://charts.goauthentik.io — Postgres: CNPG Cluster in resources.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "12"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.goauthentik.io
+      chart: authentik
+      targetRevision: 2026.8.2
+      helm:
+        releaseName: authentik
+        valueFiles:
+          - $values/clusters/prd/apps/authentik/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      path: clusters/prd/apps/authentik
+      directory:
+        include: resources.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

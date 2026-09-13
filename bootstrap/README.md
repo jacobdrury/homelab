@@ -1,7 +1,8 @@
 # Bootstrap (one-time / DR)
 
-Chicken-and-egg installs before GitOps can own them. After first install, **Argo**
-owns all platform charts via [`clusters/prd/platform/`](../clusters/prd/platform/).
+Chicken-and-egg installs **before Argo can take over**. After
+`argocd/install.sh` applies the app-of-apps root, **stop** — everything else
+comes from Git via Argo. Policy: [agents — bootstrap vs Argo](../docs/architecture/agents.md#bootstrap-scripts-installsh-vs-argo).
 
 | Step | Path |
 |------|------|
@@ -10,13 +11,11 @@ owns all platform charts via [`clusters/prd/platform/`](../clusters/prd/platform
 | iSCSI CSI | `clusters/prd/platform/iscsi-csi/install.sh` |
 | 1Password Connect | `clusters/prd/platform/onepassword-connect/install.sh` |
 | ESO | `clusters/prd/platform/external-secrets/install.sh` |
-| Argo CD | `clusters/prd/platform/argocd/install.sh` |
-| cert-manager | `clusters/prd/platform/cert-manager/install.sh` |
-| Envoy Gateway | `clusters/prd/platform/envoy-gateway/install.sh` |
+| Argo CD (+ `root.yaml`) | `clusters/prd/platform/argocd/install.sh` |
+
+Do **not** add bootstrap scripts for cert-manager, Envoy, CNPG, or apps — those
+are `application.yaml` only under [`clusters/prd/`](../clusters/prd/).
 
 Bootstrap Secrets (never commit): `op-credentials`, `onepassword-connect-token`,
 and (until ESO owns it) the iSCSI driver-config Secret — scripts annotate
 `Prune=false`. Re-run the matching `install.sh` if lost.
-
-New workloads live under `apps/` and get an `Application` under
-`clusters/prd/apps/` when that tree is used.

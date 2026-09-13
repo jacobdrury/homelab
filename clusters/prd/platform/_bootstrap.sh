@@ -1,4 +1,4 @@
-# Shared helpers for platform bootstrap / DR scripts.
+# Shared helpers for platform bootstrap scripts (pre-Argo chicken-and-egg only).
 # shellcheck shell=bash
 
 PLATFORM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

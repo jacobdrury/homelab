@@ -1,0 +1,55 @@
+# Authentik IdP — external Postgres via CNPG Cluster authentik-pg (resources.yaml).
+# Chart: https://docs.goauthentik.io/install-config/install/kubernetes/
+
+authentik:
+  secret_key: file:///authentik-creds/secret_key
+  error_reporting:
+    enabled: false
+  postgresql:
+    host: authentik-pg-rw
+    name: authentik
+    user: file:///postgres-creds/username
+    password: file:///postgres-creds/password
+    port: 5432
+
+postgresql:
+  enabled: false
+
+global:
+  volumes:
+    - name: authentik-creds
+      secret:
+        secretName: authentik-creds
+    - name: postgres-creds
+      secret:
+        secretName: authentik-pg-owner
+  volumeMounts:
+    - name: authentik-creds
+      mountPath: /authentik-creds
+      readOnly: true
+    - name: postgres-creds
+      mountPath: /postgres-creds
+      readOnly: true
+
+server:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 384Mi
+    limits:
+      memory: 768Mi
+  ingress:
+    enabled: false
+  route:
+    main:
+      enabled: false
+
+worker:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 384Mi
+    limits:
+      memory: 768Mi
