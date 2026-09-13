@@ -257,6 +257,9 @@ spec:
       labels:
         app: pihole-proxy
     spec:
+      # naboo (scarif VM) cannot reach Pi-hole :80; yavin can.
+      nodeSelector:
+        kubernetes.io/hostname: yavin
       containers:
         - name: nginx
           image: docker.io/library/nginx:1.27-alpine
