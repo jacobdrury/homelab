@@ -207,6 +207,17 @@ spec:
         - path:
             type: PathPrefix
             value: /
+      # HA returns 400 if it sees X-Forwarded-* without trusted_proxies.
+      # Strip until HA is configured with use_x_forwarded_for + trusted_proxies.
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            remove:
+              - x-forwarded-for
+              - x-forwarded-proto
+              - x-forwarded-host
+              - x-forwarded-port
+              - x-real-ip
       backendRefs:
         - group: gateway.envoyproxy.io
           kind: Backend
