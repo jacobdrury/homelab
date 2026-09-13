@@ -38,3 +38,14 @@ resource "cloudflare_dns_record" "lab_app" {
   ttl     = 1
   comment = "Homelab app via Envoy — ${each.key}"
 }
+
+# Apex lab.jacobdrury.com → Envoy (Homepage). Wildcard *.lab does not cover this.
+resource "cloudflare_dns_record" "lab_apex" {
+  zone_id = data.cloudflare_zone.jacobdrury.id
+  name    = "lab"
+  type    = "A"
+  content = local.lab.networks.homelab.hosts.envoy.ip
+  proxied = false
+  ttl     = 1
+  comment = "Homelab Homepage apex via Envoy"
+}
