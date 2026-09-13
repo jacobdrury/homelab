@@ -10,3 +10,4 @@ customization:
       - siderolabs/intel-ucode
       - siderolabs/i915
       - siderolabs/realtek-firmware
+      - siderolabs/iscsi-tools

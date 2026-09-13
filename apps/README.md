@@ -5,5 +5,7 @@ Kubernetes workloads managed by Argo CD (once Phase 2 GitOps is live). Until the
 | Path | Role |
 |------|------|
 | `system/cilium/` | CNI + kube-proxy replacement |
-| `system/` (later) | NFS CSI, cert-manager, Envoy, Tailscale, ESO, … |
+| `system/nfs-csi/` | RWX media on scarif NFS |
+| `system/iscsi-csi/` | RWO block on scarif ZFS/iSCSI |
+| `system/` (later) | cert-manager, Envoy, Tailscale, ESO, … |
 | `media/`, `home/`, `games/`, `network/` | Workloads (Phase 3+) |

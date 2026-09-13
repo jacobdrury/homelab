@@ -26,7 +26,7 @@ Talos + Cilium + **`connect/`** are up: **yavin** (CP) + **naboo** (worker). Uni
 
 | Step | Action |
 |------|--------|
-| **1** | Housekeeping — SSH/sudo + Talos secrets backup + commit ([SSH](#phase-2-housekeeping--ssh--credentials)); **NFS CSI + iSCSI CSI → scarif** ([storage](#phase-2-housekeeping--storage-csi)) |
+| **1** | Housekeeping — ~~SSH~~ (deferred); ~~**NFS CSI**~~ + ~~**iSCSI CSI**~~ **done** (`scarif-nfs`, `scarif-iscsi`); Talos secrets backup when convenient |
 | **2** | ~~**naboo**~~ — **Done** (Sep 2026): Unraid KVM worker on scarif · `192.168.5.14` · 6 vCPU / 20 GB · Ready |
 | **3** | **1Password Connect + ESO** |
 | **4** | **Argo CD** + `clusters/prd` app-of-apps |
@@ -211,15 +211,16 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 
 **Checklist:**
 
-- [ ] scarif: SSD pool / cache for `appdata` + iSCSI LUNs (500 GB NVMe) if not already  
-- [ ] scarif: **iSCSI target** plugin; export path ready for CSI  
-- [ ] Talos: `iscsi-tools` (or equivalent) on nodes that will attach block PVCs (**yavin** now; **naboo** when joined)  
-- [ ] Install **NFS CSI** → StorageClass; smoke Pod mounts media export; `touch` as uid `99` / gid `100`  
-- [ ] Install **iSCSI CSI** → StorageClass; smoke Pod with small RWO PVC (create/write/delete)  
+- [x] Install **NFS CSI** → `scarif-nfs` (`apps/system/nfs-csi/`); smoke Pod `touch` as uid `99` / gid `100` (Sep 2026)  
+- [x] scarif: ZFS pool **`scarif-ssd`** (500 GB SATA) + `k8s/vols` / `k8s/snaps` (Sep 2026)  
+- [x] scarif: **iSCSI Target** plugin (targetcli)  
+- [x] Talos: `iscsi-tools` on **yavin** + **naboo** (schematic `b61bec70…`)  
+- [x] Install **iSCSI CSI** → `scarif-iscsi` (`apps/system/iscsi-csi/`); smoke Pod RWO write/delete (Sep 2026)  
 - [ ] Document which class apps use (media → NFS; config/DB → iSCSI) in `apps/` / storage docs  
 - [ ] Confirm no local-path / hostPath provisioner for real apps  
+- [ ] SSH/sudo break-glass — **deferred** (optional before pc black leaves)  
 
-**Exit (housekeeping):** SSH break-glass works; **NFS + iSCSI** StorageClasses ready and smoke-tested; then secrets → Argo → apps. (**naboo** already online.)
+**Exit (housekeeping):** **NFS + iSCSI** StorageClasses ready and smoke-tested; then secrets → Argo → apps. (**naboo** already online. SSH optional.)
 
 **Exit (Phase 2):** `prd` GitOps-reachable on Tailscale + VLAN; **`https://*.lab`** works home and away (incl. **proxied** jellyfin/*arr/HA/scarif as needed); storage CSI live; **naboo** worker online; **Homepage** live; cluster ready to accept CP joins.
 

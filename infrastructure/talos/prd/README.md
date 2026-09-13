@@ -6,7 +6,7 @@ Control plane on Mac Mini; interim worker VM on scarif. CNI/kube-proxy disabled 
 
 | Path | Commit? | Role |
 |------|---------|------|
-| `schematic.yaml` / `schematic.id` | yes | Image Factory extensions (`intel-ucode`, `i915`, `realtek-firmware`) |
+| `schematic.yaml` / `schematic.id` | yes | Image Factory extensions (`intel-ucode`, `i915`, `realtek-firmware`, `iscsi-tools`) |
 | `patches/` | yes | Cluster + yavin (CP) + naboo (worker) — no secrets |
 | `gen.sh` | yes | Regenerate `generated/` from secrets + patches |
 | `secrets.yaml` | **no** | Cluster PKI — generate once; store a copy in 1Password |
@@ -23,7 +23,9 @@ talosctl gen secrets -o secrets.yaml   # already done if file exists
 
 Installer image:
 
-`factory.talos.dev/metal-installer/611c46fd514a0cbc412c3945e3a9b1c8ff49f3408a9ada6c170e936ad97cbe6d:v1.12.7`
+`factory.talos.dev/metal-installer/b61bec70ff5223641d986c88a927920b3f8676cacd22a9bf50522f13a8775eb6:v1.12.7`
+
+Previous (no iSCSI): `611c46fd514a0cbc412c3945e3a9b1c8ff49f3408a9ada6c170e936ad97cbe6d`
 
 ## Apply (wipes `nvme0n1` / Proxmox)
 

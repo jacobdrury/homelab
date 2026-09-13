@@ -1,0 +1,6 @@
+# Minimal overrides — chart defaults are fine for a two-node Talos cluster.
+controller:
+  replicas: 1
+  # Allow scheduling on yavin (control-plane taint) until more workers exist.
+  runOnControlPlane: true
+  enableSnapshotter: false

@@ -1,0 +1,44 @@
+# Throwaway RWX smoke test — apply, verify touch as 99:100, then delete.
+#   kubectl apply -f smoke-test.yaml
+#   kubectl -n nfs-smoke wait --for=condition=Ready pod/nfs-smoke --timeout=120s
+#   kubectl -n nfs-smoke exec nfs-smoke -- sh -c 'touch /data/.k8s-nfs-ok && ls -la /data/.k8s-nfs-ok'
+#   kubectl delete -f smoke-test.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nfs-smoke
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media
+  namespace: nfs-smoke
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: scarif-nfs
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-smoke
+  namespace: nfs-smoke
+spec:
+  securityContext:
+    runAsUser: 99
+    runAsGroup: 100
+    fsGroup: 100
+  containers:
+    - name: smoke
+      image: busybox:1.37
+      command: ["sleep", "3600"]
+      volumeMounts:
+        - name: media
+          mountPath: /data
+  volumes:
+    - name: media
+      persistentVolumeClaim:
+        claimName: media

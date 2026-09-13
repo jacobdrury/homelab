@@ -1,0 +1,36 @@
+# Throwaway RWO smoke test — apply, write a file, delete.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: iscsi-smoke
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+  namespace: iscsi-smoke
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: scarif-iscsi
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iscsi-smoke
+  namespace: iscsi-smoke
+spec:
+  containers:
+    - name: smoke
+      image: busybox:1.37
+      command: ["sleep", "3600"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data

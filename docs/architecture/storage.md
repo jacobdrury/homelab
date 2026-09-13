@@ -106,7 +106,7 @@ This is **not Docker-specific** — it is Unraid NFS + matching process UID/GID.
 | `downloads/` | qBittorrent (pool or UD as you prefer) |
 | `backups/` | App dumps / future backup tooling |
 
-Cluster: **NFS CSI** (ReadWriteMany). Point CSI at the media export (UD path is fine initially). **Not** for Sonarr/Postgres SQLite — use iSCSI.
+Cluster: **NFS CSI** live — StorageClass **`scarif-nfs`** (`apps/system/nfs-csi/`). Dynamic PVCs land under `${namespace}/${pvc}` on the export. Shared media tree (existing `media/`) can use a static PV later if apps need the root layout. **Not** for Sonarr/Postgres SQLite — use iSCSI.
 
 **k8s must use the same UID model** as above — CSI mounts the export; it does not remap Unraid squash. For media Pods / charts:
 
@@ -116,7 +116,7 @@ Cluster: **NFS CSI** (ReadWriteMany). Point CSI at the media export (UD path is 
 | `runAsGroup` / `fsGroup` / `PGID` | `100` |
 | scarif tree | `nobody:users` + group-writable (`ug+rwX`) |
 
-Validate with a throwaway Pod that mounts the PVC and `touch`es a file under `media/downloads` before cutting over *arr.
+Validated (Sep 2026): throwaway Pod mounted `scarif-nfs` and `touch`ed as `99:100`. Re-run via `apps/system/nfs-csi/smoke-test.yaml` before *arr cutover if unsure.
 
 ## iSCSI → cluster
 
