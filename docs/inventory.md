@@ -77,8 +77,8 @@ Compose: `/home/arr/docker/docker-compose.yml` · config `/home/arr/docker/arr-s
 |-----------|-------|---------|--------------------------|
 | `jellyfin` | `jellyfin/jellyfin:10.11.11` | default | `8096`, `8920`, `1900/udp`, `7359/udp` |
 | `gluetun` | `qmcgaw/gluetun:v3.41.1` | default | `8085`, `8989–8990`, `9696`, `6767`, `6881` |
-| `sonarr-tv` | `linuxserver/sonarr:4.0.19` | `service:gluetun` | via Gluetun (`:8989`) |
-| `sonarr-anime` | `linuxserver/sonarr:4.0.19` | `service:gluetun` | via Gluetun (`:8990`) |
+| `sonarr-tv` | `linuxserver/sonarr:4.0.19` | `service:gluetun` | via Gluetun (`:8990`) · `sonarr-tv.lab` |
+| `sonarr-anime` | `linuxserver/sonarr:4.0.19` | `service:gluetun` | via Gluetun (`:8989`) · `sonarr.lab` |
 | `prowlarr` | `linuxserver/prowlarr:2.4.0` | `service:gluetun` | via Gluetun (`:9696`) |
 | `qbittorrent` | `linuxserver/qbittorrent:5.2.3` | `service:gluetun` | via Gluetun (`:8085`) |
 
@@ -177,7 +177,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
 | **NFS (media)** | **scarif** | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (`192.168.5.10`) | ~8.7 TB library |
 | Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` via NFS |
-| Sonarr (TV / anime) | VM 101 via Gluetun | `:8989` / `:8990` | `/mnt/data/media` via NFS |
+| Sonarr (anime / TV) | VM 101 via Gluetun | `:8989` (anime/`sonarr.lab`) / `:8990` (TV/`sonarr-tv.lab`) | `/mnt/data/media` via NFS |
 | qBittorrent | VM 101 via Gluetun | `:8085` | downloads · Mullvad WG |
 | Prowlarr | VM 101 via Gluetun | `:9696` | config on VM root |
 | Discord bots | pc (black) VM **103** | `192.168.1.18` | outbound only · ex homelab03 |

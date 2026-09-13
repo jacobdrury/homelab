@@ -82,7 +82,7 @@ spec:
   endpoints:
     - ip:
         address: 192.168.1.9
-        port: 8990
+        port: 8989
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -117,7 +117,7 @@ spec:
   endpoints:
     - ip:
         address: 192.168.1.9
-        port: 8989
+        port: 8990
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

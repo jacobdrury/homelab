@@ -21,8 +21,8 @@ resource "unifi_firewall_group" "arr_http" {
   members = [
     "8096", # jellyfin
     "8085", # qbittorrent (gluetun)
-    "8989", # sonarr-tv
-    "8990", # sonarr-anime
+    "8989", # sonarr-anime (sonarr.lab)
+    "8990", # sonarr-tv (sonarr-tv.lab)
     "9696", # prowlarr
   ]
 }
