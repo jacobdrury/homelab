@@ -1,9 +1,0 @@
-apiVersion: v2
-name: envoy-gateway
-description: prd wrapper for the Envoy Gateway upstream Helm chart
-type: application
-version: 0.1.0
-dependencies:
-  - name: gateway-helm
-    version: v1.9.1
-    repository: oci://docker.io/envoyproxy

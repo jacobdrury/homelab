@@ -1,1 +1,3 @@
-gateway-helm: {}
+# Helm values for docker.io/envoyproxy/gateway-helm (official Argo source).
+# Keep lean; Gateway/HTTPRoute live in resources.yaml.
+{}

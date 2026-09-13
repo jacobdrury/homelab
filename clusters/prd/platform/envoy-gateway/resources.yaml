@@ -9,6 +9,7 @@ spec:
     kubernetes:
       envoyService:
         type: LoadBalancer
+        # Required for Cilium L2 announcements (Local is incompatible).
         externalTrafficPolicy: Cluster
         annotations:
           lbipam.cilium.io/ips: "192.168.5.21"
@@ -95,3 +96,24 @@ spec:
           requestRedirect:
             scheme: https
             statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  parentRefs:
+    - name: lab
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - argocd.lab.jacobdrury.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: argocd-server
+          port: 80
