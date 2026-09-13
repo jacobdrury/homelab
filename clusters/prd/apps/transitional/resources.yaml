@@ -36,6 +36,7 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: jellyfin
+          weight: 1
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
@@ -71,6 +72,7 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: qbittorrent
+          weight: 1
 ---
 # sonarr.lab = anime (primary); sonarr-tv.lab = TV
 apiVersion: gateway.envoyproxy.io/v1alpha1
@@ -107,6 +109,7 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: sonarr
+          weight: 1
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
@@ -142,6 +145,7 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: sonarr-tv
+          weight: 1
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
@@ -177,6 +181,7 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: prowlarr
+          weight: 1
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
@@ -223,6 +228,7 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: homeassistant
+          weight: 1
 ---
 # Pi-hole UI — Envoy Backend directly to LXC (no sidecar proxy).
 apiVersion: gateway.envoyproxy.io/v1alpha1
@@ -259,6 +265,7 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: pihole
+          weight: 1
 ---
 # scarif Unraid UI — LE on Envoy; Unraid stays HTTP on :80.
 # NFS/iSCSI clients use scarif-direct.lab.jacobdrury.com (Unraid IP; not Envoy).
@@ -296,6 +303,7 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: scarif
+          weight: 1
 ---
 # homelab02 Proxmox — self-signed upstream TLS (skip verify; LE on Envoy).
 apiVersion: gateway.envoyproxy.io/v1alpha1
@@ -334,3 +342,4 @@ spec:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: proxmox
+          weight: 1
