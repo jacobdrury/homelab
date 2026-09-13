@@ -224,76 +224,17 @@ spec:
           kind: Backend
           name: homeassistant
 ---
-# Envoy Backend→Pi-hole :80 times out (other Drury ports OK). Proxy via in-cluster nginx.
-apiVersion: v1
-kind: ConfigMap
+# Pi-hole UI — Envoy Backend directly to LXC (no sidecar proxy).
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
 metadata:
-  name: pihole-proxy
-  namespace: transitional
-data:
-  default.conf: |
-    server {
-      listen 80;
-      location / {
-        proxy_pass http://192.168.1.11;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-      }
-    }
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: pihole-proxy
+  name: pihole
   namespace: transitional
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: pihole-proxy
-  template:
-    metadata:
-      labels:
-        app: pihole-proxy
-    spec:
-      # naboo (scarif VM) cannot reach Pi-hole :80; yavin can.
-      nodeSelector:
-        kubernetes.io/hostname: yavin
-      containers:
-        - name: nginx
-          image: docker.io/library/nginx:1.27-alpine
-          ports:
-            - containerPort: 80
-              name: http
-          volumeMounts:
-            - name: conf
-              mountPath: /etc/nginx/conf.d
-              readOnly: true
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              memory: 64Mi
-      volumes:
-        - name: conf
-          configMap:
-            name: pihole-proxy
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: pihole-proxy
-  namespace: transitional
-spec:
-  selector:
-    app: pihole-proxy
-  ports:
-    - name: http
-      port: 80
-      targetPort: http
+  endpoints:
+    - ip:
+        address: 192.168.1.11
+        port: 80
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -315,8 +256,9 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: pihole-proxy
-          port: 80
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: pihole
 ---
 # scarif Unraid UI — LE on Envoy; Unraid stays HTTP on :80.
 # NFS clients must use scarif-nfs.lab.jacobdrury.com (not scarif.lab).
