@@ -12,6 +12,13 @@ Manages **configuration** for the Pi-hole LXC (host in [`../lab.yaml`](../lab.ya
 moon run pihole:apply
 ```
 
+After adding a new `*.lab` / apex record in Cloudflare, if LAN clients still see
+**NXDOMAIN** / “site can’t be reached”, flush Pi-hole’s negative cache:
+
+```bash
+moon run pihole:restartdns
+```
+
 Do **not** change lists, domains, or upstreams in the Pi-hole UI — those changes will drift and get reverted on the next apply.
 
 `*.auto.tfvars` is the OpenTofu convention for auto-loaded var files (committed, not “generated”).

@@ -11,3 +11,17 @@ tags:
 
 env:
   TOFU_SECRET_PIHOLE_PASSWORD: 'op://Homelab/Pi-hole API/credential'
+
+tasks:
+  # Clear FTL negative cache after new Cloudflare lab records (NXDOMAIN/NODATA).
+  restartdns:
+    script: |
+      exec ./restartdns.sh
+    inputs:
+      - 'restartdns.sh'
+      - '/.moon/scripts/tofu/env.sh'
+      - '/infrastructure/lab.yaml'
+    options:
+      cache: false
+      runInCI: false
+
