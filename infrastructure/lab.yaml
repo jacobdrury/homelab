@@ -15,6 +15,7 @@ dns:
   transitional_hosts:
     arr: 192.168.1.9 # VM 101 · jellyfin/*arr via Envoy
   # App / transitional UI frontends → Envoy VIP (Cilium L2 LB).
+  # Storage DNS (scarif-nfs → Unraid IP) is derived in dns/lab_locals.tf from hosts.scarif.
   app_hosts:
     argocd: 192.168.5.21
     jellyfin: 192.168.5.21
@@ -24,7 +25,7 @@ dns:
     prowlarr: 192.168.5.21
     homeassistant: 192.168.5.21
     pihole: 192.168.5.21
-    scarif: 192.168.5.21 # HTTPS UI via Envoy; NFS/iSCSI use host IP (.10), not this name
+    scarif: 192.168.5.21 # HTTPS UI via Envoy; NFS/iSCSI use scarif-nfs.lab
 
 
 networks:
@@ -47,7 +48,8 @@ networks:
       scarif:
         ip: 192.168.5.10
         role: unraid # NAS · NFS/iSCSI
-        dns: false # A record is app_hosts scarif → Envoy; NFS/iSCSI use host IP
+        dns: false # A record is app_hosts scarif → Envoy; storage is scarif-nfs.lab
+
       yavin:
         ip: 192.168.5.11
         role: talos_cp # Mac Mini · bootstrap CP #1

@@ -8,7 +8,13 @@ locals {
 
   transitional_lab_hosts = try(local.lab.dns.transitional_hosts, {})
 
-  direct_lab_hosts = try(local.lab.dns.direct_hosts, {})
+  # Storage plane: always Unraid IP (scarif.lab is Envoy HTTPS UI).
+  direct_lab_hosts = merge(
+    try(local.lab.dns.direct_hosts, {}),
+    {
+      "scarif-nfs" = local.lab.networks.homelab.hosts.scarif.ip
+    },
+  )
 
   app_lab_hosts = try(local.lab.dns.app_hosts, {})
 }

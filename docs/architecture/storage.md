@@ -21,7 +21,7 @@ Why Unraid over TrueNAS: **mixed drive sizes** over time. Parity must be **≥ l
 | 24TB | UD mount `/mnt/disks/ZXA0VZBA` · XFS · **8.7 TB** used |
 | NFS export | `/mnt/disks/ZXA0VZBA` · NFSv4 |
 | Array | Started · **no data/parity disks** |
-| Consumer | pc (black) VM 101 `arr` → `/mnt/data` via `scarif.lab.jacobdrury.com` (fstab · `_netdev,nofail`) |
+| Consumer | pc (black) VM 101 `arr` → `/mnt/data` via `scarif-nfs.lab.jacobdrury.com` (fstab · `_netdev,nofail`) |
 | 500 GB NVMe | UD · XFS `/mnt/disks/naboo-ssd` · naboo VM + libvirt (Sep 2026) |
 
 ## Disks
