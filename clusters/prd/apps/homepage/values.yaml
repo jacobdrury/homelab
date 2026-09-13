@@ -60,10 +60,6 @@ config:
             description: GitOps
             icon: argocd.png
             siteMonitor: https://argocd.lab.jacobdrury.com
-        - Homepage:
-            href: https://lab.jacobdrury.com
-            description: This dashboard
-            icon: homepage.png
 
     - Media:
         - Jellyfin:
@@ -105,21 +101,10 @@ config:
             icon: pi-hole.png
 
   widgets:
+    # kubernetes CPU/mem widget needs metrics-server (Phase 5) — omit until then.
     - search:
         provider: duckduckgo
         target: _blank
-    - kubernetes:
-        cluster:
-          show: true
-          cpu: true
-          memory: true
-          showLabel: true
-          label: prd
-        nodes:
-          show: true
-          cpu: true
-          memory: true
-          showLabel: true
 
   bookmarks: []
   docker: {}
