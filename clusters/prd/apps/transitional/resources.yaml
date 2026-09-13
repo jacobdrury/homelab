@@ -261,7 +261,7 @@ spec:
           name: pihole
 ---
 # scarif Unraid UI — LE on Envoy; Unraid stays HTTP on :80.
-# NFS/iSCSI clients use scarif-nfs.lab.jacobdrury.com (Unraid IP; not Envoy).
+# NFS/iSCSI clients use scarif-direct.lab.jacobdrury.com (Unraid IP; not Envoy).
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
 metadata:

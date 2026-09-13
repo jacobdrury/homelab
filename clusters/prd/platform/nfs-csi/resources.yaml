@@ -6,7 +6,7 @@ metadata:
     homelab.jacobdrury.com/backend: scarif-nfs
 provisioner: nfs.csi.k8s.io
 parameters:
-  server: scarif-nfs.lab.jacobdrury.com
+  server: scarif-direct.lab.jacobdrury.com
   share: /mnt/disks/ZXA0VZBA
   subDir: "${pvc.metadata.namespace}/${pvc.metadata.name}"
   mountPermissions: "0775"

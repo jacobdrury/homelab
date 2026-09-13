@@ -42,7 +42,7 @@ Host and infrastructure naming for the lab. Locked decision — see [decisions](
 | Unraid hostname | Planet | `scarif` |
 | Tailscale machine name | Same as hostname | `scarif` |
 | Talos / Kubernetes node name | Same as hostname | `yavin`, `naboo`, `hoth`, `endor` |
-| NFS / iSCSI server | Storage DNS (not UI) | `scarif-nfs.lab.jacobdrury.com` → Unraid; `scarif.lab` is HTTPS UI via Envoy |
+| NFS / iSCSI server | Direct DNS (not UI) | `scarif-direct.lab.jacobdrury.com` → Unraid; `scarif.lab` is HTTPS UI via Envoy |
 | SMB / mDNS | Hostname | `scarif.local` |
 | App ingress (Envoy) | Functional subdomain | `jellyfin.lab.jacobdrury.com` |
 | GitOps paths | Environment, not planet | `clusters/prd/`, `infrastructure/talos/prd/` |

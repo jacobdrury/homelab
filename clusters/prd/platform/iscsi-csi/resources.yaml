@@ -17,7 +17,7 @@ spec:
         driver-config-file.yaml: |
           driver: zfs-generic-iscsi
           sshConnection:
-            host: scarif-nfs.lab.jacobdrury.com
+            host: scarif-direct.lab.jacobdrury.com
             port: 22
             username: root
             privateKey: |
@@ -43,7 +43,7 @@ spec:
               block:
                 attributes:
                   emulate_tpu: 0
-            targetPortal: scarif-nfs.lab.jacobdrury.com:3260
+            targetPortal: scarif-direct.lab.jacobdrury.com:3260
             interface: ""
             namePrefix: csi-
             nameSuffix: -prd

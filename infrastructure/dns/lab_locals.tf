@@ -12,7 +12,7 @@ locals {
   direct_lab_hosts = merge(
     try(local.lab.dns.direct_hosts, {}),
     {
-      "scarif-nfs" = local.lab.networks.homelab.hosts.scarif.ip
+      "scarif-direct" = local.lab.networks.homelab.hosts.scarif.ip
     },
   )
 
