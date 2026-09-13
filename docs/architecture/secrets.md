@@ -19,7 +19,14 @@ flowchart LR
 | External Secrets | `ExternalSecret` CRs → native `Secret`s |
 | Git | References only |
 
-**Bootstrap:** seed Connect credentials into the cluster once (`kubectl` / script) — not committed in plaintext. After that Argo manages Connect/ESO and app secrets.
+**Bootstrap (done on prd):** seed once via install scripts — credentials/token never in Git.
+
+| App | Path |
+|-----|------|
+| Connect | `apps/system/onepassword-connect/` → ns `onepassword` |
+| ESO | `apps/system/external-secrets/` → `ClusterSecretStore/onepassword` |
+
+Homelab items: **`prd Connect credentials`** (document), **`prd Connect token`** (password). `install.sh` pulls them with `op`. Connect/ESO remain bootstrap Helm for now; app secrets use `ExternalSecret` → this store. Re-seed Connect Secrets only if lost.
 
 ## Host shell access (SSH / sudo)
 

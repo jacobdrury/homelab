@@ -1,0 +1,25 @@
+# Smoke: sync Homelab item "ESO smoke test" → Secret eso-smoke
+# Cleanup: kubectl delete -f apps/system/external-secrets/smoke-test.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: eso-smoke
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: eso-smoke
+  namespace: eso-smoke
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: eso-smoke
+    creationPolicy: Owner
+  data:
+    - secretKey: password
+      remoteRef:
+        key: ESO smoke test
+        property: password

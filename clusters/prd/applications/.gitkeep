@@ -1,0 +1,3 @@
+# Child Argo Applications for prd (one YAML per app).
+# Directory exists so Application `root` can sync an empty tree until apps are added.
+# See clusters/prd/README.md

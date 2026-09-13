@@ -128,10 +128,10 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 
 ### Not yet
 
-- Cache / `appdata` pool (NVMe currently holds **naboo**; iSCSI LUNs still needed in Phase 2 housekeeping)
 - Tailscale on Unraid
-- iSCSI target
 - Phase 1b: buy **~12 TB** data drive → copy library → repurpose 24TB as **parity** ([storage](architecture/storage.md#phase-1b--array--parity))
+
+**Done (Sep 2026):** iSCSI Target plugin · ZFS **`scarif-ssd`** · CSI classes **`scarif-nfs`** / **`scarif-iscsi`** (naboo still on NVMe vdisk `/mnt/disks/naboo-ssd`).
 
 ### naboo (Talos worker VM)
 

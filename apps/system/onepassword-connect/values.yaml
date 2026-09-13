@@ -1,0 +1,18 @@
+# 1Password Connect (no Operator — External Secrets talks to Connect directly)
+connect:
+  create: true
+  replicas: 1
+  serviceType: ClusterIP
+  # Secret name/key created by the chart from --set-file connect.credentials=...
+  credentialsName: op-credentials
+  credentialsKey: 1password-credentials.json
+  api:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+operator:
+  create: false

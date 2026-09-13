@@ -1,0 +1,17 @@
+# External Secrets Operator — talks to in-cluster 1Password Connect
+installCRDs: true
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+# Single-node / small cluster: no webhook HA needed
+webhook:
+  replicaCount: 1
+
+certController:
+  replicaCount: 1

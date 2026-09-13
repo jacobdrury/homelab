@@ -127,11 +127,11 @@ Validated (Sep 2026): throwaway Pod mounted `scarif-nfs` and `touch`ed as `99:10
 | Pi-hole (multi-replica) | One RWO PVC **per** pod — not one shared volume |
 | Single-writer app disks | Classic RWO block PVC |
 
-Cluster: **iSCSI CSI** (Talos needs initiator / `iscsi-tools`). One node attaches a given LUN at a time; pods **can reschedule** (detach/attach). Do not share one LUN across replicas.
+Cluster: **iSCSI CSI** live — StorageClass **`scarif-iscsi`** (`apps/system/iscsi-csi/`); Talos **`iscsi-tools`**; backend ZFS pool **`scarif-ssd`** on scarif. One node attaches a given LUN at a time; pods **can reschedule** (detach/attach). Do not share one LUN across replicas.
 
 **Don’t** put the Jellyfin library on iSCSI — keep large shared libraries on NFS (UD or array).
 
-Phase 2: stand up **NFS + iSCSI CSI together** in housekeeping — [roadmap](../roadmap.md#phase-2-housekeeping--storage-csi).
+Validated (Sep 2026): smoke Pod RWO write/delete. NFS + iSCSI CSI both in housekeeping — [roadmap](../roadmap.md#phase-2-housekeeping--storage-csi).
 
 ## Backups
 
