@@ -11,7 +11,7 @@ GitOps: Argo Applications in [`clusters/prd/applications/`](../clusters/prd/appl
 | `system/external-secrets/` | ESO + `ClusterSecretStore/onepassword` | Argo (+ seeded token) |
 | `system/argocd/` | Argo CD | `install.sh` |
 | `system/cert-manager/` | LE DNS-01 | Argo |
-| `system/envoy-gateway/` | Gateway VIP `.21` · `*.lab` TLS | Argo |
+| `system/envoy-gateway/` | Gateway VIP `.21` · `*.lab` TLS | Argo (manifests) + `install.sh` (Helm) |
 | `system/` (next) | Tailscale operator | — |
 | `media/`, `home/`, `games/`, `network/` | Workloads (Phase 3+) | Argo when added |
 

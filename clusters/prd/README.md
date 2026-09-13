@@ -8,9 +8,9 @@ What Argo on **prd** syncs. Contract: merge to `main` → Applications here reco
 | `onepassword-connect` | Connect 2.4.1 |
 | `external-secrets` | ESO 2.10.0 + ClusterSecretStore |
 | `cert-manager` | cert-manager v1.21.2 + issuer |
-| `envoy-gateway` | Gateway helm v1.9.1 + Gateway/HTTPRoute |
+| `envoy-gateway` | Gateway/HTTPRoute YAMLs (Helm chart still `install.sh` — OCI/Docker Hub) |
 | `nfs-csi` | csi-driver-nfs 4.13.4 + StorageClass |
 
-**Not in Argo yet:** Cilium, Argo CD itself, iSCSI CSI.
+**Not in Argo yet:** Cilium, Argo CD itself, iSCSI CSI, Envoy Gateway **Helm** release.
 
 Install Argo once: `bash apps/system/argocd/install.sh` (applies `root.yaml`).
