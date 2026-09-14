@@ -28,7 +28,7 @@ Talos + Cilium + **`connect/`** are up: **yavin** (CP) + **naboo** (worker). Uni
 |------|--------|
 | **1–7b** | ~~Platform bootstrap through Authentik~~ **done** |
 | **7c** | ~~**Shared MariaDB**~~ **done** (`platform/mariadb/`; Kuma consumer) |
-| **5′** | **Tailscale operator** — Connector advertises `192.168.5.0/24`; retire Homelab route from homelab02 when stable |
+| **5′** | ~~**Tailscale operator**~~ **done** — Connector `prd-homelab-router` advertises `192.168.5.0/24`; homelab02 admin route is Drury-only (still advertise Homelab on host until host `tailscale set` updated) |
 | **7d** | **Shared CNPG Postgres** — collapse app `Cluster`s (e.g. Authentik) into one lab Postgres |
 | **8** | etcd snapshot cadence; confirm `https://*.lab` on LAN + Tailscale without interim router for Homelab |
 
