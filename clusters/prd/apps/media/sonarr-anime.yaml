@@ -1,0 +1,98 @@
+# Sonarr anime — config copied from arr VM; library on NFS media/anime.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-anime-config
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: scarif-iscsi
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr-anime
+  namespace: media
+  labels:
+    app.kubernetes.io/name: sonarr-anime
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sonarr-anime
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sonarr-anime
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      securityContext:
+        fsGroup: 100
+      containers:
+        - name: sonarr
+          image: lscr.io/linuxserver/sonarr:4.0.19@sha256:64e9c8a2315516837fd809d53e2d2006bf8a17787754dc6474d2c5964d862f6e
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PUID
+              value: "99"
+            - name: PGID
+              value: "100"
+            - name: TZ
+              value: America/Chicago
+          ports:
+            - name: http
+              containerPort: 8989
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: anime
+              mountPath: /anime
+            - name: downloads
+              mountPath: /downloads
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 25m
+              memory: 256Mi
+            limits:
+              memory: 768Mi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: sonarr-anime-config
+        - name: anime
+          persistentVolumeClaim:
+            claimName: media-anime
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: media-downloads
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr-anime
+  namespace: media
+spec:
+  selector:
+    app.kubernetes.io/name: sonarr-anime
+  ports:
+    - name: http
+      port: 8989
+      targetPort: http
+# HTTPRoute at cutover — httproutes.yaml

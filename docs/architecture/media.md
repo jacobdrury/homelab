@@ -2,9 +2,11 @@
 
 Jellyfin, Sonarr ×2, Prowlarr, qBittorrent on k8s; libraries/downloads on Unraid NFS. Jellyfin GPU: [gpu](gpu.md).
 
-## NFS UID fix (VM 101 `arr`)
+**Phase 3 (in progress):** download stack GitOps under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) — **config copied from Proxmox arr VM** (not a fresh install). Jellyfin remains transitional → arr until a later cutover.
 
-**Status:** deferred — downloads/libraries temporarily world-writable after Sep 2026 incident; apply when convenient.
+## NFS UID fix (VM 101 `arr` + k8s)
+
+**Status:** required before/with Phase 3 cutover — downloads/libraries must be writable as `99:100`.
 
 Root cause and Unraid/k8s rules: [storage — NFS permissions](storage.md#nfs-permissions-uid--squash). Summary: Unraid NFS squashes to `nobody:users` (`99:100`); apps must match.
 
@@ -16,7 +18,7 @@ chmod -R ug+rwX,o+rX /mnt/disks/ZXA0VZBA/media
 ls -ld /mnt/disks/ZXA0VZBA/media /mnt/disks/ZXA0VZBA/media/downloads
 ```
 
-### On arr (Compose)
+### On arr (Compose) — until cutover
 
 1. In `/home/arr/docker/docker-compose.yml`, set for every service that mounts `/mnt/data` (at least `qbittorrent`, `sonarr-anime`, `sonarr-tv`; also Bazarr / Jellyfin if they write media):
 
@@ -43,30 +45,45 @@ ls -ld /mnt/disks/ZXA0VZBA/media /mnt/disks/ZXA0VZBA/media/downloads
 
 ### k8s (Phase 3)
 
-Same requirement — not Compose-only. Media charts/manifests should use **`runAsUser: 99`**, **`runAsGroup` / `fsGroup: 100`** (or chart `PUID`/`PGID` equivalents). Do this once on scarif ownership; then Docker cutover and later NFS CSI Pods both work without `777`.
+Media Deployments use **`PUID=99` / `PGID=100`** (`fsGroup: 100`). Static NFS PVs mount the existing `media/{anime,tv,downloads}` tree (not dynamic `scarif-nfs` subdirs).
+
+## Config migration from Proxmox arr
+
+| App | Source on arr | k8s PVC |
+|-----|---------------|---------|
+| qBittorrent | `/home/arr/docker/arr-stack/qbittorrent/` | `qbittorrent-config` |
+| Sonarr anime | `…/sonarr-anime/` | `sonarr-anime-config` |
+| Sonarr TV | `…/sonarr-tv/` | `sonarr-tv-config` |
+| Prowlarr | `…/prowlarr/` | `prowlarr-config` |
+
+Procedure: [`copy-configs-from-arr.sh`](../../clusters/prd/apps/media/scripts/copy-configs-from-arr.sh) — stops Compose for those four → tar → PVC → `chown 99:100` → rollout restart. **Jellyfin stays up.**
+
+After copy:
+
+1. qBit → Network interface **`wg0`**
+2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080` (was localhost via Gluetun)
+3. Root folders → `/anime`, `/tv`, `/downloads` (match Deployments)
 
 ## qBittorrent + VPN
 
 | Traffic | Requirement |
 |---------|-------------|
-| BitTorrent peers (up/down) | Out **Mullvad WireGuard** (kill switch / no clearnet leak) |
+| BitTorrent peers (up/down) | Out **Mullvad WireGuard** (sidecar `wg0`; qBit binds to it) |
 | Web UI | **`https://qbittorrent.lab.jacobdrury.com`** — Envoy TLS; same URL on LAN and Tailscale ([networking](networking.md#https)) |
 
-No special UI exposure story — Envoy + `*.lab.jacobdrury.com` like Argo/Jellyfin/Homepage. Implementation detail at deploy time (Service + HTTPRoute, etc.) does not matter as long as that hostname works on the lab path.
+**k8s pattern:** Mullvad conf in 1Password **`prd Mullvad WireGuard`** (`wg0.conf`). Sidecar runs `wg-quick` with **`Table = off`** so the pod default route (UI, DNS, cluster) stays on `eth0`. Peers use `wg0` via qBit interface binding. **Gluetun is not used on k8s.**
 
-**Implication for the Pod:** peer traffic must use the VPN iface; the Web UI port must stay reachable from Envoy on the cluster network (so the UI is not forced through Mullvad). Common approaches: qBittorrent **bind peers to `wg0`**, or Gluetun/similar with lab/cluster CIDRs allowed to the UI port. Sidecar/image choice is TBD in Phase 3; Mullvad stays the provider. Secrets in 1Password.
-
-Sonarr/Prowlarr stay off-VPN and call the qBit API in-cluster (or via the same hostname if you prefer).
+Sonarr/Prowlarr stay off-VPN and call the qBit API in-cluster.
 
 ```mermaid
 flowchart TB
   User[Tailscale_or_LAN]
   Envoy[Envoy]
   Q[qBittorrent_UI]
-  WG[Mullvad_WG]
+  WG[Mullvad_WG_sidecar]
   Peers[Torrent_peers]
   NFS[Unraid_NFS]
   User -->|qbittorrent.lab| Envoy --> Q
   Q --> NFS
-  Q -->|peers_only| WG --> Peers
+  Q -->|peers_bound_wg0| WG --> Peers
 ```

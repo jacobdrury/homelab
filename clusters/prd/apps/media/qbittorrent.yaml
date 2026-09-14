@@ -1,0 +1,167 @@
+# qBittorrent + Mullvad WireGuard sidecar (peers on wg0; UI on eth0).
+# Homelab item "prd Mullvad WireGuard" — field wg0.conf (full Mullvad WG config).
+# Prefer Table = off in the conf so wg-quick does not steal the pod default route.
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: qbittorrent-mullvad
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: qbittorrent-mullvad
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        wg0.conf: "{{ .wg0conf }}"
+  data:
+    - secretKey: wg0conf
+      remoteRef:
+        key: prd Mullvad WireGuard
+        property: wg0.conf
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-config
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: scarif-iscsi
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent
+  namespace: media
+  labels:
+    app.kubernetes.io/name: qbittorrent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qbittorrent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qbittorrent
+    spec:
+      # naboo intentionally down — pin to CP until Phase 4 capacity.
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: wireguard
+          image: lscr.io/linuxserver/wireguard:1.0.20260223-r0-ls122@sha256:d6de09f9e9a2398446a3e951e278da930dd254c05d842755a10a6079d8b7b8aa
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              conf=/etc/wireguard/wg0.conf
+              cp /mullvad/wg0.conf "$conf"
+              chmod 600 "$conf"
+              # Bind-to-wg0 mode: do not replace the pod default route (keeps UI/DNS on eth0).
+              if ! grep -qE '^[[:space:]]*Table[[:space:]]*=' "$conf"; then
+                sed -i '/^\[Interface\]/a Table = off' "$conf"
+              fi
+              wg-quick down wg0 2>/dev/null || true
+              wg-quick up wg0
+              echo "wg0 up"
+              wg show
+              sleep infinity
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            privileged: true
+          volumeMounts:
+            - name: mullvad
+              mountPath: /mullvad
+              readOnly: true
+            - name: tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+        - name: qbittorrent
+          image: lscr.io/linuxserver/qbittorrent:5.2.3@sha256:d157cbfb81272a252f2d3a80fcc7a3c347949919bf25443c421b465d31e38f42
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PUID
+              value: "99"
+            - name: PGID
+              value: "100"
+            - name: TZ
+              value: America/Chicago
+            - name: WEBUI_PORT
+              value: "8080"
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: mullvad
+          secret:
+            secretName: qbittorrent-mullvad
+        - name: tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+        - name: config
+          persistentVolumeClaim:
+            claimName: qbittorrent-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: media-downloads
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent
+  namespace: media
+  labels:
+    app.kubernetes.io/name: qbittorrent
+spec:
+  selector:
+    app.kubernetes.io/name: qbittorrent
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+# HTTPRoute added at cutover — see httproutes.yaml (kept out of Argo include until config copy).

@@ -1,0 +1,28 @@
+# Phase 3 media download stack — qBittorrent (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr.
+# Jellyfin stays transitional → arr VM until a later slice.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: media
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jacobdrury/homelab.git
+    targetRevision: main
+    path: clusters/prd/apps/media
+    directory:
+      include: '{namespace,storage,qbittorrent,sonarr-anime,sonarr-tv,prowlarr}.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

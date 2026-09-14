@@ -52,7 +52,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Friend Jellyfin HTTPS | **Tailscale L7 Ingress** (`ingressClassName: tailscale`) — LE cert on `https://jellyfin.<tailnet>.ts.net`; not L3 Service expose (self-signed) |
 | Friend Minecraft | **Tailscale L3 Service expose** — TCP `:25565`; no HTTPS on game port |
 | MagicDNS tailnet suffix | Rename once in **admin console** (word list); **not** OpenTofu; hostname prefixes in k8s GitOps |
-| qBittorrent VPN | Peers via **Mullvad WG**; UI at **`qbittorrent.lab.jacobdrury.com`** (normal Envoy lab exposure) |
+| qBittorrent VPN | Peers via **Mullvad WireGuard sidecar** + qBit **bind to `wg0`**; UI at **`qbittorrent.lab.jacobdrury.com`** (not Gluetun on k8s) |
 | Power | Prefer fewer always-on watts when cheap (strip white GPU; black off when gaming-only); **not** a reason to defer k8s/GitOps |
 | Laptops | Precision optional NVENC/burst; Inspiron **out of lab plan** |
 | Backups | **Decide after Unraid is up** (parity ≠ backup; UD has no parity) |

@@ -1,0 +1,137 @@
+# Static NFS → existing scarif media tree (not dynamic scarif-nfs subdirs).
+# Server: scarif-direct.lab.jacobdrury.com (Unraid IP; see infrastructure/dns).
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-anime
+  labels:
+    homelab.jacobdrury.com/media: anime
+spec:
+  capacity:
+    storage: 10Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: scarif-nfs-media
+  mountOptions:
+    - nfsvers=4.2
+    - hard
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: scarif-media-anime
+    volumeAttributes:
+      server: scarif-direct.lab.jacobdrury.com
+      share: /mnt/disks/ZXA0VZBA/media/anime
+  claimRef:
+    namespace: media
+    name: media-anime
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-anime
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: scarif-nfs-media
+  volumeName: media-anime
+  resources:
+    requests:
+      storage: 10Ti
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-tv
+  labels:
+    homelab.jacobdrury.com/media: tv
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: scarif-nfs-media
+  mountOptions:
+    - nfsvers=4.2
+    - hard
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: scarif-media-tv
+    volumeAttributes:
+      server: scarif-direct.lab.jacobdrury.com
+      share: /mnt/disks/ZXA0VZBA/media/tv
+  claimRef:
+    namespace: media
+    name: media-tv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-tv
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: scarif-nfs-media
+  volumeName: media-tv
+  resources:
+    requests:
+      storage: 2Ti
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-downloads
+  labels:
+    homelab.jacobdrury.com/media: downloads
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: scarif-nfs-media
+  mountOptions:
+    - nfsvers=4.2
+    - hard
+    - noatime
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: scarif-media-downloads
+    volumeAttributes:
+      server: scarif-direct.lab.jacobdrury.com
+      share: /mnt/disks/ZXA0VZBA/media/downloads
+  claimRef:
+    namespace: media
+    name: media-downloads
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-downloads
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: scarif-nfs-media
+  volumeName: media-downloads
+  resources:
+    requests:
+      storage: 1Ti
+---
+# Binding-only class for static media PVs (no dynamic provisioning intended).
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: scarif-nfs-media
+  labels:
+    homelab.jacobdrury.com/backend: scarif-nfs-static
+provisioner: nfs.csi.k8s.io
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+allowVolumeExpansion: false
