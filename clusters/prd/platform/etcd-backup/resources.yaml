@@ -1,4 +1,4 @@
-# Namespace labels: default PSA is fine (non-root alpine).
+# Namespace labels: default PSA is fine (non-root where possible).
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -28,7 +28,7 @@ spec:
       storage: 5Gi
 ---
 # Every 6 hours; keep the newest 14 snapshots (~3.5 days).
-# alpine + pinned talosctl binary (siderolabs/talosctl image is scratch / no shell).
+# Init: pinned talosctl (scratch image). Main: alpine rename + retention (no network).
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -54,40 +54,47 @@ spec:
             - key: node-role.kubernetes.io/control-plane
               operator: Exists
               effect: NoSchedule
-          containers:
+          initContainers:
             - name: snapshot
+              image: ghcr.io/siderolabs/talosctl:v1.12.7
+              imagePullPolicy: IfNotPresent
+              command:
+                - /talosctl
+              args:
+                - -n
+                - "192.168.5.11"
+                - etcd
+                - snapshot
+                - /backup/.inprogress.snap
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                - name: talos-secrets
+                  mountPath: /var/run/secrets/talos.dev
+                  readOnly: true
+          containers:
+            - name: retain
               image: docker.io/library/alpine:3.20.3@sha256:029a752048e32e843bd6defe3841186fb8d19a28dae8ec287f433bb9d6d1ad85
               imagePullPolicy: IfNotPresent
               env:
-                - name: NODE
-                  value: "192.168.5.11"
                 - name: KEEP
                   value: "14"
-                - name: TALOSCTL_VERSION
-                  value: "v1.12.7"
-                - name: TALOSCTL_SHA256
-                  value: "9f2626b4755cbd72401cacdf1812878ae6d738b8355c9e8d3600ecebb39a02ca"
               command:
                 - /bin/sh
                 - -ec
                 - |
                   set -eu
-                  apk add --no-cache curl >/dev/null
-                  curl -fsSL -o /tmp/talosctl \
-                    "https://github.com/siderolabs/talos/releases/download/${TALOSCTL_VERSION}/talosctl-linux-amd64"
-                  echo "${TALOSCTL_SHA256}  /tmp/talosctl" | sha256sum -c -
-                  chmod +x /tmp/talosctl
                   ts="$(date -u +%Y%m%dT%H%M%SZ)"
                   out="/backup/etcd-${ts}.snap"
-                  echo "snapshot -> ${out} (node=${NODE})"
-                  /tmp/talosctl -n "${NODE}" etcd snapshot "${out}"
+                  mv /backup/.inprogress.snap "${out}"
+                  echo "saved ${out}"
                   ls -1t /backup/etcd-*.snap 2>/dev/null | tail -n +"$((KEEP + 1))" | while read -r f; do
                     rm -f "${f}"
                   done
                   ls -lah /backup
               securityContext:
                 allowPrivilegeEscalation: false
-                # Root needed for apk + writing talosctl under /tmp; still no privilege escalation.
+                # Init (talosctl) writes as root; retain must move/delete those files.
                 runAsNonRoot: false
                 runAsUser: 0
                 capabilities:
@@ -98,11 +105,6 @@ spec:
               volumeMounts:
                 - name: backup
                   mountPath: /backup
-                - name: talos-secrets
-                  mountPath: /var/run/secrets/talos.dev
-                  readOnly: true
-                - name: tmp
-                  mountPath: /tmp
           volumes:
             - name: backup
               persistentVolumeClaim:
@@ -110,5 +112,3 @@ spec:
             - name: talos-secrets
               secret:
                 secretName: etcd-backup
-            - name: tmp
-              emptyDir: {}
