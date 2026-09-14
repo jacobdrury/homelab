@@ -1,33 +1,33 @@
-# Uptime Kuma — status / HTTP monitors. Auth via Authentik Proxy Provider (not native OIDC).
-# Chart: https://artifacthub.io/packages/helm/uptime-kuma/uptime-kuma
+# Shared MariaDB — one instance, many app databases (Kuma first).
+# Chart: oci://registry-1.docker.io/bitnamicharts/mariadb
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: uptime-kuma
+  name: mariadb
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "12"
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   project: default
   sources:
-    - repoURL: https://helm.irsigler.cloud
-      chart: uptime-kuma
-      targetRevision: 4.2.0
+    - repoURL: registry-1.docker.io/bitnamicharts
+      chart: mariadb
+      targetRevision: 27.3.0
       helm:
-        releaseName: uptime-kuma
+        releaseName: mariadb
         valueFiles:
-          - $values/clusters/prd/apps/uptime-kuma/values.yaml
+          - $values/clusters/prd/platform/mariadb/values.yaml
     - repoURL: https://github.com/jacobdrury/homelab.git
       targetRevision: main
       ref: values
     - repoURL: https://github.com/jacobdrury/homelab.git
       targetRevision: main
-      path: clusters/prd/apps/uptime-kuma
+      path: clusters/prd/platform/mariadb
       directory:
         include: resources.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: uptime-kuma
+    namespace: mariadb
   syncPolicy:
     automated:
       prune: true

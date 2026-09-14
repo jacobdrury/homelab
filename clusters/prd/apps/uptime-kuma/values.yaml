@@ -1,4 +1,5 @@
-# Uptime Kuma — SQLite on scarif-iscsi. Public URL is Authentik Proxy Provider.
+# Uptime Kuma — MariaDB on shared lab instance (platform/mariadb).
+# Public URL is Authentik Proxy Provider.
 # https://integrations.goauthentik.io/monitoring/uptime-kuma/
 
 image:
@@ -10,10 +11,29 @@ useDeploy: true
 strategy:
   type: Recreate
 
-# Skip first-run DB wizard — Kuma only supports SQLite / MariaDB (not Postgres/CNPG).
+# Shared MariaDB — secrets from ExternalSecret uptime-kuma-mariadb.
 podEnv:
   - name: UPTIME_KUMA_DB_TYPE
-    value: sqlite
+    value: mariadb
+  - name: UPTIME_KUMA_DB_HOSTNAME
+    value: mariadb.mariadb.svc.cluster.local
+  - name: UPTIME_KUMA_DB_PORT
+    value: "3306"
+  - name: UPTIME_KUMA_DB_NAME
+    valueFrom:
+      secretKeyRef:
+        name: uptime-kuma-mariadb
+        key: database
+  - name: UPTIME_KUMA_DB_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: uptime-kuma-mariadb
+        key: username
+  - name: UPTIME_KUMA_DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: uptime-kuma-mariadb
+        key: password
 
 ingress:
   enabled: false
@@ -22,6 +42,7 @@ service:
   type: ClusterIP
   port: 3001
 
+# Still needed for screenshots / local files (DB is remote).
 volume:
   enabled: true
   size: 2Gi

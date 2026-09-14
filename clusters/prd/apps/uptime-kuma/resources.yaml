@@ -1,0 +1,29 @@
+# Homelab item "prd Uptime Kuma MariaDB" (username, password, database).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: uptime-kuma-mariadb
+  namespace: uptime-kuma
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: uptime-kuma-mariadb
+    creationPolicy: Owner
+  data:
+    - secretKey: username
+      remoteRef:
+        key: prd Uptime Kuma MariaDB
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: prd Uptime Kuma MariaDB
+        property: password
+    - secretKey: database
+      remoteRef:
+        key: prd Uptime Kuma MariaDB
+        property: database

@@ -14,7 +14,8 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | Storage | **NFS CSI + iSCSI CSI → Unraid** | Live — `scarif-nfs`, `scarif-iscsi` — [storage](storage.md) |
 | Ingress | **Envoy Gateway** | Live — VIP **`192.168.5.21`**, wildcard LE — [networking](networking.md#https) |
 | Identity | **Authentik** | Live path — `auth.lab.jacobdrury.com`; OIDC for Argo/Grafana/etc.; CNPG Postgres |
-| Postgres | **CloudNativePG** | Operator in `platform/cloudnative-pg/`; app `Cluster`s on `scarif-iscsi` |
+| Postgres | **CloudNativePG** | Operator in `platform/cloudnative-pg/`; **todo:** one shared `Cluster` (many DBs) |
+| MariaDB | **Shared Bitnami MariaDB** | `platform/mariadb/` — many DBs; Kuma first |
 | Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
 | Monitoring | Prometheus, Grafana (Phase 5); **Uptime Kuma** after Argo | Bootstrap debug: `connect/` + k9s + talosctl — no early metrics stack on 16 GB yavin |

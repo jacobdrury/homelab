@@ -30,6 +30,8 @@ Homelab items: **`prd Connect credentials`** (document), **`prd Connect token`**
 
 App SSO: **`prd Argo CD OIDC`** (password = OAuth client secret) is shared by Authentik blueprints (`!Env`) and Argo `argocd-secret` merge — create before enabling OIDC sync.
 
+Databases: **`prd MariaDB`** (Bitnami keys `mariadb-root-password` / `mariadb-password` / `mariadb-replication-password`); per-app items like **`prd Uptime Kuma MariaDB`** (username, password, database).
+
 ## Host shell access (SSH / sudo)
 
 Separate from in-cluster secrets. Goal: **stop memorizing per-host passwords**; easy SSH during Phase 3 migrations.

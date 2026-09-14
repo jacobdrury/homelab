@@ -1,0 +1,28 @@
+# Shared lab MariaDB (standalone). App DBs/users: chart auth for first consumer;
+# add more via Sync Job in resources.yaml (idempotent SQL).
+# Secrets: Homelab "prd MariaDB" (mariadb-*-password fields).
+
+architecture: standalone
+
+auth:
+  username: uptime_kuma
+  database: uptime_kuma
+  existingSecret: mariadb-credentials
+
+primary:
+  persistence:
+    enabled: true
+    storageClass: scarif-iscsi
+    size: 8Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+metrics:
+  enabled: false
+
+volumePermissions:
+  enabled: false

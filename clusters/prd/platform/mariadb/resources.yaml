@@ -1,0 +1,78 @@
+# Homelab item "prd MariaDB" — fields used by Bitnami auth.existingSecret.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: mariadb-credentials
+  namespace: mariadb
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: mariadb-credentials
+    creationPolicy: Owner
+  data:
+    - secretKey: mariadb-root-password
+      remoteRef:
+        key: prd MariaDB
+        property: mariadb-root-password
+    - secretKey: mariadb-password
+      remoteRef:
+        key: prd MariaDB
+        property: mariadb-password
+    - secretKey: mariadb-replication-password
+      remoteRef:
+        key: prd MariaDB
+        property: mariadb-replication-password
+---
+# Idempotent DB ensure for consumers beyond chart first-boot auth.
+# Re-runs each sync (BeforeHookCreation). Add blocks as apps land.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mariadb-ensure-databases
+  namespace: mariadb
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ensure
+          image: docker.io/bitnami/mariadb:13.0.1
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-credentials
+                  key: mariadb-root-password
+            - name: UPTIME_KUMA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-credentials
+                  key: mariadb-password
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              HOST=mariadb.mariadb.svc.cluster.local
+              until mysqladmin ping -h "$HOST" -uroot -p"$MARIADB_ROOT_PASSWORD" --silent; do
+                echo waiting for mariadb
+                sleep 3
+              done
+              mysql -h "$HOST" -uroot -p"$MARIADB_ROOT_PASSWORD" <<EOF
+              CREATE DATABASE IF NOT EXISTS uptime_kuma CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+              CREATE USER IF NOT EXISTS 'uptime_kuma'@'%' IDENTIFIED BY '${UPTIME_KUMA_PASSWORD}';
+              ALTER USER 'uptime_kuma'@'%' IDENTIFIED BY '${UPTIME_KUMA_PASSWORD}';
+              GRANT ALL PRIVILEGES ON uptime_kuma.* TO 'uptime_kuma'@'%';
+              FLUSH PRIVILEGES;
+              EOF
+              echo ok

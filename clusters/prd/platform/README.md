@@ -18,7 +18,8 @@ Not a day-to-day deploy path — see
 | Argo CD | `argocd/` | Yes — installs Argo + applies `../root.yaml` (**handoff**) |
 | cert-manager | `cert-manager/` | No — Git / Argo only |
 | Envoy Gateway | `envoy-gateway/` | No — Git / Argo only |
-| CloudNativePG | `cloudnative-pg/` | No — Git / Argo only; `Cluster` CRs with apps |
+| CloudNativePG | `cloudnative-pg/` | No — Git / Argo only; prefer **shared** `Cluster` (many DBs) long-term |
+| MariaDB | `mariadb/` | No — Git / Argo only; shared instance for MySQL/MariaDB apps |
 
 Each directory: `application.yaml` + `values.yaml` / optional `resources.yaml`.
 Chart versions are pinned in `application.yaml` (and mirrored in remaining

@@ -29,7 +29,9 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Ingress | **Envoy Gateway** (Gateway API) |
 | Secrets | **1Password** + Connect + External Secrets |
 | Identity / SSO | **Authentik** at `auth.lab.jacobdrury.com` — OIDC-first; directory config via **blueprints** in Git (not OpenTofu); forward auth later for legacy UIs |
-| Postgres (apps) | **CloudNativePG** on `scarif-iscsi` (operator in `platform/cloudnative-pg/`; `Cluster` CRs with consuming apps). Chart-bundled Postgres only for demos |
+| Postgres (apps) | **CloudNativePG** on `scarif-iscsi`. **Target:** one shared CNPG `Cluster` (many DBs) — same ops model as MariaDB; migrate Authentik off dedicated `authentik-pg` when convenient. Chart-bundled Postgres only for demos |
+| MariaDB (apps) | **Shared MariaDB** (`platform/mariadb/`) — one instance, many databases; Uptime Kuma first consumer. Prefer over SQLite when the app supports MariaDB/MySQL |
+| SQLite | Only when the app cannot use Postgres or MariaDB — RWO PVC on `scarif-iscsi` |
 | Host SSH / sudo | **1Password** + **SSH keys** (1Password agent); `connect/ssh/config` Host aliases (scarif, homelab02, arr, HA, pihole, …); **shared lab admin sudo password** in 1P rotated onto hosts (not NOPASSWD); no private keys in Git; Talos = **talosctl** |
 | Mesh | **Tailscale operator** on `prd` advertises **`192.168.5.0/24`** (steady subnet router); **homelab02 interim** until pc (black) leaves; tailnet DNS in **`infrastructure/tailscale/`** |
 | Domain | `lab.jacobdrury.com`; registrar Squarespace → **Cloudflare DNS** (OpenTofu), full Cloudflare transfer later |
