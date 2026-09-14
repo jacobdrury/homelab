@@ -1,5 +1,15 @@
 # Homelab item "Tailscale OAuth" — chart expects Secret operator-oauth
 # with keys client_id + client_secret.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tailscale
+  labels:
+    # Connector proxies need privileged + NET_ADMIN (sysctler / tailscale).
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
+---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
