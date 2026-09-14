@@ -25,7 +25,7 @@ The script: stops Compose for the four apps → tar configs → untar into PVCs 
 | App | Fix |
 |-----|-----|
 | qBittorrent | Network interface = **`wg0`**; WebUI **8080** |
-| Sonarr ×2 | Download client → **`qbittorrent.media.svc.cluster.local:8080`** |
+| Sonarr ×2 | Download client → **`qbittorrent.media.svc.cluster.local:8080`**; indexers → **`prowlarr.media.svc.cluster.local:9696`** |
 | Prowlarr | Apps → in-cluster Sonarr Services |
 | Paths | Keep Compose mounts: `/home/data/{anime,tv,downloads}` |
 | Postgres | `./clusters/prd/apps/media/scripts/migrate-arr-to-postgres.sh` after `media-pg` is Ready |
