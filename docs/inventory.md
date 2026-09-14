@@ -62,30 +62,24 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 
 | VMID | Type | Name | IP | VLAN | RAM | Notes |
 |------|------|------|-----|------|-----|-------|
-| 101 | VM | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | Full media stack · library via **NFS → scarif** |
+| 101 | VM | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | **Stopped** · `onboot=0` · media configs archived; stack on k8s |
 | 105 | VM | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · no USB radios |
 | — | LXC | `Pi-Hole` | `192.168.1.11` | untagged | 1 GB / 8 GB | VMID **106** · ex homelab03 · k8s cutover **last** |
 | 103 | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Migrated from homelab03** |
 
 **Must migrate or retire all guests before wipe → personal gaming.**
 
-### VM 101 `arr` — media stack (partially retired)
+### VM 101 `arr` — stopped (media stack on k8s)
 
-Compose: `/home/arr/docker/docker-compose.yml` · config `/home/arr/docker/arr-stack/`.
+Compose archive: `/home/arr/docker/docker-compose.yml` · config `/home/arr/docker/arr-stack/`.
+VM is **powered off** with **onboot disabled**; keep the disk until configs on iSCSI are trusted.
 
-**Migrated to k8s** (`clusters/prd/apps/media/`): Sonarr anime/TV, Prowlarr, qBittorrent (+ Mullvad WG sidecar), Jellyfin (`10.11.11`). Compose for those should stay **stopped**.
+**On k8s** (`clusters/prd/apps/media/`): Sonarr anime/TV, Prowlarr, qBittorrent (+ Mullvad WG sidecar), Jellyfin (`10.11.11`).
 
-Legacy Gluetun + Compose containers may still exist on disk but are not the live backends for `*.lab`.
-
-| Path | Size | Used by |
-|------|------|---------|
-| `/mnt/data` | NFSv4 | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (fstab · `_netdev,nofail`) |
-| `/mnt/data/media/anime` | 6.9 TB | Jellyfin (k8s), Sonarr (k8s) |
-| `/mnt/data/media/tv` | 608 GB | Jellyfin (k8s), Sonarr (k8s) |
-| `/mnt/data/media/downloads` | ~27 GB | qBittorrent (k8s) |
-| `/home/arr/docker/arr-stack/*` | on 32 GB root | archived configs (copied to iSCSI PVCs) |
-
-**VM notes:** `scsi1` (24TB passthrough) removed Aug 2025. Old XFS UUID fstab entry commented out; NFS mount in `/etc/fstab`. Needs `nfs-common` in guest.
+| Path (on disk when VM is on) | Used by |
+|------|---------|
+| `/mnt/data/media/{anime,tv,downloads}` | NFS → scarif (k8s mounts directly now) |
+| `/home/arr/docker/arr-stack/*` | archived configs (copied to iSCSI PVCs) |
 
 ---
 
@@ -194,7 +188,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | IP | Device |
 |----|--------|
 | `.1` | UDM Pro |
-| `.9` | `arr` VM (pc black) |
+| `.9` | `arr` VM (**stopped**, onboot off) |
 | `.11` | Pi-hole |
 | `.12` | pc (black) / `homelab02` |
 | `.13` | USW Aggregation |

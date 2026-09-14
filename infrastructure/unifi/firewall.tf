@@ -14,19 +14,7 @@ resource "unifi_firewall_group" "dns" {
   members = ["53"]
 }
 
-# Envoy (Homelab) → legacy UIs until Phase 3 cutover.
-resource "unifi_firewall_group" "arr_http" {
-  name = "arr HTTP"
-  type = "port-group"
-  members = [
-    "8096", # jellyfin
-    "8085", # qbittorrent (gluetun)
-    "8989", # sonarr-anime (sonarr.lab)
-    "8990", # sonarr-tv (sonarr-tv.lab)
-    "9696", # prowlarr
-  ]
-}
-
+# Envoy (Homelab) → remaining legacy UIs (Pi-hole / HA / Proxmox). Media stack is in-cluster.
 resource "unifi_firewall_group" "pihole_http" {
   name    = "Pi-hole HTTP"
   type    = "port-group"
@@ -124,26 +112,6 @@ resource "unifi_firewall_zone_policy" "homelab_to_pihole_http" {
   }
 }
 
-resource "unifi_firewall_zone_policy" "homelab_to_arr_http" {
-  name                      = "Allow Homelab HTTP to arr"
-  action                    = "ALLOW"
-  protocol                  = "tcp"
-  enabled                   = true
-  auto_allow_return_traffic = true
-  ip_version                = "IPV4"
-  description               = "Envoy transitional *.lab → arr VM media stack"
-
-  source = {
-    zone_id = unifi_firewall_zone.homelab.id
-  }
-
-  destination = {
-    zone_id       = unifi_firewall_zone.drury.id
-    ips           = [local.lab.dns.transitional_hosts.arr]
-    port_group_id = unifi_firewall_group.arr_http.id
-  }
-}
-
 resource "unifi_firewall_zone_policy" "homelab_to_proxmox" {
   name                      = "Allow Homelab HTTPS to Proxmox"
   action                    = "ALLOW"
@@ -230,7 +198,6 @@ resource "unifi_firewall_zone_policy_order" "homelab_to_drury" {
   before_predefined_ids = [
     unifi_firewall_zone_policy.homelab_to_pihole_dns.id,
     unifi_firewall_zone_policy.homelab_to_pihole_http.id,
-    unifi_firewall_zone_policy.homelab_to_arr_http.id,
     unifi_firewall_zone_policy.homelab_to_proxmox.id,
   ]
 }

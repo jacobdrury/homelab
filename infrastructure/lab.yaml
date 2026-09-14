@@ -11,9 +11,8 @@ dns:
   cloudflare_resolvers:
     - 1.1.1.1
     - 1.0.0.1
-  # Legacy guest IPs (firewall / inventory). DNS for UIs is app_hosts → Envoy.
-  transitional_hosts:
-    arr: 192.168.1.9 # VM 101 · jellyfin/*arr via Envoy
+  # Legacy guest IPs retired when VMs stop (arr media stack → k8s).
+  transitional_hosts: {}
   # App / transitional UI frontends → Envoy VIP (Cilium L2 LB).
   # Storage DNS (scarif-direct → Unraid IP) is derived in dns/lab_locals.tf from hosts.scarif.
   app_hosts:
@@ -32,7 +31,7 @@ dns:
 
 
 networks:
-  # Primary trusted LAN (UniFi VLAN 1). Pi-hole, Proxmox, arr VM, IoT gateway path.
+  # Primary trusted LAN (UniFi VLAN 1). Pi-hole, Proxmox, IoT gateway path.
   drury:
     unifi_name: Drury
     route_cidr: 192.168.1.0/24 # Tailscale interim — drop when pc (black) leaves lab
