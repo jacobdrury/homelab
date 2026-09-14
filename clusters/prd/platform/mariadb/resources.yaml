@@ -46,8 +46,9 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: ensure
-          # Match Bitnami chart 27.3.0 default (tag 13.0.1 does not exist on Docker Hub).
-          image: registry-1.docker.io/bitnami/mariadb:latest
+          # Same pin as values.yaml image (tag+digest). Bare :13.0.1 is not on Hub.
+          image: registry-1.docker.io/bitnami/mariadb:13.0.1@sha256:16c4d59ca1e33e557e5003596d244aefac4dd03220c8967ae12e3cee2a4c7dd9
+          imagePullPolicy: IfNotPresent
           env:
             - name: MARIADB_ROOT_PASSWORD
               valueFrom:

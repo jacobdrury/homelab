@@ -49,3 +49,5 @@ Details: `connect/README.md`
 
 **Leave `install.sh` only for what must be installed before Argo exists** (CNI, CSI, Connect/`op` seeding, ESO, Argo + root). Anything Argo can own entirely from Git must never get an install script. Details: `docs/architecture/agents.md` (§ Bootstrap scripts).
 
+**Never use `:latest` (or unpinned floating tags) for container images.** Pin chart `targetRevision` and image `tag` (and `digest` when the registry does not publish a pullable version tag). Keep Jobs/init containers on the same pin as the app image when they share it.
+

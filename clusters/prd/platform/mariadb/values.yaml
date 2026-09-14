@@ -1,8 +1,18 @@
 # Shared lab MariaDB (standalone). App DBs/users: chart auth for first consumer;
 # add more via Sync Job in resources.yaml (idempotent SQL).
 # Secrets: Homelab "prd MariaDB" (mariadb-*-password fields).
+#
+# Image: chart 27.3.0 appVersion is 13.0.1; Bitnami Hub no longer serves a bare
+# `:13.0.1` tag, so pin by digest (never `:latest`). Keep Job image in sync.
 
 architecture: standalone
+
+image:
+  registry: registry-1.docker.io
+  repository: bitnami/mariadb
+  tag: "13.0.1"
+  digest: sha256:16c4d59ca1e33e557e5003596d244aefac4dd03220c8967ae12e3cee2a4c7dd9
+  pullPolicy: IfNotPresent
 
 auth:
   username: uptime_kuma
