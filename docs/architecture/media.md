@@ -85,7 +85,9 @@ Init containers upsert `Postgres*` into each app’s `config.xml`. SQLite → Po
 | BitTorrent peers (up/down) | Out **Mullvad WireGuard** (sidecar `wg0`; qBit binds to it) |
 | Web UI | **`https://qbittorrent.lab.jacobdrury.com`** — Envoy TLS; same URL on LAN and Tailscale ([networking](networking.md#https)) |
 
-**k8s pattern:** Mullvad conf in 1Password **`prd Mullvad WireGuard`** (password field = full `wg0.conf`). Sidecar runs `wg-quick` with **`Table = off`** so the pod default route (UI, DNS, cluster) stays on `eth0`. Peers use `wg0` via qBit interface binding. **Gluetun is not used on k8s.**
+**k8s pattern:** Mullvad conf in 1Password **`prd Mullvad WireGuard`** (password field = full `wg0.conf`). Sidecar runs `wg-quick` with **`Table = off`** so the pod default route (UI/DNS stay on eth0). Peers use `wg0` via qBit interface binding. **Gluetun is not used on k8s.**
+
+**SSO:** public `*.lab` UIs for qBit / Sonarr / Prowlarr use **Authentik Proxy** (same pattern as Uptime Kuma). In-cluster clients (Sonarr→Prowlarr, Homepage API via `/api` skip) do not need a browser session.
 
 Sonarr/Prowlarr stay off-VPN and call the qBit API in-cluster.
 

@@ -42,6 +42,10 @@ Done when `httproutes.yaml` is in the Argo include and transitional Backends for
 | `storage.yaml` | Static NFS PVs for `media/{anime,tv,downloads}` |
 | `qbittorrent.yaml` | qBit + WG sidecar, iSCSI config |
 | `sonarr-*.yaml` / `prowlarr.yaml` | *arr Deployments |
-| `httproutes.yaml` | Lab URLs |
+| `httproutes.yaml` | Deprecated stub — public URLs via Authentik Proxy |
 | `scripts/copy-configs-from-arr.sh` | VM → PVC migration |
 | `scripts/migrate-arr-to-postgres.sh` | SQLite → media-pg |
+
+## Auth
+
+Browser access to `sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent` `.lab` goes through **Authentik Proxy** (`clusters/prd/apps/authentik/`). `/api` is skipped so Homepage widgets still work with API keys. Native *arr UI auth is disabled; qBit auth is bypassed for the cluster pod CIDR.

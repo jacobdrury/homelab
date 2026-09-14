@@ -1,0 +1,130 @@
+# Authentik blueprints — media stack Proxy Providers (Sonarr ×2, Prowlarr, qBittorrent).
+# Traffic: Envoy *.lab → authentik-server (embedded outpost) → media Services.
+# HTTPRoutes live in resources-media-routes.yaml (authentik namespace).
+# /api paths skipped so Homepage widgets keep working with API keys.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-media
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  media.yaml: |
+    version: 1
+    metadata:
+      name: media-proxy
+    entries:
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-sonarr
+        state: present
+        identifiers:
+          name: Sonarr Anime
+        attrs:
+          name: Sonarr Anime
+          mode: proxy
+          external_host: https://sonarr.lab.jacobdrury.com
+          internal_host: http://sonarr-anime.media.svc.cluster.local:8989
+          internal_host_ssl_validation: false
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          skip_path_regex: |
+            ^/api(/.*)?$
+            ^/feed(/.*)?$
+
+      - model: authentik_core.application
+        id: app-sonarr
+        state: present
+        identifiers:
+          slug: sonarr
+        attrs:
+          name: Sonarr Anime
+          slug: sonarr
+          provider: !KeyOf provider-sonarr
+          policy_engine_mode: any
+          meta_launch_url: https://sonarr.lab.jacobdrury.com
+
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-sonarr-tv
+        state: present
+        identifiers:
+          name: Sonarr TV
+        attrs:
+          name: Sonarr TV
+          mode: proxy
+          external_host: https://sonarr-tv.lab.jacobdrury.com
+          internal_host: http://sonarr-tv.media.svc.cluster.local:8990
+          internal_host_ssl_validation: false
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          skip_path_regex: |
+            ^/api(/.*)?$
+            ^/feed(/.*)?$
+
+      - model: authentik_core.application
+        id: app-sonarr-tv
+        state: present
+        identifiers:
+          slug: sonarr-tv
+        attrs:
+          name: Sonarr TV
+          slug: sonarr-tv
+          provider: !KeyOf provider-sonarr-tv
+          policy_engine_mode: any
+          meta_launch_url: https://sonarr-tv.lab.jacobdrury.com
+
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-prowlarr
+        state: present
+        identifiers:
+          name: Prowlarr
+        attrs:
+          name: Prowlarr
+          mode: proxy
+          external_host: https://prowlarr.lab.jacobdrury.com
+          internal_host: http://prowlarr.media.svc.cluster.local:9696
+          internal_host_ssl_validation: false
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          skip_path_regex: |
+            ^/api(/.*)?$
+
+      - model: authentik_core.application
+        id: app-prowlarr
+        state: present
+        identifiers:
+          slug: prowlarr
+        attrs:
+          name: Prowlarr
+          slug: prowlarr
+          provider: !KeyOf provider-prowlarr
+          policy_engine_mode: any
+          meta_launch_url: https://prowlarr.lab.jacobdrury.com
+
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-qbittorrent
+        state: present
+        identifiers:
+          name: qBittorrent
+        attrs:
+          name: qBittorrent
+          mode: proxy
+          external_host: https://qbittorrent.lab.jacobdrury.com
+          internal_host: http://qbittorrent.media.svc.cluster.local:8080
+          internal_host_ssl_validation: false
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          skip_path_regex: |
+            ^/api(/.*)?$
+
+      - model: authentik_core.application
+        id: app-qbittorrent
+        state: present
+        identifiers:
+          slug: qbittorrent
+        attrs:
+          name: qBittorrent
+          slug: qbittorrent
+          provider: !KeyOf provider-qbittorrent
+          policy_engine_mode: any
+          meta_launch_url: https://qbittorrent.lab.jacobdrury.com

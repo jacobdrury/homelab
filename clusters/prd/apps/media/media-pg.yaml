@@ -183,6 +183,9 @@ data:
     upsert("PostgresPassword", password)
     upsert("PostgresMainDb", main_db)
     upsert("PostgresLogDb", log_db)
+    # Authentik Proxy sits in front of public URLs — disable native UI auth.
+    upsert("AuthenticationMethod", "None")
+    upsert("AuthenticationRequired", "Disabled")
 
     tree.write(conf, encoding="utf-8", xml_declaration=True)
     print(f"postgres config ensured in {conf} -> {host}/{main_db}")

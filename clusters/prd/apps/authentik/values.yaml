@@ -20,6 +20,7 @@ blueprints:
   configMaps:
     - authentik-blueprint-argocd
     - authentik-blueprint-uptime
+    - authentik-blueprint-media
 
 global:
   volumes:
