@@ -3,6 +3,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: etcd-backup
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
 ---
 # Talos injects a matching Secret with credentials for talosctl.
 apiVersion: talos.dev/v1alpha1
