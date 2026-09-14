@@ -10,6 +10,11 @@ useDeploy: true
 strategy:
   type: Recreate
 
+# Skip first-run DB wizard — Kuma only supports SQLite / MariaDB (not Postgres/CNPG).
+podEnv:
+  - name: UPTIME_KUMA_DB_TYPE
+    value: sqlite
+
 ingress:
   enabled: false
 

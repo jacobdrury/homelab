@@ -86,6 +86,17 @@ Order: [platform README](../../clusters/prd/platform/README.md) · [bootstrap/RE
 2. Needs a 1Password item? → create it + `ExternalSecret`; still no install script.  
 3. Brand-new cluster with no Argo yet? → use the existing **platform** pre-Argo scripts only, then stop.
 
+**Implementation is not complete** until the new user-facing service is on **Homepage** and **Uptime Kuma**, unless the user (or task) explicitly says otherwise.
+
+| Surface | What to add |
+|---------|-------------|
+| **Homepage** | Tile under the right section in [`clusters/prd/apps/homepage/values.yaml`](../../clusters/prd/apps/homepage/values.yaml) (`href` + icon; widget only if useful) |
+| **Uptime Kuma** | HTTP(S) monitor for the public `*.lab` URL (after Kuma is up — create via UI or API; keep monitors in sync with Homepage links) |
+| **DNS** | `infrastructure/lab.yaml` `app_hosts` + `moon run dns:apply` when a new hostname is needed |
+| **Authentik** | Blueprint when the app gets SSO (OIDC or proxy) |
+
+Exceptions (skip Homepage and/or Kuma unless asked): pure operators/controllers, CSI, secret plumbing, one-off jobs, or infra with no human URL.
+
 If you helm-applied something in a pinch, get it into Git and let Argo adopt it — do not leave a second install script around.
 
 ## Buildout
