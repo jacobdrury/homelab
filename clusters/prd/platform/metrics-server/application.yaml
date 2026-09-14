@@ -1,0 +1,36 @@
+# Metrics Server — Metrics API for kubectl top, HPA, Homepage kubernetes widget.
+# Chart: https://artifacthub.io/packages/helm/metrics-server/metrics-server
+#
+# Talos kubelets present certs metrics-server does not trust by default.
+# Prefer InternalIP; skip kubelet TLS verify until kubelet serving-cert rotation
+# + approver are in machine config (optional harden later).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://kubernetes-sigs.github.io/metrics-server
+      chart: metrics-server
+      targetRevision: 3.14.0
+      helm:
+        releaseName: metrics-server
+        valueFiles:
+          - $values/clusters/prd/platform/metrics-server/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -100,8 +100,8 @@ config:
   settingsString: |
     title: Homelab
     description: lab.jacobdrury.com
-    # Empty info-widgets strip is from headerStyle boxed; none removes it.
-    headerStyle: none
+    # Show info widgets strip (kubernetes node stats).
+    headerStyle: underlined
     target: _blank
     hideVersion: true
     statusStyle: dot
@@ -236,7 +236,7 @@ config:
             description: Home automation (transitional)
             icon: home-assistant.png
 
-    - Network:
+    - Infrastructure:
         - UniFi:
             href: https://192.168.1.1
             description: UDM Pro (Drury)
@@ -252,8 +252,6 @@ config:
                 - wan
                 - lan_users
                 - wlan_users
-
-    - Infrastructure:
         - Pi-hole:
             href: https://pihole.lab.jacobdrury.com/admin/
             description: DNS / adblock (transitional)
@@ -297,8 +295,20 @@ config:
                 - resources.cpu
                 - resources.mem
 
-  # Chart defaults include search/resources widgets; null disables them (empty [] is truthy in Helm).
-  widgets: null
+  # Info widgets (top strip). Requires metrics-server for kubernetes CPU/memory.
+  widgets:
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "prd"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
 
   bookmarks: []
   docker: {}

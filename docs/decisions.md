@@ -45,7 +45,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` on k8s |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
 | Apps (migrate order) | *arr + qBit → Jellyfin → HA → **Pi-hole last**. **URLs first:** Envoy transitional routes to today’s VMs; then move backends. **Homepage** = first GitOps app after Envoy |
-| Observability timing | Bootstrap: **`connect/`** + k9s + talosctl. **Homepage** first after Envoy (Uptime Kuma with/after it). **Prometheus/Grafana** Phase 5 |
+| Observability timing | Bootstrap: **`connect/`** + k9s + talosctl. **Homepage** first after Envoy (Uptime Kuma with/after it). **metrics-server** early (Metrics API / Homepage / HPA — not the full stack). **Prometheus/Grafana** Phase 5 |
 | Transitional ingress | After Envoy: `jellyfin.lab` (etc.) → **current** backends on arr/HA/scarif; swap to k8s Services at cutover with **no DNS/URL change** |
 | Games (ATM10) | **Phase 6** — after core platform stable; **itzg/minecraft-server** on k8s; iSCSI block PVC; pin to beefiest node — [games](architecture/games.md) |
 | Friend remote access | **Tailscale per-service expose** (`*.ts.net`); `group:friends` → `tag:shared` only (Jellyfin + Minecraft); **no** subnet routes for friends — [games](architecture/games.md#friend-access--tailscale) |

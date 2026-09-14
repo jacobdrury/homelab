@@ -1,0 +1,12 @@
+# Talos: kubelet serving certs are not cluster-CA-signed unless rotate-server-certificates
+# + an approver are configured. insecure TLS to kubelet is the usual interim approach.
+args:
+  - --kubelet-insecure-tls
+  - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 128Mi

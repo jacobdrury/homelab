@@ -18,7 +18,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | MariaDB | **Shared Bitnami MariaDB** | `platform/mariadb/` — many DBs; Kuma first |
 | Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
-| Monitoring | Prometheus, Grafana (Phase 5); **Uptime Kuma** after Argo | Bootstrap debug: `connect/` + k9s + talosctl — no early metrics stack on 16 GB yavin |
+| Monitoring | **metrics-server** (Metrics API); Prometheus, Grafana (Phase 5); **Uptime Kuma** after Argo | Bootstrap debug: `connect/` + k9s + talosctl — full scrape stack deferred (yavin RAM) |
 
 ### Node layout
 
