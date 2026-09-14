@@ -1,0 +1,15 @@
+# OAuth comes from Secret operator-oauth (ExternalSecret) — do not set oauth.* here.
+# https://tailscale.com/docs/kubernetes-operator/install-operator
+
+installCRDs: true
+
+operatorConfig:
+  # Must match ACL tagOwners + OAuth client tag in Tailscale admin.
+  defaultTags:
+    - "tag:k8s-operator"
+  hostname: tailscale-operator
+  logging: info
+
+ingressClass:
+  enabled: true
+  name: tailscale

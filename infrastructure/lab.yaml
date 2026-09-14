@@ -83,4 +83,5 @@ services:
 
 tailscale:
   magic_dns_suffix: ibex-ladon.ts.net # Rename tailnet in admin console — not settable via OpenTofu
-  interim_subnet_router: homelab02 # advertises routes on host; TF enables in admin
+  interim_subnet_router: homelab02 # advertises Drury (+ Homelab until k8s cutover)
+  k8s_subnet_router: prd-homelab-router # Connector hostname on prd

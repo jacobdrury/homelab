@@ -61,8 +61,10 @@ curl -sI http://scarif.lab.jacobdrury.com
 
 ## Steady state (Phase 2+)
 
-- Point `devices.tf` at the k8s operator node; drop Drury route when pc (black) leaves.
-- Operator Helm uses auth key from 1Password / ESO.
+- Operator Helm chart: `clusters/prd/platform/tailscale-operator/` (OAuth from 1Password **Tailscale OAuth**).
+- Connector `prd-homelab-router` advertises **`192.168.5.0/24`** (`tag:k8s`).
+- After smoke test: `homelab_route_via_k8s=true` + `manage_k8s_subnet_router=true` in tofu vars (or tfvars); drop Homelab from homelab02 advertise list; keep Drury on interim until Pi-hole leaves.
+- OAuth client in Tailscale admin must be tagged **`tag:k8s-operator`** (Devices Core + Auth Keys write).
 - Split DNS unchanged.
 
 ## Friend access (Phase 3 / 6)

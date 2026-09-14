@@ -1,0 +1,48 @@
+# Homelab item "Tailscale OAuth" — chart expects Secret operator-oauth
+# with keys client_id + client_secret.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: operator-oauth
+  namespace: tailscale
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: operator-oauth
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        client_id: "{{ .client_id }}"
+        client_secret: "{{ .client_secret }}"
+  data:
+    - secretKey: client_id
+      remoteRef:
+        key: oy2i24vqgjezewrj5aks24i6ai
+        property: client id
+    - secretKey: client_secret
+      remoteRef:
+        key: oy2i24vqgjezewrj5aks24i6ai
+        property: credential
+---
+# Advertise Homelab VLAN to the tailnet (steady subnet router).
+# Defaults to tag:k8s — ACL autoApprovers must include that tag for this CIDR.
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: homelab-subnet
+  namespace: tailscale
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  hostname: prd-homelab-router
+  subnetRouter:
+    advertiseRoutes:
+      - "192.168.5.0/24"
+  tags:
+    - "tag:k8s"

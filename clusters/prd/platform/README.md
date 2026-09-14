@@ -21,6 +21,7 @@ Not a day-to-day deploy path — see
 | CloudNativePG | `cloudnative-pg/` | No — Git / Argo only; prefer **shared** `Cluster` (many DBs) long-term |
 | MariaDB | `mariadb/` | No — Git / Argo only; shared instance for MySQL/MariaDB apps |
 | Metrics Server | `metrics-server/` | No — Git / Argo only; Metrics API for `kubectl top` / Homepage / HPA |
+| Tailscale operator | `tailscale-operator/` | No — Git / Argo only; Homelab subnet router via Connector |
 
 Each directory: `application.yaml` + `values.yaml` / optional `resources.yaml`.
 Chart versions are pinned in `application.yaml` (and mirrored in remaining

@@ -2,15 +2,15 @@
 
 Phased path from [inventory](inventory.md) → target. Principles and checklists only; leans live in [decisions](decisions.md).
 
-## Current status (2026-09-12)
+## Current status (2026-09-13)
 
 | Phase | State | Notes |
 |-------|--------|--------|
 | **0** Docs & inventory | **Done** | |
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
-| **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; `http://scarif.lab` works home + away |
-| **2** Talos `prd` | **In progress** | CSI + Connect/ESO + Argo + **Envoy/cert-manager** · next: transitional routes / Tailscale op |
+| **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; interim subnet router on homelab02 |
+| **2** Talos `prd` | **In progress** | Platform + transitional routes + Homepage/Kuma/Authentik live; next: Tailscale operator cutover, shared CNPG, etcd |
 | **3–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -18,25 +18,19 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 
 **DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/dns/`). LAN: Pi-hole forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare (no per-record Tailscale changes).
 
-**Remote access (verified):** split DNS + homelab02 subnet router (`192.168.1.0/24`, `192.168.5.0/24`) · policy/keys in `infrastructure/tailscale/`.
+**Remote access (verified):** split DNS + homelab02 subnet router (`192.168.1.0/24`, `192.168.5.0/24`) · policy/keys in `infrastructure/tailscale/`. Homelab route moving to k8s Connector when operator is stable.
 
 ## What's next — Phase 2
 
-Talos + Cilium + **`connect/`** are up: **yavin** (CP) + **naboo** (worker). UniFi **ZBF** live. **CSI**, **Connect/ESO**, and **Argo CD** are in. Remaining platform work (ordered):
+Talos + Cilium + **`connect/`** are up: **yavin** (CP) + **naboo** (worker). UniFi **ZBF** live. **CSI**, **Connect/ESO**, **Argo CD**, **Envoy/cert-manager**, transitional routes, Homepage, Uptime Kuma, Authentik, metrics-server, shared MariaDB (Kuma) are in. Remaining:
 
 | Step | Action |
 |------|--------|
-| **1** | Housekeeping — ~~SSH~~ (deferred); ~~**NFS CSI**~~ + ~~**iSCSI CSI**~~ **done** (`scarif-nfs`, `scarif-iscsi`); Talos secrets backup when convenient |
-| **2** | ~~**naboo**~~ — **Done** (Sep 2026): Unraid KVM worker on scarif · `192.168.5.14` · 6 vCPU / 20 GB · Ready |
-| **3** | ~~**1Password Connect + ESO**~~ **done** (`ClusterSecretStore/onepassword`; smoke synced) |
-| **4** | ~~**Argo CD**~~ **done** (`clusters/prd` app-of-apps root; UI via port-forward until Envoy) |
-| **5** | ~~Envoy Gateway + cert-manager~~ **done** (VIP `.21`, wildcard LE, `https://argocd.lab`); **Tailscale operator** still open |
-| **6** | **Transitional `*.lab` routes** — Envoy → **today’s** backends (e.g. `jellyfin.lab` → arr VM); consumers cut over URLs before k8s migrate ([below](#phase-2--transitional-lab-routes)) |
-| **7** | **Homepage** — **first** GitOps app; tiles point at `*.lab` URLs (Uptime Kuma right after or with it) |
-| **7b** | **Authentik** — SSO IdP at `auth.lab` (CNPG Postgres); **blueprints** for directory; Argo OIDC first |
-| **7c** | **Shared MariaDB** — `platform/mariadb/`; Kuma first consumer; MySQL-only apps reuse this |
-| **7d** | **Shared CNPG Postgres** — collapse app `Cluster`s (e.g. Authentik) into one lab Postgres; many DBs, one backup |
-| **8** | etcd snapshot cadence; confirm `https://*.lab` on LAN + Tailscale |
+| **1–7b** | ~~Platform bootstrap through Authentik~~ **done** |
+| **7c** | ~~**Shared MariaDB**~~ **done** (`platform/mariadb/`; Kuma consumer) |
+| **5′** | **Tailscale operator** — Connector advertises `192.168.5.0/24`; retire Homelab route from homelab02 when stable |
+| **7d** | **Shared CNPG Postgres** — collapse app `Cluster`s (e.g. Authentik) into one lab Postgres |
+| **8** | etcd snapshot cadence; confirm `https://*.lab` on LAN + Tailscale without interim router for Homelab |
 
 **Deliberately later:** Prometheus / Grafana / Discord alert wiring — **Phase 5** (yavin is 16 GB; bootstrap debugging uses `connect/` + k9s + talosctl). Do **not** pull full metrics stack forward.
 
@@ -163,13 +157,15 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [x] 1Password Connect + ESO; seed once (`onepassword` + `external-secrets`)  
 - [x] Argo CD → `clusters/prd` (app-of-apps root; UI now `https://argocd.lab`)  
 - [x] Envoy + cert-manager; LE wildcard `*.lab.jacobdrury.com` (VIP `192.168.5.21`)  
-- [ ] **Shared MariaDB** — `platform/mariadb/`; first consumer Uptime Kuma  
+- [x] **Shared MariaDB** — `platform/mariadb/`; Uptime Kuma consumer  
 - [ ] **Shared CNPG Postgres** — one lab `Cluster`, many DBs; migrate Authentik off dedicated `authentik-pg`  
-- [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire homelab02 routes when stable  
-- [ ] **Transitional HTTPRoutes** — Envoy proxies to current VMs/LXCs (`jellyfin.lab` → arr, etc.); DNS A → Envoy; swap backend to k8s Service later with **no client URL change**  
-- [ ] **Homepage** via Argo — **first** app; catalog `*.lab` links (Uptime Kuma next)  
+- [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire Homelab route from homelab02 when stable  
+- [x] **Transitional HTTPRoutes** — Envoy proxies to current VMs/LXCs (`jellyfin.lab` → arr, etc.); DNS A → Envoy  
+- [x] **Homepage** via Argo (+ Uptime Kuma)  
+- [x] **Authentik** at `auth.lab`  
+- [x] **metrics-server**  
 - [ ] etcd snapshot cadence (single-node DR until expansion)  
-- [ ] Confirm GitOps + CSI + **`https://*.lab`** (incl. proxied legacy backends) on LAN and away via Tailscale  
+- [ ] Confirm GitOps + CSI + **`https://*.lab`** (incl. proxied legacy backends) on LAN and away via Tailscale (Homelab via k8s Connector)  
 
 **Defer:** Prometheus / Grafana / Discord alerts → [Phase 5](#phase-5--hardening). Bootstrap troubleshooting: **`connect/`**, k9s, talosctl (no early metrics stack on 16 GB yavin).
 

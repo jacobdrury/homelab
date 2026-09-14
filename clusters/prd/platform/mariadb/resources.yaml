@@ -46,7 +46,8 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: ensure
-          image: docker.io/bitnami/mariadb:13.0.1
+          # Match Bitnami chart 27.3.0 default (tag 13.0.1 does not exist on Docker Hub).
+          image: registry-1.docker.io/bitnami/mariadb:latest
           env:
             - name: MARIADB_ROOT_PASSWORD
               valueFrom:

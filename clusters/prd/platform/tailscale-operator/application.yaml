@@ -1,0 +1,39 @@
+# Tailscale Kubernetes operator — subnet router for Homelab VLAN.
+# Chart: https://pkgs.tailscale.com/helmcharts (tailscale-operator)
+# Auth: OAuth via ExternalSecret → Secret operator-oauth (chart default).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tailscale-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  sources:
+    - repoURL: https://pkgs.tailscale.com/helmcharts
+      chart: tailscale-operator
+      targetRevision: 1.102.3
+      helm:
+        releaseName: tailscale-operator
+        valueFiles:
+          - $values/clusters/prd/platform/tailscale-operator/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      path: clusters/prd/platform/tailscale-operator
+      directory:
+        include: resources.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tailscale
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

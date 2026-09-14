@@ -1,12 +1,11 @@
 locals {
-  auto_approver_routes = merge(
-    { (local.lab.networks.homelab.route_cidr) = ["autogroup:member"] },
-    var.enable_drury_subnet_route ? { (local.lab.networks.drury.route_cidr) = ["autogroup:member"] } : {},
-  )
-
+  # Operator OAuth client must be tagged tag:k8s-operator in Tailscale admin
+  # (Devices write + Auth Keys write). Connector nodes use tag:k8s.
+  # https://tailscale.com/docs/kubernetes-operator/install-operator
   tailnet_policy = {
     tagOwners = {
-      "tag:k8s" = ["autogroup:admin"]
+      "tag:k8s-operator" = ["autogroup:admin"]
+      "tag:k8s"          = ["tag:k8s-operator", "autogroup:admin"]
     }
 
     grants = [
