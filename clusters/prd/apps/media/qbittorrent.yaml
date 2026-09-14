@@ -20,12 +20,12 @@ spec:
     template:
       engineVersion: v2
       data:
-        wg0.conf: "{{ .wg0conf }}"
+        wg0.conf: "{{ .config }}"
   data:
-    - secretKey: wg0conf
+    - secretKey: config
       remoteRef:
         key: prd Mullvad WireGuard
-        property: wg0.conf
+        property: password
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

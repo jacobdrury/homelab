@@ -5,7 +5,7 @@ Jellyfin remains on the arr VM via transitional routes.
 
 ## Prerequisites
 
-1. **1Password** Homelab item **`prd Mullvad WireGuard`** with field **`wg0.conf`** (full Mullvad WireGuard config). Prefer adding `Table = off` under `[Interface]` (the sidecar also injects this if missing) so the tunnel does not steal the pod default route.
+1. **1Password** Homelab item **`prd Mullvad WireGuard`** — paste the full Mullvad WireGuard config into the **password** field. Prefer adding `Table = off` under `[Interface]` (the sidecar also injects this if missing).
 2. Scarif media tree owned for NFS squash: `nobody:users` (`99:100`) — see [media.md](../../../docs/architecture/media.md).
 
 ## Config copy (not a fresh install)
