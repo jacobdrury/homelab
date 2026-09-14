@@ -27,6 +27,6 @@ Envoy → Service (native HA + OIDC custom component). **Not** Authentik Proxy. 
 ## Notes
 
 - No USB radios; ClusterIP only — UniFi **Homelab → IoT** (device APIs) and **IoT → Envoy `.21:80/443`** (webhooks).
-- Image pinned (`2025.4.4`); bump deliberately.
+- Image pinned (`2026.8.3`); bump deliberately (skip `2026.9.1` until listen-addr fix).
 - Homepage + Uptime Kuma use `homeassistant.lab.jacobdrury.com`.
 - Legacy HA OS VM 105 @ `192.168.2.8` — stop / `onboot=0` after soak.
