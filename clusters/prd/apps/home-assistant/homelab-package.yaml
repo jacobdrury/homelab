@@ -39,4 +39,3 @@ data:
       features:
         # Re-link SSO → local jacob (owner). Set false again after one successful Authentik login.
         automatic_user_linking: true
-        require_existing_user: true
