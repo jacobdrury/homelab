@@ -1,0 +1,188 @@
+# Shared CNPG Postgres for *arr apps (Sonarr ×2, Prowlarr). One Cluster, many DBs.
+# 1Password Homelab item: "prd Media Postgres" (username/password).
+# Service: media-pg-rw.media.svc.cluster.local:5432
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: media-pg-owner
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipResourceHealthCheck=true
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: media-pg-owner
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      type: kubernetes.io/basic-auth
+      data:
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: 33dy2vrkp4sa4iwt73oao5f3qa
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: 33dy2vrkp4sa4iwt73oao5f3qa
+        property: password
+---
+# Single-instance CNPG on scarif-iscsi (same pattern as authentik-pg).
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: media-pg
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.6
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: media
+      owner: media
+      secret:
+        name: media-pg-owner
+  storage:
+    size: 20Gi
+    storageClass: scarif-iscsi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+---
+# Per-app DBs (Servarr needs main + log each). Underscores avoid SQL quoting pain.
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: sonarr-anime-main
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  name: sonarr_anime_main
+  owner: media
+  cluster:
+    name: media-pg
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: sonarr-anime-log
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  name: sonarr_anime_log
+  owner: media
+  cluster:
+    name: media-pg
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: sonarr-tv-main
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  name: sonarr_tv_main
+  owner: media
+  cluster:
+    name: media-pg
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: sonarr-tv-log
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  name: sonarr_tv_log
+  owner: media
+  cluster:
+    name: media-pg
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: prowlarr-main
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  name: prowlarr_main
+  owner: media
+  cluster:
+    name: media-pg
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: prowlarr-log
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  name: prowlarr_log
+  owner: media
+  cluster:
+    name: media-pg
+---
+# Init helper: upsert Postgres* into existing *arr config.xml from media-pg-owner.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arr-postgres-config
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  ensure-postgres-config.py: |
+    #!/usr/bin/env python3
+    import os
+    import sys
+    import xml.etree.ElementTree as ET
+
+    conf = os.environ.get("CONFIG_XML", "/config/config.xml")
+    host = os.environ["POSTGRES_HOST"]
+    port = os.environ.get("POSTGRES_PORT", "5432")
+    user = os.environ["POSTGRES_USER"]
+    password = os.environ["POSTGRES_PASSWORD"]
+    main_db = os.environ["POSTGRES_MAIN_DB"]
+    log_db = os.environ["POSTGRES_LOG_DB"]
+
+    if not os.path.exists(conf):
+        print(f"missing {conf}; app will create it on first boot", file=sys.stderr)
+        sys.exit(0)
+
+    tree = ET.parse(conf)
+    root = tree.getroot()
+
+    def upsert(tag, value):
+        el = root.find(tag)
+        if el is None:
+            el = ET.SubElement(root, tag)
+        el.text = value
+
+    upsert("PostgresHost", host)
+    upsert("PostgresPort", port)
+    upsert("PostgresUser", user)
+    upsert("PostgresPassword", password)
+    upsert("PostgresMainDb", main_db)
+    upsert("PostgresLogDb", log_db)
+
+    tree.write(conf, encoding="utf-8", xml_declaration=True)
+    print(f"postgres config ensured in {conf} -> {host}/{main_db}")

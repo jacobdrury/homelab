@@ -2,7 +2,7 @@
 
 Jellyfin, Sonarr ×2, Prowlarr, qBittorrent on k8s; libraries/downloads on Unraid NFS. Jellyfin GPU: [gpu](gpu.md).
 
-**Phase 3 (in progress):** download stack GitOps under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) — **config copied from Proxmox arr VM** (not a fresh install). Jellyfin remains transitional → arr until a later cutover.
+**Phase 3 (in progress):** download stack GitOps under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) — **config copied from Proxmox arr VM** (not a fresh install). Jellyfin remains transitional → arr until a later cutover. *arr apps use shared **CNPG `media-pg`** (Postgres), not SQLite.
 
 ## NFS UID fix (VM 101 `arr` + k8s)
 
@@ -64,6 +64,18 @@ After copy:
 2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080`
 3. Prowlarr apps → `sonarr-anime` / `sonarr-tv` in-cluster Services
 4. Media mounts keep Compose paths: `/home/data/anime`, `/home/data/tv`, `/home/data/downloads`
+
+## Postgres (*arr)
+
+Shared CNPG Cluster **`media-pg`** in namespace `media` (iSCSI). 1Password **`prd Media Postgres`**.
+
+| App | Main DB | Log DB |
+|-----|---------|--------|
+| Sonarr anime | `sonarr_anime_main` | `sonarr_anime_log` |
+| Sonarr TV | `sonarr_tv_main` | `sonarr_tv_log` |
+| Prowlarr | `prowlarr_main` | `prowlarr_log` |
+
+Init containers upsert `Postgres*` into each app’s `config.xml`. SQLite → Postgres one-shot: [`migrate-arr-to-postgres.sh`](../../clusters/prd/apps/media/scripts/migrate-arr-to-postgres.sh). qBittorrent stays on disk (no Postgres). Backups of these DBs are **not** done by Servarr — rely on CNPG / volume snapshots later.
 
 ## qBittorrent + VPN
 

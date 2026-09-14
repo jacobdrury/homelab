@@ -1,4 +1,5 @@
 # Prowlarr — config copied from arr VM.
+# Postgres: media-pg (prowlarr_main / prowlarr_log).
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -40,6 +41,42 @@ spec:
           effect: NoSchedule
       securityContext:
         fsGroup: 100
+      initContainers:
+        - name: ensure-postgres-config
+          image: docker.io/library/alpine:3.20.3@sha256:029a752048e32e843bd6defe3841186fb8d19a28dae8ec287f433bb9d6d1ad85
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              apk add --no-cache python3 >/dev/null
+              python3 /scripts/ensure-postgres-config.py
+              chown -R 99:100 /config
+          env:
+            - name: POSTGRES_HOST
+              value: media-pg-rw.media.svc.cluster.local
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_MAIN_DB
+              value: prowlarr_main
+            - name: POSTGRES_LOG_DB
+              value: prowlarr_log
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: media-pg-owner
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: media-pg-owner
+                  key: password
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: pg-scripts
+              mountPath: /scripts
+              readOnly: true
       containers:
         - name: prowlarr
           image: lscr.io/linuxserver/prowlarr:2.4.0@sha256:a8d9366f65212153924de8a1b92a24f3be678b650c7e0cbb0606d4651d2b34ec
@@ -72,6 +109,10 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: prowlarr-config
+        - name: pg-scripts
+          configMap:
+            name: arr-postgres-config
+            defaultMode: 0555
 ---
 apiVersion: v1
 kind: Service
@@ -85,4 +126,3 @@ spec:
     - name: http
       port: 9696
       targetPort: http
-# HTTPRoute at cutover — httproutes.yaml
