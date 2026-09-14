@@ -30,6 +30,14 @@ Config-only OpenTofu for the LXC at `192.168.1.11` (block lists, domains, upstre
 
 Tailnet DNS + subnet route approval in Git. Split DNS sends `lab.jacobdrury.com` → **Cloudflare** (`1.1.1.1`); enables routes on **homelab02** (interim subnet router). One-time device bootstrap: [tailscale/README.md](tailscale/README.md).
 
+## Uptime Kuma (`infrastructure/uptime-kuma/`)
+
+HTTP monitors + public **Lab** status page (`/status/default`). Plan/apply port-forward past Authentik. Details: [uptime-kuma/README.md](uptime-kuma/README.md).
+
+```bash
+moon run uptime-kuma:apply
+```
+
 ## Talos (`infrastructure/talos/`)
 
 Bare-metal bootstrap under **`talos/prd/`** (future: `talos/stg/`). Patches + Image Factory schematic in Git; `secrets.yaml` / `generated/` gitignored. See [talos/prd/README.md](talos/prd/README.md).
@@ -53,6 +61,7 @@ moon run dns:apply
 moon run unifi:apply
 moon run pihole:apply
 moon run tailscale:apply
+moon run uptime-kuma:apply
 ```
 
 New OpenTofu project: tag `opentofu` and add `env` entries:

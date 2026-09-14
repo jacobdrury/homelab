@@ -1,0 +1,39 @@
+id: 'uptime-kuma'
+layer: 'tool'
+stack: 'infrastructure'
+
+project:
+  name: 'uptime-kuma'
+  description: 'Uptime Kuma monitors + Lab status page (API via port-forward)'
+
+tags:
+  - opentofu
+
+# Admin login still works for the Socket.IO API when UI auth is disabled.
+# Endpoint is set by with-port-forward.sh (not the public Authentik URL).
+env:
+  TOFU_SECRET_UPTIMEKUMA_USERNAME: 'op://Homelab/Uptime Kuma/username'
+  TOFU_SECRET_UPTIMEKUMA_PASSWORD: 'op://Homelab/Uptime Kuma/password'
+
+tasks:
+  # Override inherited plan/apply so tofu reaches Kuma behind Authentik.
+  plan:
+    script: |
+      # shellcheck source=/dev/null
+      source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
+      exec ./with-port-forward.sh tofu plan -out=.tofu.plan
+    inputs:
+      - 'with-port-forward.sh'
+    options:
+        mergeInputs: append
+
+  apply:
+    script: |
+      # shellcheck source=/dev/null
+      source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
+      test -f .tofu.plan || { echo "missing .tofu.plan — run plan first" >&2; exit 1; }
+      exec ./with-port-forward.sh tofu apply .tofu.plan
+    inputs:
+      - 'with-port-forward.sh'
+    options:
+        mergeInputs: append

@@ -92,6 +92,14 @@ config:
             description: Status monitors (Authentik proxy)
             icon: uptime-kuma.png
             siteMonitor: https://uptime.lab.jacobdrury.com
+            widget:
+              type: uptimekuma
+              url: https://uptime.lab.jacobdrury.com/status/default
+              slug: default
+              fields:
+                - up
+                - down
+                - uptime
 
     - Media:
         - Jellyfin:

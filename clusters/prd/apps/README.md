@@ -13,4 +13,4 @@ Each app: `application.yaml` + optional `values.yaml` / `resources.yaml` (HTTPRo
 
 **Authentik:** create Homelab 1Password items `prd Authentik secret key`, `prd Authentik Postgres`, and (for Argo SSO) `prd Argo CD OIDC` (password = client secret). Directory config is **blueprints** under this app (not OpenTofu). Merge Git, wait for sync. Initial admin: `https://auth.lab.jacobdrury.com/setup`. Add your user to Authentik group **Argo CD Admins** for Argo SSO.
 
-**Uptime Kuma:** `https://uptime.lab.jacobdrury.com` is Authentik Proxy (Envoy → authentik-server → Kuma). DB on **shared MariaDB** (`mariadb.mariadb.svc`). After first setup, **Settings → Security → Disable Auth**. 1Password: `prd Uptime Kuma MariaDB`.
+**Uptime Kuma:** `https://uptime.lab.jacobdrury.com` is Authentik Proxy (Envoy → authentik-server → Kuma). DB on **shared MariaDB** (`mariadb.mariadb.svc`). After first setup, **Settings → Security → Disable Auth**. 1Password: `prd Uptime Kuma MariaDB` (DB), `Uptime Kuma` (admin API for OpenTofu). Monitors + Lab status page: `infrastructure/uptime-kuma/` → `moon run uptime-kuma:apply`.

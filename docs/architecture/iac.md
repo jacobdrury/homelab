@@ -14,6 +14,7 @@ Locked leans: [decisions](../decisions.md). Apply tooling: [local-tools](../setu
 | UniFi networks + firewall + selected switch ports | **OpenTofu** | `infrastructure/unifi/` | `moon run unifi:apply` |
 | Pi-hole policy (lists, domains, upstreams, local `*.homelab.com`, zone forward) | **OpenTofu** | `infrastructure/pihole/` | `moon run pihole:apply` |
 | Tailscale (policy, DNS, routes, keys, device settings) | **OpenTofu** | `infrastructure/tailscale/` | `moon run tailscale:apply` |
+| Uptime Kuma monitors + Lab status page | **OpenTofu** | `infrastructure/uptime-kuma/` | `moon run uptime-kuma:apply` (port-forward; see README) |
 | Talos machine / cluster config | **OpenTofu** (+ generated YAML) | `infrastructure/talos/prd/` | TBD at Phase 2 |
 | Kubernetes platform + apps | **Helm** via **Argo CD** | `apps/`, `clusters/prd/` | Git push → sync |
 | Authentik directory (OIDC apps, groups, …) | **Blueprints** via Authentik Helm | `clusters/prd/apps/authentik/` | Argo → worker applies |
