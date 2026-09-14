@@ -1,0 +1,216 @@
+# Reconciles pihole-policy ConfigMap into the local Pi-hole v6 API (lists + domains).
+# Loops so ConfigMap updates apply without OpenTofu dual-target.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pihole-sync
+  namespace: pihole
+  labels:
+    app.kubernetes.io/name: pihole
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  sync.py: |
+    #!/usr/bin/env python3
+    import json
+    import os
+    import sys
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    BASE = os.environ.get("PIHOLE_URL", "http://127.0.0.1").rstrip("/")
+    POLICY_PATH = os.environ.get("POLICY_PATH", "/config/policy.json")
+    PASSWORD = os.environ.get("PIHOLE_PASSWORD", "")
+    INTERVAL = int(os.environ.get("SYNC_INTERVAL_SECONDS", "60"))
+
+    def http_json(method, path, body=None, sid=None):
+        data = None
+        headers = {"Accept": "application/json"}
+        if body is not None:
+            data = json.dumps(body).encode()
+            headers["Content-Type"] = "application/json"
+        if sid:
+            headers["sid"] = sid
+        req = urllib.request.Request(f"{BASE}{path}", data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                raw = resp.read().decode() or "{}"
+                return resp.status, json.loads(raw)
+        except urllib.error.HTTPError as exc:
+            raw = exc.read().decode() if exc.fp else ""
+            try:
+                payload = json.loads(raw) if raw else {}
+            except json.JSONDecodeError:
+                payload = {"error": raw}
+            return exc.code, payload
+
+    def wait_ready():
+        for _ in range(90):
+            try:
+                status, _ = http_json("GET", "/api/auth")
+                if status in (200, 401):
+                    return
+            except Exception:
+                pass
+            time.sleep(2)
+        raise SystemExit("pihole API not ready")
+
+    def login():
+        status, payload = http_json("POST", "/api/auth", {"password": PASSWORD})
+        if status != 200:
+            raise RuntimeError(f"auth failed: {status} {payload}")
+        sid = (payload.get("session") or {}).get("sid") or payload.get("sid")
+        if not sid:
+            raise RuntimeError(f"auth missing sid: {payload}")
+        return sid
+
+    def load_policy():
+        with open(POLICY_PATH, encoding="utf-8") as fh:
+            return json.load(fh)
+
+    def sync_lists(sid, policy):
+        desired = {}
+        for item in policy.get("block_lists") or []:
+            desired[(item["address"], "block")] = item
+        for item in policy.get("allow_lists") or []:
+            desired[(item["address"], "allow")] = item
+
+        status, payload = http_json("GET", "/api/lists", sid=sid)
+        if status != 200:
+            raise RuntimeError(f"GET /api/lists: {status} {payload}")
+        current = {(row["address"], row.get("type", "block")): row for row in payload.get("lists") or []}
+
+        changed = False
+        for key, item in desired.items():
+            address, list_type = key
+            body = {
+                "address": address,
+                "type": list_type,
+                "enabled": bool(item.get("enabled", True)),
+                "comment": item.get("comment") or "",
+            }
+            if key not in current:
+                st, resp = http_json("POST", "/api/lists", body, sid=sid)
+                if st not in (200, 201):
+                    raise RuntimeError(f"POST list {address}: {st} {resp}")
+                changed = True
+                continue
+            cur = current[key]
+            if bool(cur.get("enabled", True)) != body["enabled"] or (cur.get("comment") or "") != body["comment"]:
+                enc = urllib.parse.quote(address, safe="")
+                st, resp = http_json("PUT", f"/api/lists/{enc}/{list_type}", body, sid=sid)
+                if st != 200:
+                    # Fallback: delete + add
+                    http_json("DELETE", f"/api/lists/{enc}/{list_type}", sid=sid)
+                    st2, resp2 = http_json("POST", "/api/lists", body, sid=sid)
+                    if st2 not in (200, 201):
+                        raise RuntimeError(f"replace list {address}: {st}/{st2} {resp}/{resp2}")
+                changed = True
+
+        for key in list(current):
+            if key in desired:
+                continue
+            address, list_type = key
+            enc = urllib.parse.quote(address, safe="")
+            st, resp = http_json("DELETE", f"/api/lists/{enc}/{list_type}", sid=sid)
+            if st not in (200, 204):
+                raise RuntimeError(f"DELETE list {address}: {st} {resp}")
+            changed = True
+        return changed
+
+    def sync_domains(sid, policy):
+        desired = {}
+        for item in policy.get("domains") or []:
+            key = (item["domain"], item["type"], item["kind"])
+            desired[key] = item
+
+        status, payload = http_json("GET", "/api/domains", sid=sid)
+        if status != 200:
+            raise RuntimeError(f"GET /api/domains: {status} {payload}")
+
+        current = {}
+        domains = payload.get("domains") or payload
+        if isinstance(domains, dict):
+            for list_type, kinds in domains.items():
+                if not isinstance(kinds, dict):
+                    continue
+                for kind, rows in kinds.items():
+                    for row in rows or []:
+                        current[(row["domain"], list_type, kind)] = row
+        elif isinstance(domains, list):
+            for row in domains:
+                current[(row["domain"], row.get("type"), row.get("kind") or row.get("match_type"))] = row
+
+        changed = False
+        for key, item in desired.items():
+            domain, list_type, kind = key
+            body = {
+                "domain": domain,
+                "comment": item.get("comment") or "",
+                "enabled": bool(item.get("enabled", True)),
+            }
+            if key not in current:
+                st, resp = http_json("POST", f"/api/domains/{list_type}/{kind}", body, sid=sid)
+                if st not in (200, 201):
+                    raise RuntimeError(f"POST domain {domain}: {st} {resp}")
+                changed = True
+                continue
+            cur = current[key]
+            if bool(cur.get("enabled", True)) != body["enabled"] or (cur.get("comment") or "") != body["comment"]:
+                enc = urllib.parse.quote(domain, safe="")
+                st, resp = http_json("PUT", f"/api/domains/{list_type}/{kind}/{enc}", body, sid=sid)
+                if st != 200:
+                    http_json("DELETE", f"/api/domains/{list_type}/{kind}/{enc}", sid=sid)
+                    st2, resp2 = http_json("POST", f"/api/domains/{list_type}/{kind}", body, sid=sid)
+                    if st2 not in (200, 201):
+                        raise RuntimeError(f"replace domain {domain}: {st}/{st2} {resp}/{resp2}")
+                changed = True
+
+        for key in list(current):
+            if key in desired:
+                continue
+            domain, list_type, kind = key
+            if list_type not in ("allow", "deny") or kind not in ("exact", "regex"):
+                continue
+            enc = urllib.parse.quote(domain, safe="")
+            st, resp = http_json("DELETE", f"/api/domains/{list_type}/{kind}/{enc}", sid=sid)
+            if st not in (200, 204):
+                raise RuntimeError(f"DELETE domain {domain}: {st} {resp}")
+            changed = True
+        return changed
+
+    def gravity(sid):
+        st, resp = http_json("POST", "/api/action/gravity", sid=sid)
+        if st not in (200, 201, 202):
+            raise RuntimeError(f"gravity: {st} {resp}")
+
+    def once():
+        wait_ready()
+        if not PASSWORD:
+            raise SystemExit("PIHOLE_PASSWORD unset")
+        sid = login()
+        policy = load_policy()
+        lists_changed = sync_lists(sid, policy)
+        domains_changed = sync_domains(sid, policy)
+        if lists_changed or domains_changed:
+            print("policy changed — running gravity", flush=True)
+            gravity(sid)
+        else:
+            print("policy already in sync", flush=True)
+
+    def main():
+        last_mtime = None
+        while True:
+            try:
+                mtime = os.path.getmtime(POLICY_PATH)
+                if last_mtime != mtime:
+                    once()
+                    last_mtime = mtime
+            except Exception as exc:
+                print(f"sync error: {exc}", file=sys.stderr, flush=True)
+            time.sleep(INTERVAL)
+
+    if __name__ == "__main__":
+        main()

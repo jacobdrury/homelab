@@ -1,0 +1,133 @@
+# Stateless Pi-hole — Deployment replicas share ConfigMaps; gravity lives on emptyDir per pod.
+# DNS: LoadBalancer 192.168.5.22 · Admin: ClusterIP → Envoy/Authentik (not nginx Ingress).
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pihole
+  namespace: pihole
+  labels:
+    app.kubernetes.io/name: pihole
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pihole
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pihole
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: pihole
+                topologyKey: kubernetes.io/hostname
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: pihole
+          image: docker.io/pihole/pihole:2026.07.2@sha256:f7d1be836e3bc608b56d82fc9904f5a831cdfbc0dc9c6d58f94e4c985c70038b
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: pihole-settings
+          env:
+            - name: FTLCONF_webserver_api_password
+              valueFrom:
+                secretKeyRef:
+                  name: pihole
+                  key: password
+          readinessProbe:
+            httpGet:
+              path: /admin/
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /admin/
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: etc-pihole
+              mountPath: /etc/pihole
+            - name: dnsmasq
+              mountPath: /etc/dnsmasq.d
+              readOnly: true
+        - name: config-sync
+          image: docker.io/library/python:3.12.7-alpine@sha256:5049c050bdc68575a10bcb1885baa0689b6c15152d8a56a7e399fb49f783bf98
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/sync/sync.py"]
+          env:
+            - name: PIHOLE_URL
+              value: http://127.0.0.1
+            - name: POLICY_PATH
+              value: /config/policy.json
+            - name: SYNC_INTERVAL_SECONDS
+              value: "60"
+            - name: PIHOLE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pihole
+                  key: password
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: sync
+              mountPath: /sync
+              readOnly: true
+            - name: policy
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: etc-pihole
+          emptyDir: {}
+        - name: dnsmasq
+          configMap:
+            name: pihole-dnsmasq
+        - name: policy
+          configMap:
+            name: pihole-policy
+        - name: sync
+          configMap:
+            name: pihole-sync
+            defaultMode: 0555

@@ -1,0 +1,28 @@
+# Pi-hole — LAN DNS / ad blocking. Stateless Deployment; ConfigMaps are SoT.
+# DNS VIP 192.168.5.22 via Cilium L2. Admin via Envoy + Authentik (after cutover).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pihole
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "14"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jacobdrury/homelab.git
+    targetRevision: main
+    path: clusters/prd/apps/pihole
+    directory:
+      include: '{namespace,secret,configmap-settings,configmap-policy,configmap-dnsmasq,configmap-sync,pihole,services}.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pihole
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

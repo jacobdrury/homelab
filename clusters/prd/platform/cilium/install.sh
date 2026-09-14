@@ -21,7 +21,7 @@ helm upgrade --install cilium cilium/cilium \
 
 kubectl apply -f "${ROOT}/resources.yaml"
 
-echo "OK — Cilium ${CILIUM_VERSION} (L2 LB pool 192.168.5.21)"
+echo "OK — Cilium ${CILIUM_VERSION} (L2 LB: Pi-hole DNS 192.168.5.22; Envoy stays host .21)"
 kubectl -n kube-system get pods -l app.kubernetes.io/part-of=cilium -o wide
 kubectl get ciliumloadbalancerippool,ciliuml2announcementpolicy
 kubectl get nodes -o wide

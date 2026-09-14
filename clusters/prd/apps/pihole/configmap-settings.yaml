@@ -1,0 +1,20 @@
+# FTL / runtime settings — loaded via envFrom. Changing these requires a pod rollout.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pihole-settings
+  namespace: pihole
+  labels:
+    app.kubernetes.io/name: pihole
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  TZ: America/Chicago
+  FTLCONF_dns_listeningMode: ALL
+  # Semicolon-separated upstreams (Pi-hole v6 FTLCONF).
+  FTLCONF_dns_upstreams: 8.8.8.8;8.8.4.4
+  FTLCONF_misc_etc_dnsmasq_d: "true"
+  # Query log is per-pod / ephemeral — fine for HA DNS.
+  FTLCONF_dns_queryLogging: "true"
+  # API writes from config-sync sidecar (same password as web until Authentik cutover).
+  FTLCONF_webserver_api_app_sudo: "true"

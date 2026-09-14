@@ -1,0 +1,22 @@
+# dnsmasq snippets — mounted at /etc/dnsmasq.d (FTLCONF_misc_etc_dnsmasq_d=true).
+# *.lab zone forward to Cloudflare; transitional *.homelab.com local A records.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pihole-dnsmasq
+  namespace: pihole
+  labels:
+    app.kubernetes.io/name: pihole
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  01-lab-zone.conf: |
+    # Authoritative *.lab.jacobdrury.com lives in Cloudflare (infrastructure/dns/).
+    server=/lab.jacobdrury.com/1.1.1.1
+    server=/lab.jacobdrury.com/1.0.0.1
+  02-local-dns.conf: |
+    # Transitional LAN names — retire as apps move to *.lab.
+    host-record=pihole.homelab.com,192.168.1.11
+    host-record=proxmox.homelab.com,192.168.1.12
+    host-record=docker.homelab.com,192.168.1.217
+    host-record=home-assistant.homelab.com,192.168.2.8

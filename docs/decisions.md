@@ -11,7 +11,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Cluster scale-out | **Expand in place** (join CPs to existing etcd) when mini PCs arrive — **not** a full cluster rebuild |
 | Cluster API endpoint | **`k8s.lab.jacobdrury.com`** — stable DNS from first bootstrap; VIP or DNS update at 3 CPs |
 | Homelab VLAN | **Before Talos bootstrap** — UniFi network name **`Homelab`**, VLAN **5**, `192.168.5.0/24` (reuses former Work VLAN; Teleport holds `.6`) |
-| IaC | **GitOps first** (Helm/Argo/blueprints); **OpenTofu only** when no GitOps-native path (DNS, UniFi, Pi-hole, Tailscale, Talos); secrets via 1Password — [iac](architecture/iac.md) · [agents](architecture/agents.md#gitops-first-opentofu-when-needed) |
+| IaC | **GitOps first** (Helm/Argo/blueprints/ConfigMaps); **OpenTofu only** when no GitOps-native path (DNS, UniFi, Tailscale, Talos; Pi-hole LXC until cutover); secrets via 1Password — [iac](architecture/iac.md) · [agents](architecture/agents.md#gitops-first-opentofu-when-needed) |
 | Infra DNS | `*.lab.jacobdrury.com` in Cloudflare (OpenTofu) — see [networking](architecture/networking.md#infra-dns) |
 | yavin networking | **USB 2.5G** (UGREEN RTL8156BG) **primary**; onboard **1G** **secondary**; pin interfaces by MAC in Talos machine config |
 | Cluster availability | **No HA** until 3 CPs; single-node downtime acceptable (matches today) |
@@ -40,8 +40,8 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Homelab firewall | **Zone-Based Firewall** (UniFi OS 9+): Drury → Homelab allow all; **Homelab → IoT allow** (HA devices + return); **IoT → Homelab Envoy `.21:80/443`** (webhooks); Homelab → Guest/Camera deny; Homelab → Drury = Pi-hole DNS (+ transitional Envoy); IoT/Isolated → Pi-hole DNS — [networking](architecture/networking.md) |
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
-| Pi-hole IaC | OpenTofu under `infrastructure/pihole/` — config in Git; migrate **deployment** to k8s last |
-| DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; **LAN ad blocking**; `*.lab` stays in Cloudflare |
+| DNS app | **Pi-hole** in k8s — **Deployment ×2**, ConfigMaps SoT, Cilium L2 VIP `.22`; migrate **last** from LXC; Authentik Proxy for UI |
+| Pi-hole IaC | **k8s:** ConfigMaps in GitOps. **LXC (until cutover):** OpenTofu `infrastructure/pihole/` — then retire |
 | Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` (`arr.homelab.com` retired Sep 2026) |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
 | Apps (migrate order) | ~~*arr + qBit → Jellyfin → HA~~ **done** → **Pi-hole last**. **URLs first:** Envoy transitional routes; swap backends at cutover. **Homepage** = first GitOps app after Envoy |

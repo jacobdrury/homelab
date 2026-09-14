@@ -14,6 +14,7 @@ Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live
 | [GPU](architecture/gpu.md) | Jellyfin encode (optional; direct play OK) |
 | [Media / VPN](architecture/media.md) | *arr + qBit + Jellyfin on k8s; Mullvad for peers, UI off-VPN |
 | [Home Assistant](architecture/home-assistant.md) | Container 2026.8.3 + CNPG + Authentik OIDC (groups → owner) |
+| [Pi-hole](architecture/pihole.md) | Stateless Deployment ×2; ConfigMaps; LB VIP `.22`; Authentik UI |
 | [Games (ATM10)](architecture/games.md) | Minecraft server + friend access via Tailscale `.ts.net` |
 | [Secrets](architecture/secrets.md) | 1Password → cluster |
 | [Agent access](architecture/agents.md) | Cursor / AI operators on the tailnet |

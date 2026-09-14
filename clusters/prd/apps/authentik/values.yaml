@@ -22,6 +22,7 @@ blueprints:
     - authentik-blueprint-uptime
     - authentik-blueprint-media
     - authentik-blueprint-homeassistant
+    - authentik-blueprint-pihole
 
 global:
   volumes:

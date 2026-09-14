@@ -1,0 +1,26 @@
+# Cilium L2 for Pi-hole DNS VIP only — not Envoy .21 (hostNetwork on yavin).
+# Safe here: LAN clients hit .22 for UDP/TCP 53; Tailscale split DNS uses Cloudflare,
+# and pihole.lab UI goes Envoy .21 → Authentik → ClusterIP (never Tailscale → L2 VIP).
+# nodeSelector empty so the VIP can announce from any node (CP or worker) when peers are down.
+---
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: pihole-dns
+spec:
+  blocks:
+    - cidr: 192.168.5.22/32
+  serviceSelector:
+    matchLabels:
+      lb-pool: pihole-dns
+---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: pihole-dns
+spec:
+  loadBalancerIPs: true
+  interfaces:
+    - ^enp
+    - ^eth
+  nodeSelector: {}

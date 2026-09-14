@@ -1,0 +1,81 @@
+# Policy SoT in Git — config-sync sidecar reconciles into each pod via Pi-hole v6 API.
+# Migrated from infrastructure/pihole/*.auto.tfvars (LXC OpenTofu remains until DHCP cutover).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pihole-policy
+  namespace: pihole
+  labels:
+    app.kubernetes.io/name: pihole
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  policy.json: |
+    {
+      "block_lists": [
+        {
+          "address": "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
+          "enabled": true,
+          "comment": "Migrated from /etc/pihole/adlists.list"
+        },
+        {
+          "address": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/dyndns.txt",
+          "enabled": true,
+          "comment": "Dynamic DNS blocking"
+        },
+        {
+          "address": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/fake.txt",
+          "enabled": true,
+          "comment": "Fake / scam blocking"
+        },
+        {
+          "address": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/gambling.txt",
+          "enabled": true,
+          "comment": "Gambling"
+        },
+        {
+          "address": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/hoster.txt",
+          "enabled": true,
+          "comment": "Badware hoster blocking"
+        },
+        {
+          "address": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.plus.txt",
+          "enabled": true,
+          "comment": "Multi PRO++"
+        },
+        {
+          "address": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/spam-tlds-adblock.txt",
+          "enabled": true,
+          "comment": "Most abused TLDs"
+        },
+        {
+          "address": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.txt",
+          "enabled": true,
+          "comment": "Threat Intelligence Feeds"
+        }
+      ],
+      "allow_lists": [],
+      "domains": [
+        {
+          "domain": "gpt.seemanncomposites.com",
+          "type": "allow",
+          "kind": "exact",
+          "enabled": true,
+          "comment": "Added from Query Log"
+        },
+        {
+          "domain": "mask-h2.icloud.com",
+          "type": "allow",
+          "kind": "exact",
+          "enabled": true,
+          "comment": ""
+        },
+        {
+          "domain": "mask.icloud.com",
+          "type": "allow",
+          "kind": "exact",
+          "enabled": true,
+          "comment": ""
+        }
+      ]
+    }

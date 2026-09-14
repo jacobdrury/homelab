@@ -4,7 +4,7 @@ stack: infrastructure
 
 project:
   name: pihole
-  description: Pi-hole DNS config (LXC now; k8s later)
+  description: Pi-hole DNS config (LXC live; k8s parallel soak)
 
 tags:
   - opentofu

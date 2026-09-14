@@ -72,10 +72,19 @@ networks:
         # Real secondary IP on yavin (Envoy hostNetwork). Not Cilium L2.
         # Phase 4: HA via kube-vip/VRRP — keep this address in app_hosts.
         role: envoy_vip
+      pihole_dns:
+        ip: 192.168.5.22
+        # Cilium L2 LoadBalancer for UDP/TCP 53 only. UI stays app_hosts → Envoy .21.
+        # Not Tailscale-facing (split DNS → Cloudflare). See docs/architecture/pihole.md.
+        role: pihole_dns_vip
+        dns: false # no Cloudflare A — LAN DHCP only
 
 services:
   pihole:
-    host: 192.168.1.11 # LXC on homelab02 · network: drury · migrates to k8s last
+    # LAN DNS VIP after cutover (Cilium L2 LoadBalancer). Keep LXC host until DHCP flips.
+    host: 192.168.1.11 # LXC on homelab02 · Drury · live until cutover
+    dns_vip: 192.168.5.22 # k8s LoadBalancer — parallel soak; not DHCP yet
+    # Reserve .22 in UniFi (DHCP pool overlaps) so a client cannot claim the VIP.
   homeassistant:
     host: 192.168.2.8 # legacy HA OS VM (IoT); live HA is k8s → Envoy .21 — stop when soak done
   proxmox:
