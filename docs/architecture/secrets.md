@@ -32,6 +32,8 @@ App SSO: **`prd Argo CD OIDC`** (password = OAuth client secret) is shared by Au
 
 Databases: **`prd MariaDB`** (Bitnami keys `mariadb-root-password` / `mariadb-password` / `mariadb-replication-password`); per-app items like **`prd Uptime Kuma MariaDB`** (username, password, database).
 
+Homepage widgets: **`prd Homepage media API keys`** (jellyfin / sonarr-anime / sonarr-tv / prowlarr); **`prd Homepage Proxmox API token`** (`root@pam!homepage`); **`prd Homepage Authentik API token`**; **`Unifi API Key (opentofu-homelab)`** (shared with OpenTofu); **`qBittorrent`** (WebUI username/password); plus existing Argo/Unraid/Pi-hole items.
+
 ## Host shell access (SSH / sudo)
 
 Separate from in-cluster secrets. Goal: **stop memorizing per-host passwords**; easy SSH during Phase 3 migrations.

@@ -85,3 +85,123 @@ spec:
       remoteRef:
         key: vezrlczecpu4bkm4tisz5gzqxm
         property: credential
+---
+# Homelab item "prd Homepage media API keys" (jellyfin / sonarr-anime / sonarr-tv / prowlarr).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homepage-media
+  namespace: homepage
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homepage-media
+    creationPolicy: Owner
+  data:
+    - secretKey: jellyfin
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: jellyfin
+    - secretKey: sonarr-anime
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: sonarr-anime
+    - secretKey: sonarr-tv
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: sonarr-tv
+    - secretKey: prowlarr
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: prowlarr
+---
+# Homelab item "qBittorrent" (username / password).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homepage-qbittorrent
+  namespace: homepage
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homepage-qbittorrent
+    creationPolicy: Owner
+  data:
+    - secretKey: username
+      remoteRef:
+        key: kc62r7k7yesqbd27qx3vgcomwe
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: kc62r7k7yesqbd27qx3vgcomwe
+        property: password
+---
+# Homelab item "prd Homepage Proxmox API token" (username = root@pam!homepage).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homepage-proxmox
+  namespace: homepage
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homepage-proxmox
+    creationPolicy: Owner
+  data:
+    - secretKey: username
+      remoteRef:
+        key: cvlyjjjnkwa3wo6vhb6ij5vewa
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: cvlyjjjnkwa3wo6vhb6ij5vewa
+        property: password
+---
+# Homelab item "prd Homepage Authentik API token" (API Token intent for user jacob).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homepage-authentik
+  namespace: homepage
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homepage-authentik
+    creationPolicy: Owner
+  data:
+    - secretKey: api-key
+      remoteRef:
+        key: isf3ugsheo5s6fsb55tecwvlie
+        property: password
+---
+# Homelab item "Unifi API Key (opentofu-homelab)" — Network Integrations API key (same as OpenTofu).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homepage-unifi
+  namespace: homepage
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homepage-unifi
+    creationPolicy: Owner
+  data:
+    - secretKey: api-key
+      remoteRef:
+        key: bqbnkqxcyyg6h72orwebvozdjm
+        property: credential

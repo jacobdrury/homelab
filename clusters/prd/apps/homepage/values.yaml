@@ -41,6 +41,56 @@ env:
       secretKeyRef:
         name: homepage-pihole
         key: api-key
+  - name: HOMEPAGE_VAR_JELLYFIN_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-media
+        key: jellyfin
+  - name: HOMEPAGE_VAR_SONARR_ANIME_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-media
+        key: sonarr-anime
+  - name: HOMEPAGE_VAR_SONARR_TV_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-media
+        key: sonarr-tv
+  - name: HOMEPAGE_VAR_PROWLARR_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-media
+        key: prowlarr
+  - name: HOMEPAGE_VAR_QBITTORRENT_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: homepage-qbittorrent
+        key: username
+  - name: HOMEPAGE_VAR_QBITTORRENT_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: homepage-qbittorrent
+        key: password
+  - name: HOMEPAGE_VAR_PROXMOX_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: homepage-proxmox
+        key: username
+  - name: HOMEPAGE_VAR_PROXMOX_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: homepage-proxmox
+        key: password
+  - name: HOMEPAGE_VAR_AUTHENTIK_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-authentik
+        key: api-key
+  - name: HOMEPAGE_VAR_UNIFI_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-unifi
+        key: api-key
 
 config:
   kubernetes:
@@ -61,6 +111,8 @@ config:
       Media:
         style: column
       Home:
+        style: column
+      Network:
         style: column
       Infrastructure:
         style: column
@@ -83,10 +135,10 @@ config:
                 - healthy
                 - degraded
         - Uptime Kuma:
-            href: https://uptime.lab.jacobdrury.com
+            href: https://uptime.lab.jacobdrury.com/status/default
             description: Status monitors (Authentik proxy)
             icon: uptime-kuma.png
-            siteMonitor: https://uptime.lab.jacobdrury.com
+            siteMonitor: https://uptime.lab.jacobdrury.com/status/default
             widget:
               type: uptimekuma
               # Base URL only — Homepage appends /api/status-page/<slug>.
@@ -102,34 +154,104 @@ config:
             description: SSO / IdP
             icon: authentik.png
             siteMonitor: https://auth.lab.jacobdrury.com
+            widget:
+              type: authentik
+              # In-cluster API; token needs view User + Event (admin jacob).
+              url: http://authentik-server.authentik.svc.cluster.local
+              key: "{{HOMEPAGE_VAR_AUTHENTIK_KEY}}"
+              version: 2
+              fields:
+                - users
+                - loginsLast24H
+                - failedLoginsLast24H
+                - authorizationsLast24H
 
     - Media:
         - Jellyfin:
             href: https://jellyfin.lab.jacobdrury.com
             description: Media (transitional → arr)
             icon: jellyfin.png
+            widget:
+              type: jellyfin
+              url: https://jellyfin.lab.jacobdrury.com
+              key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
+              enableBlocks: true
+              enableNowPlaying: true
+              fields:
+                - series
+                - episodes
         - qBittorrent:
             href: https://qbittorrent.lab.jacobdrury.com
             description: Downloads (transitional → arr)
             icon: qbittorrent.png
+            widget:
+              type: qbittorrent
+              url: https://qbittorrent.lab.jacobdrury.com
+              username: "{{HOMEPAGE_VAR_QBITTORRENT_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_QBITTORRENT_PASSWORD}}"
+              fields:
+                - leech
+                - download
         - Sonarr Anime:
             href: https://sonarr.lab.jacobdrury.com
             description: Anime (transitional → arr)
             icon: sonarr.png
+            widget:
+              type: sonarr
+              url: https://sonarr.lab.jacobdrury.com
+              key: "{{HOMEPAGE_VAR_SONARR_ANIME_KEY}}"
+              fields:
+                - wanted
+                - queued
+                - series
         - Sonarr TV:
             href: https://sonarr-tv.lab.jacobdrury.com
             description: TV (transitional → arr)
             icon: sonarr.png
+            widget:
+              type: sonarr
+              url: https://sonarr-tv.lab.jacobdrury.com
+              key: "{{HOMEPAGE_VAR_SONARR_TV_KEY}}"
+              fields:
+                - wanted
+                - queued
+                - series
         - Prowlarr:
             href: https://prowlarr.lab.jacobdrury.com
             description: Indexers (transitional → arr)
             icon: prowlarr.png
+            widget:
+              type: prowlarr
+              url: https://prowlarr.lab.jacobdrury.com
+              key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
+              fields:
+                - numberOfGrabs
+                - numberOfQueries
+                - numberOfFailGrabs
+                - numberOfFailQueries
 
     - Home:
         - Home Assistant:
             href: https://homeassistant.lab.jacobdrury.com
             description: Home automation (transitional)
             icon: home-assistant.png
+
+    - Network:
+        - UniFi:
+            href: https://192.168.1.1
+            description: UDM Pro (Drury)
+            icon: unifi.png
+            siteMonitor: https://192.168.1.1
+            widget:
+              type: unifi
+              url: https://192.168.1.1
+              # Same Network Integrations API key as OpenTofu (Homelab item).
+              key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
+              fields:
+                - uptime
+                - wan
+                - lan_users
+                - wlan_users
 
     - Infrastructure:
         - Pi-hole:
@@ -163,6 +285,17 @@ config:
             description: homelab02 (arr host)
             icon: proxmox.png
             siteMonitor: https://proxmox.lab.jacobdrury.com
+            widget:
+              type: proxmox
+              url: https://proxmox.lab.jacobdrury.com
+              username: "{{HOMEPAGE_VAR_PROXMOX_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_PROXMOX_PASSWORD}}"
+              node: homelab02
+              fields:
+                - vms
+                - lxc
+                - resources.cpu
+                - resources.mem
 
   # Chart defaults include search/resources widgets; null disables them (empty [] is truthy in Helm).
   widgets: null
