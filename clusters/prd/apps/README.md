@@ -3,10 +3,11 @@
 | App | Path |
 |-----|------|
 | Homepage | `homepage/` |
-| Authentik | `authentik/` — SSO IdP at `auth.lab`; CNPG Postgres + Helm; **blueprints** for OIDC apps |
+| Authentik | `authentik/` — SSO IdP at `auth.lab`; CNPG Postgres + Helm; **blueprints** for OIDC apps (Argo, HA) + Proxy (media/Kuma) |
 | Uptime Kuma | `uptime-kuma/` — `uptime.lab` via Authentik Proxy; DB on **shared MariaDB** |
-| Media | `media/` — qBit (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr; **configs copied from arr VM** |
-| Transitional | `transitional/` — Envoy HTTPS → legacy HA/Pi-hole/scarif/proxmox |
+| Media | `media/` — qBit (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr, Jellyfin; **configs copied from arr VM** |
+| Home Assistant | `home-assistant/` — Container + CNPG recorder + Authentik OIDC; **cutover scripts from HA OS VM** |
+| Transitional | `transitional/` — Envoy HTTPS → legacy Pi-hole/scarif/proxmox |
 
 Each app: `application.yaml` + optional `values.yaml` / `resources.yaml` (HTTPRoutes, etc.).
 

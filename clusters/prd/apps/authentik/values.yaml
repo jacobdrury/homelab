@@ -21,6 +21,7 @@ blueprints:
     - authentik-blueprint-argocd
     - authentik-blueprint-uptime
     - authentik-blueprint-media
+    - authentik-blueprint-homeassistant
 
 global:
   volumes:
@@ -65,4 +66,9 @@ worker:
       valueFrom:
         secretKeyRef:
           name: argocd-oidc
+          key: client_secret
+    - name: HOMEASSISTANT_OIDC_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: homeassistant-oidc
           key: client_secret

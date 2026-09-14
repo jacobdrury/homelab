@@ -1,0 +1,28 @@
+# Home Assistant — Container image on iSCSI; recorder on CNPG; Authentik OIDC (hass-oidc-auth).
+# Cutover: copy config from HA OS VM 105, migrate SQLite → Postgres, then Envoy → Service.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jacobdrury/homelab.git
+    targetRevision: main
+    path: clusters/prd/apps/home-assistant
+    directory:
+      include: '{namespace,home-assistant-pg,homelab-package,home-assistant}.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home-assistant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

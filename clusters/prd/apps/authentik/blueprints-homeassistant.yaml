@@ -1,0 +1,78 @@
+# Authentik blueprint — Home Assistant OIDC (hass-oidc-auth custom component).
+# https://integrations.goauthentik.io/miscellaneous/home-assistant/
+# Client secret: Homelab 1Password "prd Home Assistant OIDC" (password) → ExternalSecret
+# homeassistant-oidc → worker env HOMEASSISTANT_OIDC_CLIENT_SECRET.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-homeassistant
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  homeassistant.yaml: |
+    version: 1
+    metadata:
+      name: homeassistant-oidc
+    entries:
+      - model: authentik_providers_oauth2.oauth2provider
+        id: provider-homeassistant
+        state: present
+        identifiers:
+          name: Home Assistant
+        attrs:
+          name: Home Assistant
+          client_type: confidential
+          client_id: homeassistant
+          client_secret: !Env HOMEASSISTANT_OIDC_CLIENT_SECRET
+          grant_types:
+            - authorization_code
+            - refresh_token
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
+          redirect_uris:
+            - matching_mode: strict
+              url: https://homeassistant.lab.jacobdrury.com/auth/oidc/callback
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-offline_access]]
+          sub_mode: hashed_user_id
+          issuer_mode: per_provider
+          include_claims_in_id_token: true
+
+      - model: authentik_core.application
+        id: app-homeassistant
+        state: present
+        identifiers:
+          slug: homeassistant
+        attrs:
+          name: Home Assistant
+          slug: homeassistant
+          provider: !KeyOf provider-homeassistant
+          policy_engine_mode: any
+          meta_launch_url: https://homeassistant.lab.jacobdrury.com
+          meta_icon: https://brands.home-assistant.io/homeassistant/icon.png
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: homeassistant-oidc
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: homeassistant-oidc
+    creationPolicy: Owner
+  data:
+    - secretKey: client_secret
+      remoteRef:
+        key: prd Home Assistant OIDC
+        property: password

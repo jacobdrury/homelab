@@ -63,7 +63,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | VMID | Type | Name | IP | VLAN | RAM | Notes |
 |------|------|------|-----|------|-----|-------|
 | 101 | VM | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | **Stopped** · `onboot=0` · media configs archived; stack on k8s |
-| 105 | VM | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · no USB radios |
+| 105 | VM | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · **retire after** k8s cutover ([home-assistant](architecture/home-assistant.md)) |
 | — | LXC | `Pi-Hole` | `192.168.1.11` | untagged | 1 GB / 8 GB | VMID **106** · ex homelab03 · k8s cutover **last** |
 | 103 | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Migrated from homelab03** |
 
@@ -161,7 +161,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | Service | Where | Reach | Data / notes |
 |---------|-------|-------|--------------|
 | Pi-hole | pc (black) LXC **106** | `192.168.1.11` · `:53`/admin UI | LAN DNS · config in **`infrastructure/pihole/`** (OpenTofu) · `*.lab` → Cloudflare forward |
-| Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
+| Home Assistant | k8s `home-assistant` (GitOps; cutover pending) | `homeassistant.lab` → Envoy → pod `:8123` + Authentik OIDC | Was VM 105 @ `.2.8`; no USB radios |
 | **NFS (media)** | **scarif** | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (`192.168.5.10`) | ~8.7 TB library |
 | Jellyfin | k8s `media` | `jellyfin.lab` → Envoy → pod `:8096` | NFS `media/{anime,tv}` RO; SQLite on iSCSI config |
 | Sonarr (anime / TV) | k8s `media` | `sonarr` / `sonarr-tv`.lab → Authentik → pods | NFS libraries; Postgres `media-pg` |

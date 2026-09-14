@@ -81,7 +81,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 | `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
 | `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker on scarif (**live**) |
 
-**Apps:** `*.lab.jacobdrury.com` A records → **Envoy VIP `192.168.5.21`** (secondary IP on yavin; hostNetwork Envoy). Download stack (`sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent`) and Uptime Kuma go Envoy → **Authentik Proxy** → in-cluster Services. Jellyfin goes Envoy → in-cluster Service. HA / Pi-hole still use transitional Envoy → VM backends until cutover. DNS via OpenTofu and/or external-dns from HTTPRoutes.
+**Apps:** `*.lab.jacobdrury.com` A records → **Envoy VIP `192.168.5.21`** (secondary IP on yavin; hostNetwork Envoy). Download stack (`sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent`) and Uptime Kuma go Envoy → **Authentik Proxy** → in-cluster Services. Jellyfin and Home Assistant go Envoy → in-cluster Service (HA uses Authentik **OIDC** custom component). Pi-hole still uses transitional Envoy → LXC until cutover. DNS via OpenTofu and/or external-dns from HTTPRoutes.
 
 ### Transitional reverse-proxy (strangler)
 
@@ -90,7 +90,8 @@ Final hostnames were published early; media backends are now in-cluster:
 ```text
 Client → https://jellyfin.lab.jacobdrury.com → Envoy → Jellyfin Service in prd
 Client → https://sonarr.lab.jacobdrury.com → Envoy → Authentik → Sonarr Service
-                                      HA / Pi-hole still → VM until cutover
+Client → https://homeassistant.lab.jacobdrury.com → Envoy → HA Service (+ Authentik OIDC in-app)
+                                      Pi-hole still → LXC until cutover
 ```
 
 `arr.lab.jacobdrury.com` and `arr.homelab.com` are **retired** (no A records). Homepage links only to `*.lab` names. Remaining cutovers = change the HTTPRoute backend, not bookmarks.
@@ -168,7 +169,7 @@ Do **not** change Cloudflare `app_hosts` when **hoth** / **endor** join. Only ch
 | Scope | How |
 |-------|-----|
 | **k8s apps** (`argocd.lab`, apex `lab.jacobdrury.com` Homepage, …) | Wildcard Certificate → Envoy HTTPS listener |
-| **Legacy UIs during migrate** (`homeassistant.lab`, `pihole.lab`, …) | Same wildcard; HTTPRoute → VM/LXC IP until cutover |
+| **Legacy UIs during migrate** (`pihole.lab`, …) | Same wildcard; HTTPRoute → VM/LXC IP until cutover |
 | **ACME** | DNS-01 TXT in Cloudflare (ephemeral; not in OpenTofu) |
 | **scarif** (Unraid) | **Envoy reverse-proxy** → `http://192.168.5.10:80` — LE on Envoy; Unraid stays HTTP internally. **Today:** `http://scarif.lab` still works; **next:** HTTPRoute → `https://scarif.lab` |
 | **Not used** | Cloudflare proxy (orange cloud), Cloudflare Tunnel, Tailscale certs for `*.lab` names |

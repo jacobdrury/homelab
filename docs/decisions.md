@@ -46,14 +46,14 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
 | Apps (migrate order) | ~~*arr + qBit → Jellyfin~~ **done** → HA → **Pi-hole last**. **URLs first:** Envoy transitional routes; swap backends at cutover. **Homepage** = first GitOps app after Envoy |
 | Observability timing | Bootstrap: **`connect/`** + k9s + talosctl. **Homepage** first after Envoy (Uptime Kuma with/after it). **metrics-server** early (Metrics API / Homepage / HPA — not the full stack). **Prometheus/Grafana** Phase 5 |
-| Transitional ingress | Envoy `*.lab` → in-cluster Services after cutover (media done); remaining HA / Pi-hole / scarif / proxmox still transitional — **no DNS/URL change** at cutover |
+| Transitional ingress | Envoy `*.lab` → in-cluster Services after cutover (media + HA); remaining Pi-hole / scarif / proxmox still transitional — **no DNS/URL change** at cutover |
 | Games (ATM10) | **Phase 6** — after core platform stable; **itzg/minecraft-server** on k8s; iSCSI block PVC; pin to beefiest node — [games](architecture/games.md) |
 | Friend remote access | **Tailscale per-service expose** (`*.ts.net`); `group:friends` → `tag:shared` only (Jellyfin + Minecraft); **no** subnet routes for friends — [games](architecture/games.md#friend-access--tailscale) |
 | Friend Jellyfin HTTPS | **Tailscale L7 Ingress** (`ingressClassName: tailscale`) — LE cert on `https://jellyfin.<tailnet>.ts.net`; not L3 Service expose (self-signed) |
 | Friend Minecraft | **Tailscale L3 Service expose** — TCP `:25565`; no HTTPS on game port |
 | MagicDNS tailnet suffix | Rename once in **admin console** (word list); **not** OpenTofu; hostname prefixes in k8s GitOps |
 | qBittorrent VPN | Peers via **Mullvad WireGuard sidecar** + qBit **bind to `wg0`**; UI at **`qbittorrent.lab.jacobdrury.com`** (not Gluetun on k8s) |
-| Media UI auth | **Authentik Proxy** for Sonarr ×2 / Prowlarr / qBit; Jellyfin = Envoy → Service (native accounts). Homepage widgets use API keys — [media](architecture/media.md) |
+| Media UI auth | **Authentik Proxy** for Sonarr ×2 / Prowlarr / qBit; Jellyfin = Envoy → Service (native accounts); **Home Assistant = Envoy → Service + Authentik OIDC** (hass-oidc-auth) — [home-assistant](architecture/home-assistant.md) · [media](architecture/media.md) |
 | Power | Prefer fewer always-on watts when cheap (strip white GPU; black off when gaming-only); **not** a reason to defer k8s/GitOps |
 | Laptops | Precision optional NVENC/burst; Inspiron **out of lab plan** |
 | Backups | **Decide after Unraid is up** (parity ≠ backup; UD has no parity) |

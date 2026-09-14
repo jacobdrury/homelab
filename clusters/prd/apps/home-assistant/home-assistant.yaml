@@ -1,0 +1,234 @@
+# Home Assistant Container — config on iSCSI; recorder on home-assistant-pg; Authentik OIDC.
+# Image pinned (no :latest). Lab URL: Envoy → Service (not Authentik Proxy).
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home-assistant-config
+  namespace: home-assistant
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: scarif-iscsi
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: home-assistant
+  namespace: home-assistant
+  labels:
+    app.kubernetes.io/name: home-assistant
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: home-assistant
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: home-assistant
+    spec:
+      securityContext:
+        fsGroup: 0
+      initContainers:
+        - name: merge-secrets
+          image: docker.io/library/python:3.12.7-alpine@sha256:5049c050bdc68575a10bcb1885baa0689b6c15152d8a56a7e399fb49f783bf98
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: home-assistant-pg-owner
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: home-assistant-pg-owner
+                  key: password
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: home-assistant-oidc
+                  key: client_secret
+            - name: PGHOST
+              value: home-assistant-pg-rw.home-assistant.svc.cluster.local
+            - name: PGDATABASE
+              value: homeassistant
+          command:
+            - python3
+            - -c
+            - |
+              import os
+              from pathlib import Path
+              from urllib.parse import quote
+
+              def yaml_str(value: str) -> str:
+                  escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+                  return f'"{escaped}"'
+
+              config = Path("/config")
+              config.mkdir(parents=True, exist_ok=True)
+              secrets_path = config / "secrets.yaml"
+
+              user = quote(os.environ["PGUSER"], safe="")
+              password = quote(os.environ["PGPASSWORD"], safe="")
+              host = os.environ["PGHOST"]
+              db = os.environ["PGDATABASE"]
+              keys = {
+                  "recorder_db_url": f"postgresql://{user}:{password}@{host}:5432/{db}",
+                  "authentik_client_secret": os.environ["OIDC_CLIENT_SECRET"],
+              }
+
+              lines = []
+              if secrets_path.exists():
+                  lines = secrets_path.read_text().splitlines()
+
+              seen = set()
+              out = []
+              for line in lines:
+                  stripped = line.strip()
+                  if stripped and not stripped.startswith("#") and ":" in line:
+                      key = line.split(":", 1)[0].strip()
+                      if key in keys:
+                          out.append(f"{key}: {yaml_str(keys[key])}")
+                          seen.add(key)
+                          continue
+                  out.append(line)
+
+              for key, value in keys.items():
+                  if key not in seen:
+                      out.append(f"{key}: {yaml_str(value)}")
+
+              secrets_path.write_text("\n".join(out).rstrip() + "\n")
+
+              packages = config / "packages"
+              packages.mkdir(parents=True, exist_ok=True)
+
+              cfg = config / "configuration.yaml"
+              if not cfg.exists():
+                  cfg.write_text(
+                      "default_config:\n\n"
+                      "homeassistant:\n"
+                      "  packages: !include_dir_named packages\n"
+                  )
+                  raise SystemExit(0)
+
+              text = cfg.read_text()
+              if "packages: !include_dir_named packages" in text or "packages: !include_dir_merge_named packages" in text:
+                  raise SystemExit(0)
+
+              if "homeassistant:" in text:
+                  lines = text.splitlines(keepends=True)
+                  out_lines = []
+                  inserted = False
+                  for line in lines:
+                      out_lines.append(line)
+                      if not inserted and line.rstrip() == "homeassistant:":
+                          out_lines.append("  packages: !include_dir_named packages\n")
+                          inserted = True
+                  if not inserted:
+                      out_lines.append("\nhomeassistant:\n  packages: !include_dir_named packages\n")
+                  cfg.write_text("".join(out_lines))
+              else:
+                  cfg.write_text(
+                      text.rstrip()
+                      + "\n\nhomeassistant:\n  packages: !include_dir_named packages\n"
+                  )
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      containers:
+        - name: home-assistant
+          image: ghcr.io/home-assistant/home-assistant:2026.9.2@sha256:a1bc133af84ee6505fe2c266d9805b7c75b780dfdc188edfee3b11e8f3cd8efe
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TZ
+              value: America/Chicago
+          ports:
+            - name: http
+              containerPort: 8123
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: homelab-package
+              mountPath: /config/packages/homelab.yaml
+              subPath: homelab.yaml
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: home-assistant-config
+        - name: homelab-package
+          configMap:
+            name: home-assistant-homelab-package
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: home-assistant
+  namespace: home-assistant
+  labels:
+    app.kubernetes.io/name: home-assistant
+spec:
+  selector:
+    app.kubernetes.io/name: home-assistant
+  ports:
+    - name: http
+      port: 8123
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: home-assistant
+  namespace: home-assistant
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: lab
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - homeassistant.lab.jacobdrury.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: home-assistant
+          port: 8123
+          weight: 1

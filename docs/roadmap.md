@@ -11,7 +11,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; interim subnet router on homelab02 |
 | **2** Talos `prd` | **In progress** | Platform + Homepage/Kuma/Authentik live; remaining: shared CNPG collapse |
-| **3** Migrate workloads | **In progress** | **Media done** (*arr + qBit + Jellyfin on k8s; arr VM stopped). Next: **HA → Discord bots → Pi-hole** |
+| **3** Migrate workloads | **In progress** | **Media done**; **HA GitOps ready** (cutover scripts — run copy/migrate). Next: Discord bots → Pi-hole |
 | **4–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -23,7 +23,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 
 ## What's next — Phase 3 (media done)
 
-Media stack is on `prd` ([media](architecture/media.md)); arr VM 101 is **stopped** (`onboot=0`). Remaining Phase 3 guests: **Home Assistant**, optional Discord bots, **Pi-hole last**.
+Media stack is on `prd` ([media](architecture/media.md)); arr VM 101 is **stopped** (`onboot=0`). Home Assistant GitOps is in [apps/home-assistant](../clusters/prd/apps/home-assistant/) ([home-assistant](architecture/home-assistant.md)) — run cutover scripts to leave VM 105. Remaining: optional Discord bots, **Pi-hole last**.
 
 Phase 2 leftovers (non-blocking for HA cutover):
 
@@ -232,7 +232,7 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 | `jellyfin.lab.jacobdrury.com` | Jellyfin Service in `media` | Cut over; SQLite on iSCSI |
 | `qbittorrent.lab…` | qBit Service (+ Authentik) | Cut over; Mullvad WG sidecar |
 | `sonarr` / `sonarr-tv` / `prowlarr` | *arr Services (+ Authentik) | Cut over; `media-pg` |
-| `homeassistant.lab…` | HA `192.168.2.8` (transitional) | Phase 3 next |
+| `homeassistant.lab…` | HA Service in `home-assistant` (+ Authentik OIDC) | Cut over GitOps; run copy/migrate scripts |
 | `scarif.lab…` | Unraid via Envoy | NAS stays |
 | `pihole.lab…` | Pi-hole LXC (transitional) | Migrate **last** |
 | `proxmox.lab…` | homelab02 `:8006` (transitional) | Stays until black PC retires |
@@ -304,11 +304,11 @@ Cut over workloads → GitOps on `prd`. Remaining Proxmox guests on **pc (black)
 1. ~~*arr + qBittorrent (Mullvad WG sidecar + config copy; Authentik Proxy; `media-pg`)~~ **done** — see [media](architecture/media.md)  
 2. ~~Jellyfin (library on **scarif NFS**; SQLite on iSCSI; GPU/QSV optional)~~ **done** — `apps/media/jellyfin.yaml`  
    - arr VM **stopped** / `onboot=0`; `arr.lab` + `arr.homelab.com` DNS retired  
-3. Home Assistant (downtime OK)  
+3. Home Assistant — GitOps in `apps/home-assistant/` ([arch](architecture/home-assistant.md)); **cutover:** copy + recorder→CNPG scripts; then stop VM 105  
 4. Discord bots (optional — or leave on Proxmox until black PC retires)  
 5. **Pi-hole** — final cutover from pc (black) LXC → k8s; point LAN at cluster Pi-hole  
 
-**Already on cluster:** Homepage, Uptime Kuma, full **media** stack; **`*.lab` URLs** on Envoy. Remaining cutovers = retarget transitional HTTPRoutes / move pods — not new consumer hostnames.
+**Already on cluster:** Homepage, Uptime Kuma, full **media** stack; HA manifests (pending operator cutover); **`*.lab` URLs** on Envoy. Remaining cutovers = retarget transitional HTTPRoutes / move pods — not new consumer hostnames.
 
 Each migrate: `apps/` → Argo → `*.lab.jacobdrury.com` → retire old guest.
 

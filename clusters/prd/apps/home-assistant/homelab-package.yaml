@@ -1,0 +1,30 @@
+# Mounted into the HA pod at /config/packages/homelab.yaml (GitOps-owned).
+# Requires configuration.yaml to include packages (copy script ensures this).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-assistant-homelab-package
+  namespace: home-assistant
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  homelab.yaml: |
+    # Lab GitOps package — do not edit on the PVC; change this ConfigMap instead.
+    http:
+      use_x_forwarded_for: true
+      trusted_proxies:
+        # Cilium pod/service CIDRs (Kubernetes IPAM) + Envoy hostNetwork VIP.
+        - 10.0.0.0/8
+        - 192.168.5.0/24
+
+    recorder:
+      db_url: !secret recorder_db_url
+      purge_keep_days: 10
+
+    # https://integrations.goauthentik.io/miscellaneous/home-assistant/
+    # Custom component: christiaangoossens/hass-oidc-auth (custom_components/auth_oidc).
+    auth_oidc:
+      client_id: homeassistant
+      client_secret: !secret authentik_client_secret
+      discovery_url: https://auth.lab.jacobdrury.com/application/o/homeassistant/.well-known/openid-configuration
+      display_name: Authentik

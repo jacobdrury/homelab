@@ -3,54 +3,8 @@
 # Uses Envoy Gateway Backend CRD (Argo excludes EndpointSlice by default).
 # Jellyfin cut over to media/jellyfin (Envoy → Service).
 # qbittorrent / sonarr / sonarr-tv / prowlarr → Authentik Proxy.
-# Remaining: HA / Pi-hole / scarif / proxmox.
----
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: Backend
-metadata:
-  name: homeassistant
-  namespace: transitional
-spec:
-  endpoints:
-    - ip:
-        address: 192.168.2.8
-        port: 8123
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: homeassistant
-  namespace: transitional
-spec:
-  parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: lab
-      namespace: envoy-gateway-system
-      sectionName: https
-  hostnames:
-    - homeassistant.lab.jacobdrury.com
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      # HA returns 400 if it sees X-Forwarded-* without trusted_proxies.
-      # Strip until HA is configured with use_x_forwarded_for + trusted_proxies.
-      filters:
-        - type: RequestHeaderModifier
-          requestHeaderModifier:
-            remove:
-              - x-forwarded-for
-              - x-forwarded-proto
-              - x-forwarded-host
-              - x-forwarded-port
-              - x-real-ip
-      backendRefs:
-        - group: gateway.envoyproxy.io
-          kind: Backend
-          name: homeassistant
-          weight: 1
+# Home Assistant cut over to apps/home-assistant (Envoy → Service + Authentik OIDC).
+# Remaining: Pi-hole / scarif / proxmox.
 ---
 # Pi-hole UI — Envoy Backend directly to LXC (no sidecar proxy).
 apiVersion: gateway.envoyproxy.io/v1alpha1

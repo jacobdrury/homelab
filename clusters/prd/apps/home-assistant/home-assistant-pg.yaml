@@ -1,0 +1,85 @@
+# CNPG Postgres for Home Assistant recorder.
+# 1Password Homelab item: "prd Home Assistant Postgres" (username/password).
+# Service: home-assistant-pg-rw.home-assistant.svc.cluster.local:5432
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: home-assistant-pg-owner
+  namespace: home-assistant
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipResourceHealthCheck=true
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: home-assistant-pg-owner
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      type: kubernetes.io/basic-auth
+      data:
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: prd Home Assistant Postgres
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: prd Home Assistant Postgres
+        property: password
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: home-assistant-oidc
+  namespace: home-assistant
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipResourceHealthCheck=true
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: home-assistant-oidc
+    creationPolicy: Owner
+  data:
+    - secretKey: client_secret
+      remoteRef:
+        key: prd Home Assistant OIDC
+        property: password
+---
+# Single-instance CNPG on scarif-iscsi (same pattern as authentik-pg / media-pg).
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: home-assistant-pg
+  namespace: home-assistant
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.6
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: homeassistant
+      owner: homeassistant
+      secret:
+        name: home-assistant-pg-owner
+  storage:
+    size: 20Gi
+    storageClass: scarif-iscsi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
