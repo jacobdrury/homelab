@@ -1,19 +1,23 @@
-# Media stack (*arr + qBittorrent)
+# Media stack (*arr + qBittorrent + Jellyfin)
 
-**Download stack (done):** qBittorrent, Sonarr ×2, Prowlarr on Talos `prd` under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) — configs copied from the Proxmox arr VM (not a fresh install). Shared **CNPG `media-pg`** (Postgres). Public UIs behind **Authentik Proxy** ([Authentik Sonarr guide](https://integrations.goauthentik.io/media/sonarr/); same pattern for Prowlarr / qBit).
+**On Talos `prd`** under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) — configs copied from the Proxmox arr VM (not fresh installs).
 
-**Still transitional:** Jellyfin remains on the arr VM via [`transitional`](../../clusters/prd/apps/transitional/) until a later cutover. Jellyfin GPU notes: [gpu](gpu.md).
+| App | Auth | Data |
+|-----|------|------|
+| qBittorrent, Sonarr ×2, Prowlarr | **Authentik Proxy** ([Sonarr guide](https://integrations.goauthentik.io/media/sonarr/)) | Shared CNPG **`media-pg`**; NFS libraries/downloads |
+| Jellyfin | Envoy → Service (native Jellyfin accounts) | SQLite on iSCSI config PVC; NFS `/anime` + `/tv` (read-only). GPU notes: [gpu](gpu.md) |
 
 ## Runtime shape
 
 | Piece | Where |
 |-------|--------|
-| Pods | namespace `media` — qBit + Mullvad WG sidecar, Sonarr anime/TV, Prowlarr, `media-pg` |
-| Libraries / downloads | Scarif NFS static PVs (`media/{anime,tv,downloads}`), `PUID=99` / `PGID=100` |
-| Config | iSCSI PVCs (copied from arr) |
-| Browser URLs | Envoy → **Authentik embedded outpost** → in-cluster Services ([`resources-media-routes.yaml`](../../clusters/prd/apps/authentik/resources-media-routes.yaml)) |
-| API / Homepage | Authentik `skip_path_regex` on `/api` (and `/feed` for Sonarr) — widgets use API keys |
-| Native UI auth | `AuthenticationMethod=External` (*arr); qBit `AuthSubnetWhitelist` for cluster CIDRs |
+| Pods | namespace `media` — qBit + Mullvad WG sidecar, Sonarr anime/TV, Prowlarr, Jellyfin, `media-pg` |
+| Libraries / downloads | Scarif NFS static PVs (`media/{anime,tv,downloads}`); *arr `PUID=99` / `PGID=100`; Jellyfin mounts libraries read-only as UID 1000 |
+| Config | iSCSI PVCs (copied from arr); Jellyfin also uses `emptyDir` for `/cache` |
+| Browser URLs (*arr / qBit) | Envoy → **Authentik embedded outpost** → Services ([`resources-media-routes.yaml`](../../clusters/prd/apps/authentik/resources-media-routes.yaml)) |
+| Browser URL (Jellyfin) | Envoy → `jellyfin.media` Service `:8096` |
+| API / Homepage | Authentik `skip_path_regex` on `/api` (and `/feed` for Sonarr) — widgets use API keys; Jellyfin widget hits Jellyfin API directly |
+| Native UI auth | `AuthenticationMethod=External` (*arr); qBit `AuthSubnetWhitelist` for cluster CIDRs; Jellyfin native accounts |
 
 ## NFS UID (scarif + writers)
 

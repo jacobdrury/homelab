@@ -11,7 +11,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; interim subnet router on homelab02 |
 | **2** Talos `prd` | **In progress** | Platform + Homepage/Kuma/Authentik live; remaining: shared CNPG collapse, etcd cadence |
-| **3** Migrate workloads | **In progress** | *arr + qBit on k8s + Authentik + `media-pg`; next: Jellyfin → HA → Pi-hole |
+| **3** Migrate workloads | **In progress** | *arr + qBit + Jellyfin on k8s; next: HA → Pi-hole |
 | **4–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -232,7 +232,7 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 
 | Hostname | Initial backend (today) | Later (Phase 3) |
 |----------|-------------------------|-----------------|
-| `jellyfin.lab.jacobdrury.com` | arr VM `192.168.1.9:8096` | Jellyfin Service in cluster |
+| `jellyfin.lab.jacobdrury.com` | ~~arr VM `192.168.1.9:8096`~~ | Jellyfin Service in cluster |
 | `qbittorrent.lab…` | arr / Gluetun UI port | qBit in cluster |
 | `sonarr` / `prowlarr` / … | arr VM ports as needed | *arr in cluster |
 | `homeassistant.lab…` (or chosen name) | HA `192.168.2.8` | HA in cluster |
@@ -303,7 +303,7 @@ flowchart LR
 Cut over workloads → GitOps on `prd`. All Proxmox guests now on **pc (black)**. **One landing** on k8s (not Unraid Docker first). **Pi-hole** stays on pc (black) LXC until step 5 (last).
 
 1. ~~*arr + qBittorrent (Mullvad WG sidecar + config copy; Authentik Proxy; `media-pg`)~~ **done** — see [media](architecture/media.md)  
-2. Jellyfin (library on **scarif NFS**; GPU/QSV **optional** — not needed for typical 720/1080 direct play)  
+2. ~~Jellyfin (library on **scarif NFS**; SQLite on iSCSI; GPU/QSV optional)~~ **done** — `apps/media/jellyfin.yaml`
 3. Home Assistant (downtime OK)  
 4. Discord bots (optional — or leave on Proxmox until black PC retires)  
 5. **Pi-hole** — final cutover from pc (black) LXC → k8s; point LAN at cluster Pi-hole  

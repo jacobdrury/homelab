@@ -6,7 +6,7 @@
 | Authentik | `authentik/` — SSO IdP at `auth.lab`; CNPG Postgres + Helm; **blueprints** for OIDC apps |
 | Uptime Kuma | `uptime-kuma/` — `uptime.lab` via Authentik Proxy; DB on **shared MariaDB** |
 | Media | `media/` — qBit (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr; **configs copied from arr VM** |
-| Transitional | `transitional/` — Envoy HTTPS → legacy jellyfin/HA/Pi-hole/scarif (+ *arr until media cutover) |
+| Transitional | `transitional/` — Envoy HTTPS → legacy HA/Pi-hole/scarif/proxmox |
 
 Each app: `application.yaml` + optional `values.yaml` / `resources.yaml` (HTTPRoutes, etc.).
 

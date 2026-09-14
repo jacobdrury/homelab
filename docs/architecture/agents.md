@@ -119,7 +119,7 @@ If you helm-applied something in a pinch, get it into Git and let Argo adopt it 
 | **Now** | Tailscale IaC; **homelab02** interim subnet router; `https://*.lab` via Envoy |
 | **2 (done)** | **`connect/`**; CSI; Connect + ESO; **Argo CD**; **Envoy** + LE; Homepage; Authentik; Kuma; shared MariaDB; transitional routes |
 | **2 (next)** | Shared CNPG (deferred); smoke `https://*.lab` away via k8s Homelab route |
-| **3 (in progress)** | Media download stack on k8s (WG sidecar + config copy from arr); Jellyfin later |
+| **3 (in progress)** | Media stack on k8s (*arr + qBit + Jellyfin); next HA → Pi-hole |
 | **5** | Agent RBAC, optional MCP, skills |
 
 **Non-goal:** public kube API or Unraid for agents. Agents use the **tailnet**.

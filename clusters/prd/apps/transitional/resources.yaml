@@ -1,46 +1,9 @@
 # Phase 2 transitional routes: TLS on Envoy, backends stay on legacy hosts.
 # DNS A records → 192.168.5.21 (infrastructure/lab.yaml dns.app_hosts).
 # Uses Envoy Gateway Backend CRD (Argo excludes EndpointSlice by default).
----
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: Backend
-metadata:
-  name: jellyfin
-  namespace: transitional
-spec:
-  endpoints:
-    - ip:
-        address: 192.168.1.9
-        port: 8096
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: jellyfin
-  namespace: transitional
-spec:
-  parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: lab
-      namespace: envoy-gateway-system
-      sectionName: https
-  hostnames:
-    - jellyfin.lab.jacobdrury.com
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - group: gateway.envoyproxy.io
-          kind: Backend
-          name: jellyfin
-          weight: 1
----
-# qbittorrent / sonarr / sonarr-tv / prowlarr cut over to Authentik Proxy
-# (clusters/prd/apps/authentik/resources-media-routes.yaml + blueprints-media.yaml).
-# Only Jellyfin (below) and non-media transitional apps remain here.
+# Jellyfin cut over to media/jellyfin (Envoy → Service).
+# qbittorrent / sonarr / sonarr-tv / prowlarr → Authentik Proxy.
+# Remaining: HA / Pi-hole / scarif / proxmox.
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend

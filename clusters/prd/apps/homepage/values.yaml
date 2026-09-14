@@ -171,7 +171,7 @@ config:
     - Media:
         - Jellyfin:
             href: https://jellyfin.lab.jacobdrury.com
-            description: Media (transitional → arr)
+            description: Media
             icon: jellyfin.png
             widget:
               type: jellyfin

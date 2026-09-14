@@ -1,5 +1,5 @@
-# Media download stack — qBittorrent (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr.
-# Public UIs via Authentik Proxy. Jellyfin stays transitional → arr VM.
+# Media stack — qBittorrent (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr, Jellyfin.
+# Download UIs via Authentik Proxy; Jellyfin is Envoy → Service (native auth).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -14,7 +14,7 @@ spec:
     targetRevision: main
     path: clusters/prd/apps/media
     directory:
-      include: '{namespace,storage,media-pg,qbittorrent,sonarr-anime,sonarr-tv,prowlarr}.yaml'
+      include: '{namespace,storage,media-pg,qbittorrent,sonarr-anime,sonarr-tv,prowlarr,jellyfin}.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: media
