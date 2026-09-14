@@ -33,4 +33,5 @@ data:
       claims:
         username: preferred_username
       features:
-        automatic_user_linking: true
+        # Linked after first SSO login (jacob). Keep false unless re-linking.
+        automatic_user_linking: false

@@ -39,7 +39,8 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 - **Zones:** `Drury` · `Homelab` · **`IoT`** · `Isolated` (Guest + Camera)  
 - **Drury → Homelab:** allow all (mgmt + NFS); return traffic auto-allowed  
 - **Homelab → Drury:** Pi-hole DNS + transitional Envoy targets (Pi-hole UI / Proxmox)  
-- **Homelab → IoT:** **allow all** (Home Assistant on k8s must reach devices)  
+- **Homelab → IoT:** **allow all** (HA on k8s reaches devices; return traffic auto-allowed)  
+- **IoT → Homelab:** Envoy VIP `.21` **:80/:443** only (device webhooks → `https://homeassistant.lab`)  
 - **Homelab → Isolated (Guest/Camera):** deny  
 - **IoT / Isolated → Pi-hole:** DNS only  
 - **Homelab → Internet:** External zone defaults (allow)  

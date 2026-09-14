@@ -37,7 +37,7 @@ If the migrated `configuration.yaml` already defines top-level `http:`, `recorde
 
 Envoy → Service (native HA + OIDC custom component). **Not** Authentik Proxy. Redirect URI: `https://homeassistant.lab.jacobdrury.com/auth/oidc/callback`. Blueprint: `clusters/prd/apps/authentik/blueprints-homeassistant.yaml`.
 
-**SSO ↔ local user:** `features.automatic_user_linking: true` links OIDC `preferred_username` to an existing HA user with the same username. Both sides use **`jacob`**. After you confirm SSO lands on the same profile, set `automatic_user_linking: false` in `homelab-package.yaml` (existing links keep working).
+**SSO ↔ local user:** Linked (HA + Authentik username **`jacob`**). `automatic_user_linking` is off; re-enable only if you need to link another account.
 
 ## Notes
 

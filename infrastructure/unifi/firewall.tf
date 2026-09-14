@@ -28,6 +28,13 @@ resource "unifi_firewall_group" "proxmox_https" {
   members = ["8006"]
 }
 
+# Envoy VIP — IoT devices calling back to https://homeassistant.lab (webhooks, etc.).
+resource "unifi_firewall_group" "envoy_http" {
+  name    = "Envoy HTTP"
+  type    = "port-group"
+  members = ["80", "443"]
+}
+
 # Homelab must be its own zone — same zone as Drury would allow unrestricted lateral traffic.
 resource "unifi_firewall_zone" "drury" {
   name     = "Drury"
@@ -133,6 +140,7 @@ resource "unifi_firewall_zone_policy" "homelab_to_proxmox" {
 }
 
 # Home Assistant (and other Homelab workloads) must reach IoT devices (ESPHome, Hue, Lutron, …).
+# auto_allow_return_traffic covers device replies on HA-initiated sessions (the common case).
 resource "unifi_firewall_zone_policy" "homelab_to_iot" {
   name                      = "Allow Homelab to IoT"
   action                    = "ALLOW"
@@ -148,6 +156,28 @@ resource "unifi_firewall_zone_policy" "homelab_to_iot" {
 
   destination = {
     zone_id = unifi_firewall_zone.iot.id
+  }
+}
+
+# Device-initiated callbacks to HA via Envoy (https://homeassistant.lab → VIP .21).
+# ClusterIP is not reachable from IoT; public lab URLs terminate on Envoy.
+resource "unifi_firewall_zone_policy" "iot_to_homelab_envoy" {
+  name                      = "Allow IoT to Homelab Envoy"
+  action                    = "ALLOW"
+  protocol                  = "tcp"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
+  description               = "IoT webhooks/callbacks → Envoy VIP (homeassistant.lab, etc.)"
+
+  source = {
+    zone_id = unifi_firewall_zone.iot.id
+  }
+
+  destination = {
+    zone_id       = unifi_firewall_zone.homelab.id
+    ips           = [local.lab.networks.homelab.hosts.envoy.ip]
+    port_group_id = unifi_firewall_group.envoy_http.id
   }
 }
 
@@ -252,6 +282,15 @@ resource "unifi_firewall_zone_policy_order" "homelab_to_iot" {
 
   before_predefined_ids = [
     unifi_firewall_zone_policy.homelab_to_iot.id,
+  ]
+}
+
+resource "unifi_firewall_zone_policy_order" "iot_to_homelab" {
+  source_zone_id      = unifi_firewall_zone.iot.id
+  destination_zone_id = unifi_firewall_zone.homelab.id
+
+  before_predefined_ids = [
+    unifi_firewall_zone_policy.iot_to_homelab_envoy.id,
   ]
 }
 
