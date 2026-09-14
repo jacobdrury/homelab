@@ -1,4 +1,12 @@
 machine:
+  features:
+    # In-cluster CronJob may call talosctl etcd snapshot (see platform/etcd-backup).
+    kubernetesTalosAPIAccess:
+      enabled: true
+      allowedRoles:
+        - os:etcd:backup
+      allowedKubernetesNamespaces:
+        - etcd-backup
   kubelet:
     # Prefer primary Homelab address (USB .11) for NodeInternalIP.
     nodeIP:

@@ -38,7 +38,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 - Homelab **VLAN** live before install — not flat `192.168.1.0/24`  
 - One `talosctl gen config` / secrets bundle reused for join configs  
 - Per-node machine config patches (hostname, interfaces) kept in `infrastructure/talos/prd/`  
-- **etcd snapshots** on a schedule while single-node  
+- **etcd snapshots** on a schedule while single-node — **live** (`platform/etcd-backup/`, every 6h → iSCSI PVC)  
 - Odd CP count only: **1 → 3**, not 1 → 2  
 
 **Joining mental model:** boot Talos → apply machine config (shared cluster secrets + API endpoint) → node Ready. Control planes use `controlplane` config; **naboo** uses **worker**. New pods can land on new nodes; existing pods stay until roll/drain.

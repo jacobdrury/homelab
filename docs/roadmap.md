@@ -159,12 +159,12 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [x] Envoy + cert-manager; LE wildcard `*.lab.jacobdrury.com` (VIP `192.168.5.21`)  
 - [x] **Shared MariaDB** — `platform/mariadb/`; Uptime Kuma consumer  
 - [ ] **Shared CNPG Postgres** — one lab `Cluster`, many DBs; migrate Authentik off dedicated `authentik-pg`  
-- [ ] **Tailscale operator** on `prd` — subnet router `192.168.5.0/24`; retire Homelab route from homelab02 when stable  
+- [x] **Tailscale operator** on `prd` — Connector advertises `192.168.5.0/24`; Homelab route off homelab02 admin  
 - [x] **Transitional HTTPRoutes** — Envoy proxies to current VMs/LXCs (`jellyfin.lab` → arr, etc.); DNS A → Envoy  
 - [x] **Homepage** via Argo (+ Uptime Kuma)  
 - [x] **Authentik** at `auth.lab`  
 - [x] **metrics-server**  
-- [ ] etcd snapshot cadence (single-node DR until expansion)  
+- [x] **etcd snapshot cadence** — CronJob every 6h → `scarif-iscsi` PVC (keep 14)  
 - [ ] Confirm GitOps + CSI + **`https://*.lab`** (incl. proxied legacy backends) on LAN and away via Tailscale (Homelab via k8s Connector)  
 
 **Defer:** Prometheus / Grafana / Discord alerts → [Phase 5](#phase-5--hardening). Bootstrap troubleshooting: **`connect/`**, k9s, talosctl (no early metrics stack on 16 GB yavin).

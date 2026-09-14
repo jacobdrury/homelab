@@ -22,6 +22,7 @@ Not a day-to-day deploy path — see
 | MariaDB | `mariadb/` | No — Git / Argo only; shared instance for MySQL/MariaDB apps |
 | Metrics Server | `metrics-server/` | No — Git / Argo only; Metrics API for `kubectl top` / Homepage / HPA |
 | Tailscale operator | `tailscale-operator/` | No — Git / Argo only; Homelab subnet router via Connector |
+| etcd backup | `etcd-backup/` | No — CronJob + Talos SA; snapshots on `scarif-iscsi` |
 
 Each directory: `application.yaml` + `values.yaml` / optional `resources.yaml`.
 Chart versions are pinned in `application.yaml` (and mirrored in remaining

@@ -82,3 +82,17 @@ DNS `naboo.lab.jacobdrury.com` → `192.168.5.14` is in `lab.yaml` / Cloudflare.
 | Onboard 1G `enp4s0` | `68:fe:f7:10:39:b9` | Pro Max **Port 5** | static `192.168.5.111/24` (fallback, metric 200) |
 
 Both on Homelab VLAN 5. Kubelet `nodeIP.validSubnets` is `192.168.5.11/32` so NodeInternalIP stays on the USB address.
+
+## etcd snapshots
+
+In-cluster CronJob (`clusters/prd/platform/etcd-backup/`): every **6 hours**, keep **14** snapshots on a `scarif-iscsi` PVC. Uses Talos `ServiceAccount` role `os:etcd:backup` (requires `machine.features.kubernetesTalosAPIAccess` on CPs — yavin patch).
+
+Manual smoke:
+
+```bash
+source connect/env.sh
+kubectl -n etcd-backup create job --from=cronjob/etcd-snapshot etcd-snapshot-manual
+kubectl -n etcd-backup logs -f job/etcd-snapshot-manual
+```
+
+Restore (break-glass — wipes cluster state to the snapshot): see [Talos etcd recovery](https://www.talos.dev/v1.12/advanced/disaster-recovery/). Copy a `.snap` off the PVC first (`kubectl cp` or mount on a debug pod).

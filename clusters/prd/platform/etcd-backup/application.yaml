@@ -1,0 +1,27 @@
+# etcd snapshots via Talos API (single-node DR until 3 CPs).
+# Requires machine.features.kubernetesTalosAPIAccess on control planes (yavin patch).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: etcd-backup
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jacobdrury/homelab.git
+    targetRevision: main
+    path: clusters/prd/platform/etcd-backup
+    directory:
+      include: '{resources.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: etcd-backup
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
