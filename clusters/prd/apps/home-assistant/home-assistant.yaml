@@ -148,7 +148,8 @@ spec:
               mountPath: /config
       containers:
         - name: home-assistant
-          image: ghcr.io/home-assistant/home-assistant:2026.9.2@sha256:a1bc133af84ee6505fe2c266d9805b7c75b780dfdc188edfee3b11e8f3cd8efe
+          # Pin to HA OS version from cutover backup (do not jump majors on migrate).
+          image: ghcr.io/home-assistant/home-assistant:2025.4.4@sha256:c9a4eefee167f674db4a51b1b7466339a5637978cee4df0269e5f41ff1614aaf
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
