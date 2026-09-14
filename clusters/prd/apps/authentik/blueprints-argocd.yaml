@@ -7,7 +7,8 @@ metadata:
   name: authentik-blueprint-argocd
   namespace: authentik
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    # Before Helm worker Deployment (default wave 0) so the mount exists.
+    argocd.argoproj.io/sync-wave: "-1"
 data:
   argocd.yaml: |
     version: 1
