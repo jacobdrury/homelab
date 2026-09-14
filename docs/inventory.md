@@ -161,7 +161,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | Service | Where | Reach | Data / notes |
 |---------|-------|-------|--------------|
 | Pi-hole | pc (black) LXC **106** | `192.168.1.11` · `:53`/admin UI | LAN DNS · config in **`infrastructure/pihole/`** (OpenTofu) · `*.lab` → Cloudflare forward |
-| Home Assistant | k8s `home-assistant` (GitOps) | `homeassistant.lab` → Envoy → pod `:8123` + Authentik OIDC | Migrated from VM 105 @ `.2.8`; no USB radios |
+| Home Assistant | k8s `home-assistant` (GitOps; **2026.8.3**) | `homeassistant.lab` → Envoy → pod + Authentik OIDC (`authentik Admins` → owner) | Migrated from VM 105; HTTP settings in UI; no USB radios |
 | **NFS (media)** | **scarif** | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (`192.168.5.10`) | ~8.7 TB library |
 | Jellyfin | k8s `media` | `jellyfin.lab` → Envoy → pod `:8096` | NFS `media/{anime,tv}` RO; SQLite on iSCSI config |
 | Sonarr (anime / TV) | k8s `media` | `sonarr` / `sonarr-tv`.lab → Authentik → pods | NFS libraries; Postgres `media-pg` |

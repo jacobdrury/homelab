@@ -2,25 +2,25 @@
 
 Live on Talos `prd` (Container install, not HA OS). Config on **scarif-iscsi**; recorder on CNPG **`home-assistant-pg`**; SSO via Authentik OIDC ([hass-oidc-auth](https://integrations.goauthentik.io/miscellaneous/home-assistant/)).
 
-**URL:** `https://homeassistant.lab.jacobdrury.com` · Authentik: `/auth/oidc/welcome`
+**URL:** `https://homeassistant.lab.jacobdrury.com` · Authentik: `/auth/oidc/welcome`  
+**Arch:** [docs/architecture/home-assistant.md](../../../../docs/architecture/home-assistant.md)
 
 ## Layout
 
 | File | Role |
 |------|------|
 | `home-assistant-pg.yaml` | ExternalSecrets + CNPG Cluster |
-| `homelab-package.yaml` | GitOps `packages/homelab.yaml` (`http` / `recorder` / `auth_oidc`) |
-| `home-assistant.yaml` | PVC, Deployment, Service, HTTPRoute |
-| `scripts/` | One-time HA OS → PVC copy + SQLite → Postgres (complete) |
+| `homelab-package.yaml` | GitOps `packages/homelab.yaml` (`recorder` / `auth_oidc` only — **no `http:`**) |
+| `home-assistant.yaml` | PVC, Deployment (`dnsConfig.ndots: "2"`), Service, HTTPRoute |
+| `scripts/` | One-time HA OS → PVC copy + SQLite → Postgres (complete; sequence reset included) |
 
 ## Auth
 
-Envoy → Service (native HA + OIDC custom component). **Not** Authentik Proxy. Redirect URI: `https://homeassistant.lab.jacobdrury.com/auth/oidc/callback`. Blueprint: `clusters/prd/apps/authentik/blueprints-homeassistant.yaml`.
+Envoy → Service (native HA + OIDC). **Not** Authentik Proxy. Blueprint: `../authentik/blueprints-homeassistant.yaml` (includes custom **Home Assistant groups** scope mapping).
 
-**SSO ↔ local user:** Linked (username **`jacob`**, Authentik group **`authentik Admins`** → HA owner). `automatic_user_linking` is off.
+**SSO ↔ local user:** **`jacob`** + Authentik group **`authentik Admins`** → HA owner. `automatic_user_linking: false`.
 
-**HTTP / reverse proxy:** Managed in the UI (**Settings → System → Network**) / `.storage/http` — not YAML. Keep Envoy CIDRs `10.0.0.0/8` and `192.168.5.0/24` as trusted proxies.
-
+**HTTP / reverse proxy:** UI (**Settings → System → Network**) / `.storage/http`. Trusted proxies: `10.0.0.0/8`, `192.168.5.0/24`.
 
 ## Secrets
 
@@ -29,7 +29,8 @@ Envoy → Service (native HA + OIDC custom component). **Not** Authentik Proxy. 
 
 ## Notes
 
-- No USB radios; ClusterIP only — UniFi **Homelab → IoT** (device APIs) and **IoT → Envoy `.21:80/443`** (webhooks).
-- Image pinned (`2026.8.3`); bump deliberately (skip `2026.9.1` until listen-addr fix).
-- Homepage + Uptime Kuma use `homeassistant.lab.jacobdrury.com`.
+- Image pinned **`2026.8.3`** (skip `2026.9.1` listen-addr regression).
+- IoT: UniFi Homelab→IoT + IoT→Envoy `.21:80/443`.
+- Homepage + Uptime Kuma: `homeassistant.lab.jacobdrury.com`.
+- Custom components (HACS, etc.) live on the PVC — bump with Core upgrades as needed.
 - Legacy HA OS VM 105 @ `192.168.2.8` — stop / `onboot=0` after soak.

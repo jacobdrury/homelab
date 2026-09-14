@@ -11,7 +11,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; interim subnet router on homelab02 |
 | **2** Talos `prd` | **In progress** | Platform + Homepage/Kuma/Authentik live; remaining: shared CNPG collapse |
-| **3** Migrate workloads | **In progress** | **Media done**; **HA GitOps ready** (cutover scripts — run copy/migrate). Next: Discord bots → Pi-hole |
+| **3** Migrate workloads | **In progress** | **Media + HA done**. Next: optional Discord bots → **Pi-hole last** |
 | **4–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
