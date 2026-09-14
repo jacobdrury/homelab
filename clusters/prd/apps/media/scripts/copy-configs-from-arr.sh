@@ -25,6 +25,10 @@ echo "==> Stopping Compose apps on ${ARR_HOST} (Jellyfin stays up)"
 ssh -o BatchMode=yes "${ARR_HOST}" \
   "cd ${COMPOSE_DIR} && docker compose stop qbittorrent sonarr-anime sonarr-tv prowlarr"
 
+echo "==> Scaling down k8s Deployments (RWO iSCSI PVCs cannot attach to copy pods otherwise)"
+kubectl -n "${NS}" scale deploy/qbittorrent deploy/sonarr-anime deploy/sonarr-tv deploy/prowlarr --replicas=0
+kubectl -n "${NS}" wait --for=delete pod -l 'app.kubernetes.io/name in (qbittorrent,sonarr-anime,sonarr-tv,prowlarr)' --timeout=180s || true
+
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "${tmpdir}"' EXIT
 
@@ -73,8 +77,8 @@ for app in qbittorrent sonarr-anime sonarr-tv prowlarr; do
   copy_one "${app}"
 done
 
-echo "==> Restart media Deployments to pick up configs"
-kubectl -n "${NS}" rollout restart deploy/qbittorrent deploy/sonarr-anime deploy/sonarr-tv deploy/prowlarr
+echo "==> Scale media Deployments back up with copied configs"
+kubectl -n "${NS}" scale deploy/qbittorrent deploy/sonarr-anime deploy/sonarr-tv deploy/prowlarr --replicas=1
 kubectl -n "${NS}" rollout status deploy/qbittorrent --timeout=180s
 kubectl -n "${NS}" rollout status deploy/sonarr-anime --timeout=180s
 kubectl -n "${NS}" rollout status deploy/sonarr-tv --timeout=180s

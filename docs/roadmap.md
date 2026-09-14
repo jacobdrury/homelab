@@ -301,7 +301,7 @@ flowchart LR
 
 Cut over workloads → GitOps on `prd`. All Proxmox guests now on **pc (black)**. **One landing** on k8s (not Unraid Docker first). **Pi-hole** stays on pc (black) LXC until step 5 (last).
 
-1. *arr + qBittorrent (Mullvad peers; UI at `qbittorrent.lab.jacobdrury.com`)  
+1. *arr + qBittorrent (Mullvad WG sidecar + **config copy from arr VM**, not fresh install; UI at `qbittorrent.lab.jacobdrury.com`) — see [media](architecture/media.md)  
 2. Jellyfin (library on **scarif NFS**; GPU/QSV **optional** — not needed for typical 720/1080 direct play)  
 3. Home Assistant (downtime OK)  
 4. Discord bots (optional — or leave on Proxmox until black PC retires)  

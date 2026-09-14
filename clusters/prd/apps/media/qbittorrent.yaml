@@ -1,5 +1,5 @@
 # qBittorrent + Mullvad WireGuard sidecar (peers on wg0; UI on eth0).
-# Homelab item "prd Mullvad WireGuard" — field wg0.conf (full Mullvad WG config).
+# Homelab item "prd Mullvad WireGuard" — password field = full Mullvad wg0.conf.
 # Prefer Table = off in the conf so wg-quick does not steal the pod default route.
 ---
 apiVersion: external-secrets.io/v1
@@ -9,6 +9,8 @@ metadata:
   namespace: media
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
+    # Do not block the rest of the media app while 1Password item is still a stub.
+    argocd.argoproj.io/sync-options: SkipResourceHealthCheck=true
 spec:
   refreshInterval: 1h
   secretStoreRef:
@@ -82,11 +84,18 @@ spec:
               if ! grep -qE '^[[:space:]]*Table[[:space:]]*=' "$conf"; then
                 sed -i '/^\[Interface\]/a Table = off' "$conf"
               fi
-              wg-quick down wg0 2>/dev/null || true
-              wg-quick up wg0
-              echo "wg0 up"
-              wg show
-              sleep infinity
+              # Keep the sidecar alive even if conf is still a 1Password stub,
+              # so qBit can come Ready for config copy / UI smoke.
+              while true; do
+                wg-quick down wg0 2>/dev/null || true
+                if wg-quick up wg0; then
+                  echo "wg0 up"
+                  wg show
+                  sleep infinity
+                fi
+                echo "wg-quick failed; retrying in 30s (check 1Password Mullvad conf)"
+                sleep 30
+              done
           securityContext:
             capabilities:
               add:
