@@ -1,8 +1,8 @@
 # HTTP monitors for public *.lab URLs (aligned with Homepage tiles).
 #
 # Semantics:
-# - Direct app (or transitional Envoy → VM): max_redirects=0; 200–399 from the app
-#   (often a login 302) means the backend answered.
+# - Direct app (Jellyfin, HA, Homepage, …) or transitional Envoy → legacy host:
+#   max_redirects=0; 200–399 from the app (often a login 302) means the backend answered.
 # - Authentik Proxy (Uptime Kuma, media *arr/qBit): an unauthenticated GET on `/`
 #   only proves Envoy + Authentik (outpost start 302). Probe an Authentik
 #   skip_path that reaches the app (see blueprints-uptime / blueprints-media):

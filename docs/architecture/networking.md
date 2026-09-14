@@ -87,7 +87,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 
 ### Transitional reverse-proxy (strangler)
 
-Final hostnames were published early; media backends are now in-cluster:
+Final hostnames were published early; media + Home Assistant backends are now in-cluster:
 
 ```text
 Client → https://jellyfin.lab.jacobdrury.com → Envoy → Jellyfin Service in prd
@@ -96,7 +96,7 @@ Client → https://homeassistant.lab.jacobdrury.com → Envoy → HA Service (+ 
                                       Pi-hole still → LXC until cutover
 ```
 
-`arr.lab.jacobdrury.com` and `arr.homelab.com` are **retired** (no A records). Homepage links only to `*.lab` names. Remaining cutovers = change the HTTPRoute backend, not bookmarks.
+`arr.lab.jacobdrury.com` and `arr.homelab.com` are **retired** (no A records). Homepage links only to `*.lab` names. Remaining transitional cutovers (Pi-hole, etc.) = change the HTTPRoute backend, not bookmarks.
 
 **Resolving names on LAN**
 

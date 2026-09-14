@@ -1,9 +1,7 @@
 # Phase 2 transitional routes: TLS on Envoy, backends stay on legacy hosts.
 # DNS A records → 192.168.5.21 Envoy VIP on yavin (infrastructure/lab.yaml dns.app_hosts).
 # Uses Envoy Gateway Backend CRD (Argo excludes EndpointSlice by default).
-# Jellyfin cut over to media/jellyfin (Envoy → Service).
-# qbittorrent / sonarr / sonarr-tv / prowlarr → Authentik Proxy.
-# Home Assistant cut over to apps/home-assistant (Envoy → Service + Authentik OIDC).
+# Cut over to in-cluster: Jellyfin, *arr/qBit (Authentik Proxy), Home Assistant (OIDC).
 # Remaining: Pi-hole / scarif / proxmox.
 ---
 # Pi-hole UI — Envoy Backend directly to LXC (no sidecar proxy).

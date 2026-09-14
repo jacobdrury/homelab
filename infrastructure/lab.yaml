@@ -77,9 +77,9 @@ services:
   pihole:
     host: 192.168.1.11 # LXC on homelab02 · network: drury · migrates to k8s last
   homeassistant:
-    host: 192.168.2.8 # retired HA OS VM (IoT); live HA is k8s → Envoy .21
+    host: 192.168.2.8 # legacy HA OS VM (IoT); live HA is k8s → Envoy .21 — stop when soak done
   proxmox:
-    host: 192.168.1.12 # homelab02 · Proxmox UI :8006 · hosts arr / Pi-hole / HA
+    host: 192.168.1.12 # homelab02 · Proxmox UI :8006 · hosts arr / Pi-hole / legacy HA VM
   # gateway: 192.168.1.1  # UDM Pro — add when needed for IaC
 
 tailscale:

@@ -1,6 +1,6 @@
 # Home Assistant
 
-Phase 3 workload on Talos `prd`. Leans: [decisions](../decisions.md) · cutover checklist: [roadmap](../roadmap.md).
+Live on Talos `prd` (Phase 3). Leans: [decisions](../decisions.md).
 
 ## Placement
 
@@ -11,17 +11,17 @@ Phase 3 workload on Talos `prd`. Leans: [decisions](../decisions.md) · cutover 
 | Config | RWO PVC on **`scarif-iscsi`** (`/config`) |
 | Recorder DB | CNPG Cluster **`home-assistant-pg`** (dedicated; not `media-pg`) |
 | Ingress | Envoy HTTPRoute → Service `:8123` — `https://homeassistant.lab.jacobdrury.com` |
-| Auth | Authentik **OIDC** via [hass-oidc-auth](https://integrations.goauthentik.io/miscellaneous/home-assistant/) (custom component). Not Authentik Proxy. Local HA user + SSO linked via `automatic_user_linking` (usernames match — **`jacob`**) |
+| Auth | Authentik **OIDC** via [hass-oidc-auth](https://integrations.goauthentik.io/miscellaneous/home-assistant/) (custom component). Not Authentik Proxy. Local user **`jacob`** linked to Authentik; `automatic_user_linking` off |
 | Radios | None today — no USB passthrough; ClusterIP only |
-| IoT reachability | UniFi **Homelab → IoT** allow (HA pods on Homelab VLAN reach `192.168.2.0/24`) |
+| IoT reachability | UniFi **Homelab → IoT** allow + return; **IoT → Homelab Envoy `.21:80/443`** for device webhooks — [networking](networking.md) |
 
 ## Auth detail
 
-Authentik blueprint (`blueprints-homeassistant.yaml`) creates OAuth2 provider + app slug **`homeassistant`**. HA package sets `auth_oidc` discovery URL and client id/secret. Redirect: `/auth/oidc/callback`. Keep a local HA admin until SSO is verified.
+Authentik blueprint (`blueprints-homeassistant.yaml`) creates OAuth2 provider + app slug **`homeassistant`**. HA package sets `auth_oidc` discovery URL and client id/secret. Redirect: `/auth/oidc/callback`. Keep a local HA admin as break-glass.
 
-## Cutover source
+## Legacy VM
 
-Proxmox VM 105 on pc (black) — HA OS @ `192.168.2.8` (VLAN 2). Scripts copy `/config` and migrate `home-assistant_v2.db` → Postgres (pgloader). URL unchanged at cutover.
+Proxmox VM 105 (`192.168.2.8`, VLAN 2) was the HA OS source. Config + recorder migrated; stop / `onboot=0` when soak is done. Scripts remain under `apps/home-assistant/scripts/` for reference only.
 
 ## Related
 

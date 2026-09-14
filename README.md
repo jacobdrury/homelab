@@ -9,13 +9,13 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | Compute | Talos `prd`: **yavin** (CP) + **naboo** (worker on scarif) · Proxmox **homelab02** (HA / Pi-hole / bots) | Expand to **3 BM CPs** (hoth/endor); drain naboo |
 | Access | Tailscale + **`https://*.lab`** via Envoy `.21` | Same URLs · k8s Connector replaces homelab02 for Homelab |
 | Storage | **scarif** — 24TB UD · **NFS** + **iSCSI** (`scarif-nfs` / `scarif-iscsi`) · naboo on NVMe | Same + optional array/parity |
-| pc (black) | HA + Pi-hole + discord-bots · **arr VM stopped** | **Personal gaming** (after HA/Pi-hole cutover) |
+| pc (black) | Pi-hole + discord-bots · **arr + HA VMs stop when retired** | **Personal gaming** (after Pi-hole cutover) |
 | Network | Homelab **VLAN 5** + UniFi **ZBF** · Drury (Pi-hole, Proxmox) | Full lab on VLAN + Tailscale |
-| Apps | **Media on k8s** (Jellyfin / *arr / qBit) · Homepage / Authentik / Kuma · HA + Pi-hole still transitional | HA + Pi-hole on k8s |
+| Apps | **Media + Home Assistant on k8s** · Homepage / Authentik / Kuma · Pi-hole still transitional | Pi-hole on k8s |
 | Delivery | **Argo CD** · `https://argocd.lab.jacobdrury.com` | Same |
 | Secrets | **1Password** → Connect → ESO (`ClusterSecretStore/onepassword`) | Same |
 
-**Next:** Phase **3** — **Home Assistant** → optional Discord bots → **Pi-hole last**.
+**Next:** Phase **3** — optional Discord bots → **Pi-hole last**.
 
 ## Docs
 
@@ -41,4 +41,4 @@ Pins: [`.prototools`](.prototools). Install: [docs/setup/local-tools.md](docs/se
 
 ## Status
 
-Inventory done. Phase 1 storage **done**. Phase **1.5** **done**. **yavin** + **naboo** on Talos `prd` (Cilium L2 + CSI + Connect/ESO + Argo + Envoy). UniFi **ZBF** live. Executing [roadmap](docs/roadmap.md): **transitional routes → Homepage**.
+Inventory done. Phase 1 storage **done**. Phase **1.5** **done**. **yavin** + **naboo** on Talos `prd` (Cilium L2 + CSI + Connect/ESO + Argo + Envoy). UniFi **ZBF** live. Media + **Home Assistant** on GitOps; remaining transitional: Pi-hole / scarif / proxmox UI.

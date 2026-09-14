@@ -44,7 +44,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; **LAN ad blocking**; `*.lab` stays in Cloudflare |
 | Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` (`arr.homelab.com` retired Sep 2026) |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
-| Apps (migrate order) | ~~*arr + qBit → Jellyfin~~ **done** → HA → **Pi-hole last**. **URLs first:** Envoy transitional routes; swap backends at cutover. **Homepage** = first GitOps app after Envoy |
+| Apps (migrate order) | ~~*arr + qBit → Jellyfin → HA~~ **done** → **Pi-hole last**. **URLs first:** Envoy transitional routes; swap backends at cutover. **Homepage** = first GitOps app after Envoy |
 | Observability timing | Bootstrap: **`connect/`** + k9s + talosctl. **Homepage** first after Envoy (Uptime Kuma with/after it). **metrics-server** early (Metrics API / Homepage / HPA — not the full stack). **Prometheus/Grafana** Phase 5 |
 | Transitional ingress | Envoy `*.lab` → in-cluster Services after cutover (media + HA); remaining Pi-hole / scarif / proxmox still transitional — **no DNS/URL change** at cutover |
 | Games (ATM10) | **Phase 6** — after core platform stable; **itzg/minecraft-server** on k8s; iSCSI block PVC; pin to beefiest node — [games](architecture/games.md) |

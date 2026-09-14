@@ -235,8 +235,9 @@ config:
     - Home:
         - Home Assistant:
             href: https://homeassistant.lab.jacobdrury.com
-            description: Home automation (transitional)
+            description: Home automation
             icon: home-assistant.png
+            siteMonitor: https://homeassistant.lab.jacobdrury.com
 
     - Infrastructure:
         - UniFi:

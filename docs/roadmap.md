@@ -23,9 +23,9 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 
 ## What's next — Phase 3 (media done)
 
-Media stack is on `prd` ([media](architecture/media.md)); arr VM 101 is **stopped** (`onboot=0`). Home Assistant GitOps is in [apps/home-assistant](../clusters/prd/apps/home-assistant/) ([home-assistant](architecture/home-assistant.md)) — run cutover scripts to leave VM 105. Remaining: optional Discord bots, **Pi-hole last**.
+Media stack is on `prd` ([media](architecture/media.md)); arr VM 101 is **stopped** (`onboot=0`). **Home Assistant** is live on k8s ([apps/home-assistant](../clusters/prd/apps/home-assistant/), [arch](architecture/home-assistant.md)) — stop VM 105 when soak is done. Remaining: optional Discord bots, **Pi-hole last**.
 
-Phase 2 leftovers (non-blocking for HA cutover):
+Phase 2 leftovers (non-blocking):
 
 | Step | Action |
 |------|--------|
@@ -44,7 +44,7 @@ Tools: `cd connect/prd` · `moon run connect:sync` · [tailscale README](../infr
 4. **Migrate once** — apps to GitOps on `prd` (**Pi-hole last**)  
 5. **Expand later** — join **hoth** + **endor** as CPs (**1→3**); free pc (black) → gaming
 
-pc (black) **stays in lab during transition** — media cutover **done**; HA / Pi-hole / discord-bots still on Proxmox until their Phase 3 steps.
+pc (black) **stays in lab during transition** — media + HA cutovers **done**; Pi-hole / discord-bots still on Proxmox until their Phase 3 steps.
 
 ```mermaid
 flowchart LR
@@ -178,7 +178,7 @@ Do this for break-glass + migration SSH predictability. Scope is **light** — n
 | **scarif** | `192.168.5.10` | Unraid root / UI |
 | **homelab02** | `192.168.1.12` | Proxmox |
 | **arr** | `192.168.1.9` | VM 101 — **stopped** / `onboot=0`; media configs archived |
-| **home-assistant** | `192.168.2.8` | VM 105 — HA OS (VLAN 2) |
+| **home-assistant** | `192.168.2.8` | VM 105 — HA OS (VLAN 2); live HA is k8s — stop when soak done |
 | **pihole** | `192.168.1.11` | LXC 106 |
 | **discord-bots** | `192.168.1.18` | VM 103 (optional but include) |
 
@@ -232,7 +232,7 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 | `jellyfin.lab.jacobdrury.com` | Jellyfin Service in `media` | Cut over; SQLite on iSCSI |
 | `qbittorrent.lab…` | qBit Service (+ Authentik) | Cut over; Mullvad WG sidecar |
 | `sonarr` / `sonarr-tv` / `prowlarr` | *arr Services (+ Authentik) | Cut over; `media-pg` |
-| `homeassistant.lab…` | HA Service in `home-assistant` (+ Authentik OIDC) | Cut over GitOps; run copy/migrate scripts |
+| `homeassistant.lab…` | HA Service in `home-assistant` (+ Authentik OIDC) | **Cut over** (Sep 2026) |
 | `scarif.lab…` | Unraid via Envoy | NAS stays |
 | `pihole.lab…` | Pi-hole LXC (transitional) | Migrate **last** |
 | `proxmox.lab…` | homelab02 `:8006` (transitional) | Stays until black PC retires |
@@ -304,15 +304,15 @@ Cut over workloads → GitOps on `prd`. Remaining Proxmox guests on **pc (black)
 1. ~~*arr + qBittorrent (Mullvad WG sidecar + config copy; Authentik Proxy; `media-pg`)~~ **done** — see [media](architecture/media.md)  
 2. ~~Jellyfin (library on **scarif NFS**; SQLite on iSCSI; GPU/QSV optional)~~ **done** — `apps/media/jellyfin.yaml`  
    - arr VM **stopped** / `onboot=0`; `arr.lab` + `arr.homelab.com` DNS retired  
-3. Home Assistant — GitOps in `apps/home-assistant/` ([arch](architecture/home-assistant.md)); **cutover:** copy + recorder→CNPG scripts; then stop VM 105  
+3. ~~Home Assistant (Container + CNPG recorder + Authentik OIDC)~~ **done** — [home-assistant](architecture/home-assistant.md); stop VM 105 after soak  
 4. Discord bots (optional — or leave on Proxmox until black PC retires)  
 5. **Pi-hole** — final cutover from pc (black) LXC → k8s; point LAN at cluster Pi-hole  
 
-**Already on cluster:** Homepage, Uptime Kuma, full **media** stack; HA manifests (pending operator cutover); **`*.lab` URLs** on Envoy. Remaining cutovers = retarget transitional HTTPRoutes / move pods — not new consumer hostnames.
+**Already on cluster:** Homepage, Uptime Kuma, full **media** stack, **Home Assistant**; **`*.lab` URLs** on Envoy. Remaining cutovers = retarget transitional HTTPRoutes (Pi-hole) / move pods — not new consumer hostnames.
 
 Each migrate: `apps/` → Argo → `*.lab.jacobdrury.com` → retire old guest.
 
-pc (black) retained until HA + Pi-hole are validated; then idle / gaming.
+pc (black) retained until Pi-hole is validated; then idle / gaming.
 
 **Exit:** All listed apps on `prd`; old guests retired.
 
