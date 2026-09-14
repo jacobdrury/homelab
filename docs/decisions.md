@@ -37,7 +37,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Domain | `lab.jacobdrury.com`; registrar Squarespace → **Cloudflare DNS** (OpenTofu), full Cloudflare transfer later |
 | TLS | cert-manager + **Let’s Encrypt DNS-01** via Cloudflare; wildcard **`*.lab.jacobdrury.com`** on Envoy; **scarif** HTTPS via Envoy proxy to Unraid HTTP |
 | Remote `*.lab` URLs | **Same names** home and away: Cloudflare RFC1918 A records; LAN via Pi-hole forward; Tailscale **split DNS → Cloudflare** + **subnet router** — [networking](architecture/networking.md#same-urls-at-home-and-away) |
-| Homelab firewall | **Zone-Based Firewall** (UniFi OS 9+): Drury → Homelab allow all; **Homelab → Drury = Pi-hole DNS only** (`192.168.1.11:53`); deny Homelab → IoT/Guest/Camera; Isolated → Pi-hole DNS. Drop Homelab→Pi-hole when Pi-hole moves to k8s — [networking](architecture/networking.md) |
+| Homelab firewall | **Zone-Based Firewall** (UniFi OS 9+): Drury → Homelab allow all; **Homelab → IoT allow** (HA devices); Homelab → Guest/Camera deny; Homelab → Drury = Pi-hole DNS (+ transitional Envoy); IoT/Isolated → Pi-hole DNS — [networking](architecture/networking.md) |
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
 | Pi-hole IaC | OpenTofu under `infrastructure/pihole/` — config in Git; migrate **deployment** to k8s last |

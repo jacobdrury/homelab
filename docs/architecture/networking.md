@@ -36,11 +36,12 @@ Example scheme (pick numbers that fit your UniFi site): see table above. **scari
 
 OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Firewall** (UniFi OS 9+) via `unifi_firewall_zone` + `unifi_firewall_zone_policy` — not legacy LAN_IN.
 
-- **Zones:** `Drury` · `Homelab` · `Isolated` (IoT + Guest + Camera) — Homelab is **not** in the same zone as Drury  
+- **Zones:** `Drury` · `Homelab` · **`IoT`** · `Isolated` (Guest + Camera)  
 - **Drury → Homelab:** allow all (mgmt + NFS); return traffic auto-allowed  
-- **Homelab → Drury:** Pi-hole DNS + transitional Envoy targets (Pi-hole UI / HA / Proxmox). Media→arr HTTP rule **removed** after cutover.
-- **Homelab → Isolated:** deny  
-- **Isolated → Pi-hole:** DNS only  
+- **Homelab → Drury:** Pi-hole DNS + transitional Envoy targets (Pi-hole UI / Proxmox)  
+- **Homelab → IoT:** **allow all** (Home Assistant on k8s must reach devices)  
+- **Homelab → Isolated (Guest/Camera):** deny  
+- **IoT / Isolated → Pi-hole:** DNS only  
 - **Homelab → Internet:** External zone defaults (allow)  
 - Codify static reservations for scarif, yavin, and `k8s.lab` target  
 - Don’t IaC every Wi‑Fi tweak on day one  

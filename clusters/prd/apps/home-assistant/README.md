@@ -37,8 +37,10 @@ If the migrated `configuration.yaml` already defines top-level `http:`, `recorde
 
 Envoy → Service (native HA + OIDC custom component). **Not** Authentik Proxy. Redirect URI: `https://homeassistant.lab.jacobdrury.com/auth/oidc/callback`. Blueprint: `clusters/prd/apps/authentik/blueprints-homeassistant.yaml`.
 
+**SSO ↔ local user:** `features.automatic_user_linking: true` links OIDC `preferred_username` to an existing HA user with the same username. Both sides use **`jacob`**. After you confirm SSO lands on the same profile, set `automatic_user_linking: false` in `homelab-package.yaml` (existing links keep working).
+
 ## Notes
 
-- No USB radios (inventory); ClusterIP only — revisit `hostNetwork` if mDNS/SSDP discovery is required.
-- Image pinned to `2026.9.2` (+ digest); bump deliberately.
+- No USB radios (inventory); ClusterIP only — UniFi **Homelab → IoT** allow covers device APIs (ESPHome, etc.).
+- Image pinned to match HA OS backup major (`2025.4.4`); bump deliberately.
 - Homepage tile and Uptime Kuma monitor already use `homeassistant.lab.jacobdrury.com`.

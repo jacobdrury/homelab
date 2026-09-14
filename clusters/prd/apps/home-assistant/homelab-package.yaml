@@ -23,8 +23,14 @@ data:
 
     # https://integrations.goauthentik.io/miscellaneous/home-assistant/
     # Custom component: christiaangoossens/hass-oidc-auth (custom_components/auth_oidc).
+    # automatic_user_linking: OIDC preferred_username must match HA local username
+    # (jacob). Disable after first successful SSO link — links persist.
     auth_oidc:
       client_id: homeassistant
       client_secret: !secret authentik_client_secret
       discovery_url: https://auth.lab.jacobdrury.com/application/o/homeassistant/.well-known/openid-configuration
       display_name: Authentik
+      claims:
+        username: preferred_username
+      features:
+        automatic_user_linking: true

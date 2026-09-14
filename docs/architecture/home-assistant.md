@@ -11,8 +11,9 @@ Phase 3 workload on Talos `prd`. Leans: [decisions](../decisions.md) · cutover 
 | Config | RWO PVC on **`scarif-iscsi`** (`/config`) |
 | Recorder DB | CNPG Cluster **`home-assistant-pg`** (dedicated; not `media-pg`) |
 | Ingress | Envoy HTTPRoute → Service `:8123` — `https://homeassistant.lab.jacobdrury.com` |
-| Auth | Authentik **OIDC** via [hass-oidc-auth](https://integrations.goauthentik.io/miscellaneous/home-assistant/) (custom component). Not Authentik Proxy |
+| Auth | Authentik **OIDC** via [hass-oidc-auth](https://integrations.goauthentik.io/miscellaneous/home-assistant/) (custom component). Not Authentik Proxy. Local HA user + SSO linked via `automatic_user_linking` (usernames match — **`jacob`**) |
 | Radios | None today — no USB passthrough; ClusterIP only |
+| IoT reachability | UniFi **Homelab → IoT** allow (HA pods on Homelab VLAN reach `192.168.2.0/24`) |
 
 ## Auth detail
 
