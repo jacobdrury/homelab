@@ -100,8 +100,10 @@ config:
   settingsString: |
     title: Homelab
     description: lab.jacobdrury.com
-    # Show info widgets strip (kubernetes node stats).
-    headerStyle: underlined
+    # Kubernetes widget is relocated to the footer via custom.css.
+    headerStyle: clean
+    theme: dark
+    color: slate
     target: _blank
     hideVersion: true
     statusStyle: dot
@@ -295,7 +297,7 @@ config:
                 - resources.cpu
                 - resources.mem
 
-  # Info widgets (top strip). Requires metrics-server for kubernetes CPU/memory.
+  # Kubernetes widget (relocated to footer via custom.css). Needs metrics-server.
   widgets:
     - kubernetes:
         cluster:
@@ -313,11 +315,75 @@ config:
   bookmarks: []
   docker: {}
 
+# Homepage has no native footer info-widget slot; pin kubernetes into the bottom bar.
+configMaps:
+  custom:
+    enabled: true
+    data:
+      custom.css: |
+        /* Theme/color are locked in settings.yaml; hide remaining footer chrome. */
+        #revalidate {
+          display: none !important;
+        }
+
+        #footer {
+          position: fixed !important;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 50;
+          margin-top: 0 !important;
+          padding: 0.75rem 2rem !important;
+          background: transparent;
+          pointer-events: none;
+        }
+
+        /* Pin kubernetes info widgets into the footer bar. */
+        #information-widgets {
+          position: fixed !important;
+          left: 50%;
+          transform: translateX(-50%);
+          bottom: 0.55rem;
+          z-index: 45;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+          width: max-content;
+          max-width: calc(100vw - 4rem);
+          pointer-events: none;
+        }
+
+        #information-widgets #widgets-wrap {
+          justify-content: center !important;
+          width: auto !important;
+          flex-wrap: nowrap !important;
+          gap: 1.25rem !important;
+          pointer-events: auto;
+        }
+
+        #information-widgets .widget-container {
+          pointer-events: auto;
+        }
+
+        #information-widgets-right {
+          display: none !important;
+        }
+
+        .container.relative.m-auto.flex.flex-col.justify-start.z-10.h-full.min-h-screen {
+          padding-bottom: 5.5rem !important;
+        }
+
 persistence:
   logs:
     enabled: true
     type: emptyDir
     mountPath: /app/config/logs
+  custom-css:
+    enabled: true
+    type: configMap
+    name: homepage-custom
+    mountPath: /app/config/custom.css
+    subPath: custom.css
 
 resources:
   requests:
