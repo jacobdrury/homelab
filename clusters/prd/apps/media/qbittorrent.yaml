@@ -131,6 +131,9 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            # Match Compose paths used in copied qBittorrent.conf
+            - name: downloads
+              mountPath: /home/data/downloads
             - name: downloads
               mountPath: /downloads
           readinessProbe:

@@ -60,9 +60,10 @@ Procedure: [`copy-configs-from-arr.sh`](../../clusters/prd/apps/media/scripts/co
 
 After copy:
 
-1. qBit → Network interface **`wg0`**
-2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080` (was localhost via Gluetun)
-3. Root folders → `/anime`, `/tv`, `/downloads` (match Deployments)
+1. qBit → Network interface **`wg0`**; WebUI port **8080**
+2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080`
+3. Prowlarr apps → `sonarr-anime` / `sonarr-tv` in-cluster Services
+4. Media mounts keep Compose paths: `/home/data/anime`, `/home/data/tv`, `/home/data/downloads`
 
 ## qBittorrent + VPN
 

@@ -23,16 +23,14 @@ The script: stops Compose for the four apps → tar configs → untar into PVCs 
 
 | App | Fix |
 |-----|-----|
-| qBittorrent | Options → Advanced → Network interface = **`wg0`** |
-| Sonarr ×2 | Download client host `localhost` → **`qbittorrent.media.svc.cluster.local`** port **8080** |
-| Paths | Mounts are `/anime`, `/tv`, `/downloads` — align root folders if Compose used different paths |
+| qBittorrent | Network interface = **`wg0`**; WebUI **8080** |
+| Sonarr ×2 | Download client → **`qbittorrent.media.svc.cluster.local:8080`** |
+| Prowlarr | Apps → in-cluster Sonarr Services |
+| Paths | Keep Compose mounts: `/home/data/{anime,tv,downloads}` |
 
 ## Cutover (HTTPRoutes)
 
-1. Smoke via port-forward.
-2. Add `httproutes.yaml` to `application.yaml` `include`.
-3. Remove `qbittorrent` / `sonarr` / `sonarr-tv` / `prowlarr` Backend+HTTPRoute from `apps/transitional/resources.yaml`.
-4. Keep those Compose services stopped on arr.
+Done when `httproutes.yaml` is in the Argo include and transitional Backends for those four apps are removed. Jellyfin stays transitional.
 
 ## Layout
 

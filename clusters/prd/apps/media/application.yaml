@@ -14,7 +14,7 @@ spec:
     targetRevision: main
     path: clusters/prd/apps/media
     directory:
-      include: '{namespace,storage,qbittorrent,sonarr-anime,sonarr-tv,prowlarr}.yaml'
+      include: '{namespace,storage,qbittorrent,sonarr-anime,sonarr-tv,prowlarr,httproutes}.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: media

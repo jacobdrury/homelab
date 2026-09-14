@@ -53,14 +53,16 @@ spec:
               value: America/Chicago
           ports:
             - name: http
-              containerPort: 8989
+              # Copied config.xml uses Port 8990 (anime keeps 8989).
+              containerPort: 8990
           volumeMounts:
             - name: config
               mountPath: /config
+            # Match Compose /home/data tree used in copied Sonarr DB
             - name: tv
-              mountPath: /tv
+              mountPath: /home/data/tv
             - name: downloads
-              mountPath: /downloads
+              mountPath: /home/data/downloads
           readinessProbe:
             tcpSocket:
               port: http

@@ -1,29 +1,51 @@
 #!/usr/bin/env bash
 # Copy *arr / qBit configs from Proxmox arr VM into media namespace iSCSI PVCs.
-# Requires: kubectl (connect/prd), SSH to arr@192.168.1.9, jq optional.
+# Requires: kubectl (connect/prd), SSH to arr. Set SSHPASS if using password auth.
 #
 # Usage (from repo root):
 #   source connect/env.sh
-#   ./clusters/prd/apps/media/scripts/copy-configs-from-arr.sh
-set -euo pipefail
+#   ARR_HOST=arr@arr.lab.jacobdrury.com SSHPASS=… ./clusters/prd/apps/media/scripts/copy-configs-from-arr.sh
+set -eo pipefail
 
-ARR_HOST="${ARR_HOST:-arr@192.168.1.9}"
+ARR_HOST="${ARR_HOST:-arr@arr.lab.jacobdrury.com}"
 ARR_STACK="${ARR_STACK:-/home/arr/docker/arr-stack}"
 NS=media
 COMPOSE_DIR="${COMPOSE_DIR:-/home/arr/docker}"
 
-# Map: remote relative dir under ARR_STACK → PVC name
-# Adjust REMOTE_* if compose volume paths differ on the VM.
-declare -A PVC_FOR=(
-  [qbittorrent]=qbittorrent-config
-  [sonarr-anime]=sonarr-anime-config
-  [sonarr-tv]=sonarr-tv-config
-  [prowlarr]=prowlarr-config
-)
+remote_config() {
+  case "$1" in
+    qbittorrent) echo "${ARR_STACK}/qbittorrent" ;;
+    sonarr-anime) echo "${ARR_STACK}/sonarr-anime/data" ;;
+    sonarr-tv) echo "${ARR_STACK}/sonarr-tv/data" ;;
+    prowlarr) echo "${ARR_STACK}/prowlarr/data" ;;
+    *) echo "unknown app: $1" >&2; return 1 ;;
+  esac
+}
 
-echo "==> Stopping Compose apps on ${ARR_HOST} (Jellyfin stays up)"
-ssh -o BatchMode=yes "${ARR_HOST}" \
-  "cd ${COMPOSE_DIR} && docker compose stop qbittorrent sonarr-anime sonarr-tv prowlarr"
+pvc_for() {
+  case "$1" in
+    qbittorrent) echo qbittorrent-config ;;
+    sonarr-anime) echo sonarr-anime-config ;;
+    sonarr-tv) echo sonarr-tv-config ;;
+    prowlarr) echo prowlarr-config ;;
+    *) echo "unknown app: $1" >&2; return 1 ;;
+  esac
+}
+
+ssh_arr() {
+  if [[ -n "${SSHPASS:-}" ]] && command -v sshpass >/dev/null; then
+    sshpass -e ssh \
+      -o StrictHostKeyChecking=accept-new \
+      -o PreferredAuthentications=password \
+      -o PubkeyAuthentication=no \
+      "${ARR_HOST}" "$@"
+    return
+  fi
+  ssh -o BatchMode=yes "${ARR_HOST}" "$@"
+}
+
+echo "==> Stopping Compose apps on ${ARR_HOST} (Jellyfin + gluetun stay up for now)"
+ssh_arr "cd ${COMPOSE_DIR} && docker compose stop qbittorrent sonarr-anime sonarr-tv prowlarr"
 
 echo "==> Scaling down k8s Deployments (RWO iSCSI PVCs cannot attach to copy pods otherwise)"
 kubectl -n "${NS}" scale deploy/qbittorrent deploy/sonarr-anime deploy/sonarr-tv deploy/prowlarr --replicas=0
@@ -34,13 +56,12 @@ trap 'rm -rf "${tmpdir}"' EXIT
 
 copy_one() {
   local name="$1"
-  local pvc="${PVC_FOR[$name]}"
-  local remote="${ARR_STACK}/${name}"
+  local pvc remote
+  pvc="$(pvc_for "${name}")"
+  remote="$(remote_config "${name}")"
 
   echo "==> ${name}: fetch from ${remote}"
-  ssh -o BatchMode=yes "${ARR_HOST}" \
-    "test -d ${remote}/config && tar -C ${remote}/config -cf - . || tar -C ${remote} -cf - ." \
-    >"${tmpdir}/${name}.tar"
+  ssh_arr "test -d ${remote} && tar -C ${remote} -cf - ." >"${tmpdir}/${name}.tar"
 
   echo "==> ${name}: load into PVC ${pvc}"
   kubectl -n "${NS}" delete pod "cfg-copy-${name}" --ignore-not-found --wait=true
@@ -66,7 +87,7 @@ EOF
 )"
 
   kubectl -n "${NS}" wait --for=condition=Ready "pod/cfg-copy-${name}" --timeout=120s
-  kubectl -n "${NS}" exec -i "cfg-copy-${name}" -- sh -c 'rm -rf /config/* /config/.[!.]* 2>/dev/null; tar -C /config -xf -' \
+  kubectl -n "${NS}" exec -i "cfg-copy-${name}" -- sh -c 'rm -rf /config/* /config/.[!.]* /config/..?* 2>/dev/null; tar -C /config -xf -' \
     <"${tmpdir}/${name}.tar"
   kubectl -n "${NS}" exec "cfg-copy-${name}" -- chown -R 99:100 /config
   kubectl -n "${NS}" delete pod "cfg-copy-${name}" --wait=true
@@ -86,11 +107,11 @@ kubectl -n "${NS}" rollout status deploy/prowlarr --timeout=180s
 
 cat <<'EOF'
 
-Next:
-  1. Port-forward and set qBit Network Interface = wg0
-  2. Point Sonarr download clients at qbittorrent.media.svc.cluster.local:8080
-  3. Align root folders with /anime /tv /downloads if needed
-  4. Enable httproutes.yaml in application.yaml; remove those routes from transitional/
+Next (post-copy fixes):
+  1. qBit Network Interface = wg0; WebUI port 8080
+  2. Sonarr download clients → qbittorrent.media.svc.cluster.local:8080
+  3. Prowlarr apps → sonarr-*.media.svc.cluster.local
+  4. Enable httproutes.yaml; remove those routes from transitional/
 
 Compose on arr remains stopped for the four apps — do not start them again after cutover.
 EOF

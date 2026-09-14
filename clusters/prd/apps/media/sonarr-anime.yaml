@@ -57,10 +57,11 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            # Match Compose /home/data tree used in copied Sonarr DB
             - name: anime
-              mountPath: /anime
+              mountPath: /home/data/anime
             - name: downloads
-              mountPath: /downloads
+              mountPath: /home/data/downloads
           readinessProbe:
             tcpSocket:
               port: http
