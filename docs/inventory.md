@@ -69,28 +69,27 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 
 **Must migrate or retire all guests before wipe → personal gaming.**
 
-### VM 101 `arr` — media stack
+### VM 101 `arr` — media stack (partially retired)
 
 Compose: `/home/arr/docker/docker-compose.yml` · config `/home/arr/docker/arr-stack/`.
+
+**Migrated to k8s** (`clusters/prd/apps/media/`): Sonarr anime/TV, Prowlarr, qBittorrent (+ Mullvad WG sidecar). Compose services for those four should stay **stopped**.
+
+**Still on this VM (transitional):**
 
 | Container | Image | Network | Ports (on `192.168.1.9`) |
 |-----------|-------|---------|--------------------------|
 | `jellyfin` | `jellyfin/jellyfin:10.11.11` | default | `8096`, `8920`, `1900/udp`, `7359/udp` |
-| `gluetun` | `qmcgaw/gluetun:v3.41.1` | default | `8085`, `8989–8990`, `9696`, `6767`, `6881` |
-| `sonarr-tv` | `linuxserver/sonarr:4.0.19` | `service:gluetun` | via Gluetun (`:8990`) · `sonarr-tv.lab` |
-| `sonarr-anime` | `linuxserver/sonarr:4.0.19` | `service:gluetun` | via Gluetun (`:8989`) · `sonarr.lab` |
-| `prowlarr` | `linuxserver/prowlarr:2.4.0` | `service:gluetun` | via Gluetun (`:9696`) |
-| `qbittorrent` | `linuxserver/qbittorrent:5.2.3` | `service:gluetun` | via Gluetun (`:8085`) |
 
-Gluetun: **Mullvad WireGuard** · port forwarding off. Jellyfin is off-VPN.
+Legacy Gluetun + *arr/qBit containers may still exist on disk but are not the live backends for `*.lab`.
 
 | Path | Size | Used by |
 |------|------|---------|
-| `/mnt/data` | NFSv4 | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (fstab · `_netdev,nofail` — boot mount, not automount) |
-| `/mnt/data/media/anime` | 6.9 TB | Jellyfin, Sonarr |
-| `/mnt/data/media/tv` | 608 GB | Jellyfin, Sonarr |
-| `/mnt/data/media/downloads` | ~27 GB | qBittorrent |
-| `/home/arr/docker/arr-stack/*` | on 32 GB root | app config |
+| `/mnt/data` | NFSv4 | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (fstab · `_netdev,nofail`) |
+| `/mnt/data/media/anime` | 6.9 TB | Jellyfin (VM), Sonarr (k8s) |
+| `/mnt/data/media/tv` | 608 GB | Jellyfin (VM), Sonarr (k8s) |
+| `/mnt/data/media/downloads` | ~27 GB | qBittorrent (k8s) |
+| `/home/arr/docker/arr-stack/*` | on 32 GB root | Jellyfin config; archived *arr/qBit configs |
 
 **VM notes:** `scsi1` (24TB passthrough) removed Aug 2025. Old XFS UUID fstab entry commented out; NFS mount in `/etc/fstab`. Needs `nfs-common` in guest.
 
@@ -176,10 +175,10 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | Pi-hole | pc (black) LXC **106** | `192.168.1.11` · `:53`/admin UI | LAN DNS · config in **`infrastructure/pihole/`** (OpenTofu) · `*.lab` → Cloudflare forward |
 | Home Assistant | pc (black) VM 105 | `192.168.2.8` (VLAN 2) | No Z-Wave/Zigbee radios |
 | **NFS (media)** | **scarif** | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (`192.168.5.10`) | ~8.7 TB library |
-| Jellyfin | pc (black) VM 101 | `192.168.1.9:8096` | `/mnt/data/media/{anime,tv}` via NFS |
-| Sonarr (anime / TV) | VM 101 via Gluetun | `:8989` (anime/`sonarr.lab`) / `:8990` (TV/`sonarr-tv.lab`) | `/mnt/data/media` via NFS |
-| qBittorrent | VM 101 via Gluetun | `:8085` | downloads · Mullvad WG |
-| Prowlarr | VM 101 via Gluetun | `:9696` | config on VM root |
+| Jellyfin | pc (black) VM 101 (transitional) | `jellyfin.lab` → Envoy → `:8096` | `/mnt/data/media/{anime,tv}` via NFS |
+| Sonarr (anime / TV) | k8s `media` | `sonarr` / `sonarr-tv`.lab → Authentik → pods | NFS libraries; Postgres `media-pg` |
+| qBittorrent | k8s `media` | `qbittorrent.lab` → Authentik → pod | downloads on NFS · Mullvad WG sidecar |
+| Prowlarr | k8s `media` | `prowlarr.lab` → Authentik → pod | Postgres `media-pg` |
 | Discord bots | pc (black) VM **103** | `192.168.1.18` | outbound only · ex homelab03 |
 
 ---

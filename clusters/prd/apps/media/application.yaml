@@ -1,5 +1,5 @@
-# Phase 3 media download stack — qBittorrent (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr.
-# Jellyfin stays transitional → arr VM until a later slice.
+# Media download stack — qBittorrent (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr.
+# Public UIs via Authentik Proxy. Jellyfin stays transitional → arr VM.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

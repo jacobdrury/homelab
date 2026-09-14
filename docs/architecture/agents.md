@@ -91,11 +91,24 @@ Order: [platform README](../../clusters/prd/platform/README.md) · [bootstrap/RE
 | Surface | What to add |
 |---------|-------------|
 | **Homepage** | Tile under the right section in [`clusters/prd/apps/homepage/values.yaml`](../../clusters/prd/apps/homepage/values.yaml) (`href` + icon; widget only if useful) |
-| **Uptime Kuma** | HTTP(S) monitor in [`infrastructure/uptime-kuma/monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf) + status page group order; `moon run uptime-kuma:apply` |
+| **Uptime Kuma** | HTTP(S) monitor in [`infrastructure/uptime-kuma/monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf) + status page group order; `moon run uptime-kuma:apply`. **Must hit the app**, not Authentik — see below |
 | **DNS** | `infrastructure/lab.yaml` `app_hosts` + `moon run dns:apply` when a new hostname is needed |
 | **Authentik** | Blueprint when the app gets SSO (OIDC or proxy) |
 
 Exceptions (skip Homepage and/or Kuma unless asked): pure operators/controllers, CSI, secret plumbing, one-off jobs, or infra with no human URL.
+
+### Uptime Kuma vs Authentik Proxy (do not skip)
+
+If the public URL is fronted by an **Authentik Proxy Provider** (HTTPRoute → `authentik-server`, like Uptime Kuma and the media stack), an unauthenticated GET on `/` returns a **302 to Authentik**. That only proves Envoy + the outpost — **not** that the backend is up.
+
+**Required for every Authentik-proxied monitor:**
+
+1. Put a health/API path on the provider’s `skip_path_regex` (blueprint), **or** reuse an existing skip (e.g. media `/api`).
+2. Point the Kuma monitor at that skip URL (see comments + examples in [`monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf)).
+3. Set `accepted_status_codes` to what the **app** returns without a browser session (e.g. *arr `/api` → `401`; qBit version API → `200`).
+4. Keep `max_redirects = 0` so a mistaken `/` probe cannot look “green” via Authentik’s 302.
+
+Wrong: `https://sonarr.lab…/` expecting `200–399`. Right: `https://sonarr.lab…/api` expecting `401`.
 
 If you helm-applied something in a pinch, get it into Git and let Argo adopt it — do not leave a second install script around.
 

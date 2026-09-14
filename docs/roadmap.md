@@ -2,7 +2,7 @@
 
 Phased path from [inventory](inventory.md) → target. Principles and checklists only; leans live in [decisions](decisions.md).
 
-## Current status (2026-09-13)
+## Current status (2026-09-14)
 
 | Phase | State | Notes |
 |-------|--------|--------|
@@ -10,8 +10,9 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; interim subnet router on homelab02 |
-| **2** Talos `prd` | **In progress** | Platform + transitional routes + Homepage/Kuma/Authentik live; next: Tailscale operator cutover, shared CNPG, etcd |
-| **3–5** | Not started | |
+| **2** Talos `prd` | **In progress** | Platform + Homepage/Kuma/Authentik live; remaining: shared CNPG collapse, etcd cadence |
+| **3** Migrate workloads | **In progress** | *arr + qBit on k8s + Authentik + `media-pg`; next: Jellyfin → HA → Pi-hole |
+| **4–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
 **IaC live today:** `infrastructure/dns/`, `unifi/`, `pihole/`, **`tailscale/`** — `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Policy: [iac](architecture/iac.md).
@@ -301,7 +302,7 @@ flowchart LR
 
 Cut over workloads → GitOps on `prd`. All Proxmox guests now on **pc (black)**. **One landing** on k8s (not Unraid Docker first). **Pi-hole** stays on pc (black) LXC until step 5 (last).
 
-1. *arr + qBittorrent (Mullvad WG sidecar + **config copy from arr VM**, not fresh install; UI at `qbittorrent.lab.jacobdrury.com`) — see [media](architecture/media.md)  
+1. ~~*arr + qBittorrent (Mullvad WG sidecar + config copy; Authentik Proxy; `media-pg`)~~ **done** — see [media](architecture/media.md)  
 2. Jellyfin (library on **scarif NFS**; GPU/QSV **optional** — not needed for typical 720/1080 direct play)  
 3. Home Assistant (downtime OK)  
 4. Discord bots (optional — or leave on Proxmox until black PC retires)  

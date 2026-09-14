@@ -28,3 +28,5 @@ The provider does **not** support import. If slug `default` already exists from 
 1. Homepage tile (`clusters/prd/apps/homepage/values.yaml`)
 2. Monitor entry in `monitors.tf` (+ `monitor_order` for the status page)
 3. `moon run uptime-kuma:apply`
+
+For **Authentik-proxied** apps, do **not** probe `/` (that only checks the Authentik login redirect). Use a `skip_path_regex` URL that reaches the backend — see comments in `monitors.tf` (media *arr `/api` → 401; qBit version API → 200).

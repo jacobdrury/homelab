@@ -53,6 +53,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Friend Minecraft | **Tailscale L3 Service expose** — TCP `:25565`; no HTTPS on game port |
 | MagicDNS tailnet suffix | Rename once in **admin console** (word list); **not** OpenTofu; hostname prefixes in k8s GitOps |
 | qBittorrent VPN | Peers via **Mullvad WireGuard sidecar** + qBit **bind to `wg0`**; UI at **`qbittorrent.lab.jacobdrury.com`** (not Gluetun on k8s) |
+| Media UI auth | **Authentik Proxy** for Sonarr ×2 / Prowlarr / qBit (same pattern as Uptime Kuma); *arr `AuthenticationMethod=External`; Homepage widgets use `/api` skip_path + API keys — [media](architecture/media.md) |
 | Power | Prefer fewer always-on watts when cheap (strip white GPU; black off when gaming-only); **not** a reason to defer k8s/GitOps |
 | Laptops | Precision optional NVENC/burst; Inspiron **out of lab plan** |
 | Backups | **Decide after Unraid is up** (parity ≠ backup; UD has no parity) |

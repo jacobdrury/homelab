@@ -1,11 +1,13 @@
 # HTTP monitors for public *.lab URLs (aligned with Homepage tiles).
 #
 # Semantics:
-# - Envoy → app (most transitional UIs): a 302 from the *app* login page means the
-#   backend answered. max_redirects=0 avoids following long login flows.
-# - Envoy → Authentik proxy → app (today: Uptime Kuma): an unauthenticated hit on
-#   `/` only proves Envoy+Authentik. Probe an Authentik skip_path that reaches the
-#   app (see blueprints-uptime.yaml), or the in-cluster Service URL.
+# - Direct app (or transitional Envoy → VM): max_redirects=0; 200–399 from the app
+#   (often a login 302) means the backend answered.
+# - Authentik Proxy (Uptime Kuma, media *arr/qBit): an unauthenticated GET on `/`
+#   only proves Envoy + Authentik (outpost start 302). Probe an Authentik
+#   skip_path that reaches the app (see blueprints-uptime / blueprints-media):
+#   - *arr `/api` → 401 without API key (app up)
+#   - qBit `/api/v2/app/version` → 200 (app up)
 
 locals {
   zone = local.lab.dns.zone
@@ -32,24 +34,28 @@ locals {
       group = "Media"
     }
     qbittorrent = {
-      name  = "qBittorrent"
-      url   = "https://qbittorrent.${local.zone}/"
-      group = "Media"
+      name                  = "qBittorrent"
+      url                   = "https://qbittorrent.${local.zone}/api/v2/app/version"
+      group                 = "Media"
+      accepted_status_codes = ["200"]
     }
     sonarr = {
-      name  = "Sonarr Anime"
-      url   = "https://sonarr.${local.zone}/"
-      group = "Media"
+      name                  = "Sonarr Anime"
+      url                   = "https://sonarr.${local.zone}/api"
+      group                 = "Media"
+      accepted_status_codes = ["401"]
     }
     sonarr_tv = {
-      name  = "Sonarr TV"
-      url   = "https://sonarr-tv.${local.zone}/"
-      group = "Media"
+      name                  = "Sonarr TV"
+      url                   = "https://sonarr-tv.${local.zone}/api"
+      group                 = "Media"
+      accepted_status_codes = ["401"]
     }
     prowlarr = {
-      name  = "Prowlarr"
-      url   = "https://prowlarr.${local.zone}/"
-      group = "Media"
+      name                  = "Prowlarr"
+      url                   = "https://prowlarr.${local.zone}/api"
+      group                 = "Media"
+      accepted_status_codes = ["401"]
     }
     homeassistant = {
       name  = "Home Assistant"

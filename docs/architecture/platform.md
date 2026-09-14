@@ -61,7 +61,7 @@ Machine configs live under `infrastructure/talos/prd/`; keep CP patches consiste
 | Jellyfin | k8s | NFS `media/`; GPU worker — [gpu](gpu.md) |
 | Sonarr ×2, Prowlarr, qBittorrent | k8s | NFS downloads; **peers via Mullvad WG**, **UI/API off-VPN** — [media](media.md) |
 | Pi-hole | k8s | Migrate **last** from pc (black) LXC — `.11` until cutover |
-| Homepage | k8s | **First** GitOps app after Envoy; tiles use `*.lab` (incl. transitional proxies) — [gethomepage.dev](https://gethomepage.dev) |
+| Homepage | k8s | **First** GitOps app after Envoy; tiles use `*.lab` (media download stack in-cluster + Authentik; Jellyfin still transitional) — [gethomepage.dev](https://gethomepage.dev) |
 | Authentik | k8s | SSO IdP — blueprints in Git for OIDC apps; Argo wired first |
 | Home Assistant | k8s | Before Pi-hole; downtime OK; USB passthrough if radio needs it |
 | ATM10 (Minecraft) | k8s | Phase 6 — iSCSI PVC; friend access via Tailscale `.ts.net` — [games](games.md) |

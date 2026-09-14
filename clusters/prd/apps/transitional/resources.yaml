@@ -38,8 +38,9 @@ spec:
           name: jellyfin
           weight: 1
 ---
-# qbittorrent / sonarr / sonarr-tv / prowlarr cut over to
-# clusters/prd/apps/media/httproutes.yaml (media namespace Services).
+# qbittorrent / sonarr / sonarr-tv / prowlarr cut over to Authentik Proxy
+# (clusters/prd/apps/authentik/resources-media-routes.yaml + blueprints-media.yaml).
+# Only Jellyfin (below) and non-media transitional apps remain here.
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
