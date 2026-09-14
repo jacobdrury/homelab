@@ -77,6 +77,7 @@ spec:
             - -ec
             - |
               set -euo pipefail
+              mkdir -p /etc/wireguard
               conf=/etc/wireguard/wg0.conf
               cp /mullvad/wg0.conf "$conf"
               chmod 600 "$conf"
