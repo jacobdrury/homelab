@@ -1,5 +1,4 @@
-# Enable at HTTPRoute cutover: add httproutes.yaml to application.yaml include,
-# then delete qbittorrent/sonarr/sonarr-tv/prowlarr Backends+HTTPRoutes from transitional/.
+# Lab HTTPS routes for media Services (Envoy Gateway).
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -21,8 +20,11 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: qbittorrent
+        - group: ""
+          kind: Service
+          name: qbittorrent
           port: 8080
+          weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -44,8 +46,11 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: sonarr-anime
+        - group: ""
+          kind: Service
+          name: sonarr-anime
           port: 8989
+          weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -67,8 +72,11 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: sonarr-tv
+        - group: ""
+          kind: Service
+          name: sonarr-tv
           port: 8990
+          weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -90,5 +98,8 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: prowlarr
+        - group: ""
+          kind: Service
+          name: prowlarr
           port: 9696
+          weight: 1
