@@ -94,22 +94,32 @@ kubectl -n "${NS}" exec pgload-home-assistant -- sh -c "
 kubectl -n "${NS}" delete pod pgload-home-assistant --wait=true
 
 echo "==> Fix sequences after data-only load"
+# pgloader data-only leaves serials stale; two-arg setval(max) with is_called=true.
+# Do not quote_ident then re-stringify for setval — that no-ops / misses sequences.
 cnpg_psql "$(cat <<'SQL'
-DO $$ DECLARE r record; BEGIN
+DO $$
+DECLARE
+  r record;
+  max_id bigint;
+BEGIN
   FOR r IN
-    SELECT quote_ident(n.nspname) AS schemaname,
-           quote_ident(c.relname) AS seqname,
-           quote_ident(t.relname) AS tblname,
-           quote_ident(a.attname) AS colname
+    SELECT
+      n.nspname AS schemaname,
+      c.relname AS tablename,
+      a.attname AS colname,
+      pg_get_serial_sequence(format('%I.%I', n.nspname, c.relname), a.attname) AS seqname
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
-    JOIN pg_depend d ON d.objid = c.oid AND d.deptype = 'a'
-    JOIN pg_class t ON t.oid = d.refobjid
-    JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = d.refobjsubid
-    WHERE c.relkind = 'S' AND n.nspname = 'public'
+    JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+    WHERE n.nspname = 'public'
+      AND c.relkind = 'r'
+      AND pg_get_serial_sequence(format('%I.%I', n.nspname, c.relname), a.attname) IS NOT NULL
   LOOP
-    EXECUTE format('SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I.%I), 1))',
-      r.schemaname || '.' || r.seqname, r.colname, r.schemaname, r.tblname);
+    EXECUTE format(
+      'SELECT coalesce(max(%I), 0) FROM %I.%I',
+      r.colname, r.schemaname, r.tablename
+    ) INTO max_id;
+    PERFORM setval(r.seqname, greatest(max_id, 1), max_id > 0);
   END LOOP;
 END $$;
 SQL
