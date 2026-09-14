@@ -10,12 +10,11 @@ metadata:
 data:
   homelab.yaml: |
     # Lab GitOps package — do not edit on the PVC; change this ConfigMap instead.
-    http:
-      use_x_forwarded_for: true
-      trusted_proxies:
-        # Cilium pod/service CIDRs (Kubernetes IPAM) + Envoy hostNetwork VIP.
-        - 10.0.0.0/8
-        - 192.168.5.0/24
+    #
+    # http: (trusted_proxies / use_x_forwarded_for) was migrated to UI storage in
+    # 2026.8 — Settings → System → Network → HTTP server. Source of truth:
+    # /config/.storage/http (already has Envoy CIDRs 10.0.0.0/8 + 192.168.5.0/24).
+    # Do not put http: here; HA ignores it and raises a repair until 2027.2.
 
     recorder:
       db_url: !secret recorder_db_url
@@ -23,8 +22,6 @@ data:
 
     # https://integrations.goauthentik.io/miscellaneous/home-assistant/
     # Custom component: christiaangoossens/hass-oidc-auth (custom_components/auth_oidc).
-    # automatic_user_linking: OIDC preferred_username must match HA local username
-    # (jacob). Disable after first successful SSO link — links persist.
     auth_oidc:
       client_id: homeassistant
       client_secret: !secret authentik_client_secret
@@ -33,9 +30,8 @@ data:
       claims:
         username: preferred_username
         groups: groups
-      # hass-oidc defaults to group name "admins"; Authentik's built-in is "authentik Admins".
+      # hass-oidc defaults to "admins"; Authentik's built-in group is "authentik Admins".
       roles:
         admin: authentik Admins
       features:
-        # Re-link SSO → local jacob (owner). Set false again after one successful Authentik login.
-        automatic_user_linking: true
+        automatic_user_linking: false

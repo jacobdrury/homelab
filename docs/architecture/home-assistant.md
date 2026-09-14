@@ -11,7 +11,8 @@ Live on Talos `prd` (Phase 3). Leans: [decisions](../decisions.md).
 | Config | RWO PVC on **`scarif-iscsi`** (`/config`) |
 | Recorder DB | CNPG Cluster **`home-assistant-pg`** (dedicated; not `media-pg`) |
 | Ingress | Envoy HTTPRoute → Service `:8123` — `https://homeassistant.lab.jacobdrury.com` |
-| Auth | Authentik **OIDC** via [hass-oidc-auth](https://integrations.goauthentik.io/miscellaneous/home-assistant/) (custom component). Not Authentik Proxy. Local user **`jacob`** linked to Authentik; `automatic_user_linking` off |
+| Auth | Authentik **OIDC** via [hass-oidc-auth](https://integrations.goauthentik.io/miscellaneous/home-assistant/) (custom component). Not Authentik Proxy. Local user **`jacob`** linked; Authentik group **`authentik Admins`** → HA owner |
+| HTTP / proxy | UI (**Settings → System → Network**) / `.storage/http` — trusted proxies `10.0.0.0/8` + `192.168.5.0/24` (no YAML `http:` after 2026.8) |
 | Radios | None today — no USB passthrough; ClusterIP only |
 | IoT reachability | UniFi **Homelab → IoT** allow + return; **IoT → Homelab Envoy `.21:80/443`** for device webhooks — [networking](networking.md) |
 
