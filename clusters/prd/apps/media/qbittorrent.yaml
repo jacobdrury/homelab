@@ -24,7 +24,7 @@ spec:
   data:
     - secretKey: config
       remoteRef:
-        key: prd Mullvad WireGuard
+        key: 4sdxng7xkixk5duojeo5okwwxq
         property: password
 ---
 apiVersion: v1
