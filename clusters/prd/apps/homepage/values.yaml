@@ -87,6 +87,11 @@ config:
             description: SSO / IdP
             icon: authentik.png
             siteMonitor: https://auth.lab.jacobdrury.com
+        - Uptime Kuma:
+            href: https://uptime.lab.jacobdrury.com
+            description: Status monitors (Authentik proxy)
+            icon: uptime-kuma.png
+            siteMonitor: https://uptime.lab.jacobdrury.com
 
     - Media:
         - Jellyfin:

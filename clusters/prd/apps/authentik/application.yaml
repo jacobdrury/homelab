@@ -24,7 +24,7 @@ spec:
       targetRevision: main
       path: clusters/prd/apps/authentik
       directory:
-        include: "{resources.yaml,blueprints-argocd.yaml}"
+        include: "{resources.yaml,blueprints-argocd.yaml,blueprints-uptime.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: authentik

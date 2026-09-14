@@ -4,6 +4,7 @@
 |-----|------|
 | Homepage | `homepage/` |
 | Authentik | `authentik/` — SSO IdP at `auth.lab`; CNPG Postgres + Helm; **blueprints** for OIDC apps |
+| Uptime Kuma | `uptime-kuma/` — `uptime.lab` via Authentik Proxy Provider |
 | Transitional | `transitional/` — Envoy HTTPS → legacy jellyfin/*arr/HA/Pi-hole/scarif |
 
 Each app: `application.yaml` + optional `values.yaml` / `resources.yaml` (HTTPRoutes, etc.).
@@ -11,3 +12,5 @@ Each app: `application.yaml` + optional `values.yaml` / `resources.yaml` (HTTPRo
 **No app `install.sh`.** Argo owns workloads after platform handoff — [agents](../../../docs/architecture/agents.md#bootstrap-scripts-installsh-vs-argo).
 
 **Authentik:** create Homelab 1Password items `prd Authentik secret key`, `prd Authentik Postgres`, and (for Argo SSO) `prd Argo CD OIDC` (password = client secret). Directory config is **blueprints** under this app (not OpenTofu). Merge Git, wait for sync. Initial admin: `https://auth.lab.jacobdrury.com/setup`. Add your user to Authentik group **Argo CD Admins** for Argo SSO.
+
+**Uptime Kuma:** `https://uptime.lab.jacobdrury.com` is Authentik Proxy (Envoy → authentik-server → Kuma). After first setup, **Settings → Security → Disable Auth** so only Authentik gates the dashboard (status pages stay public via `skip_path_regex`).

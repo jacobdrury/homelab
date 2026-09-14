@@ -1,0 +1,31 @@
+# Uptime Kuma — SQLite on scarif-iscsi. Public URL is Authentik Proxy Provider.
+# https://integrations.goauthentik.io/monitoring/uptime-kuma/
+
+image:
+  repository: louislam/uptime-kuma
+  tag: "2.5.0"
+
+useDeploy: true
+
+strategy:
+  type: Recreate
+
+ingress:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 3001
+
+volume:
+  enabled: true
+  size: 2Gi
+  storageClassName: scarif-iscsi
+  accessMode: ReadWriteOnce
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 128Mi
+  limits:
+    memory: 512Mi

@@ -19,6 +19,7 @@ postgresql:
 blueprints:
   configMaps:
     - authentik-blueprint-argocd
+    - authentik-blueprint-uptime
 
 global:
   volumes:

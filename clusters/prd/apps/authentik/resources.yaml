@@ -131,3 +131,33 @@ spec:
           name: authentik-server
           port: 80
           weight: 1
+---
+# Uptime Kuma public hostname → embedded outpost (Proxy Provider), not the Kuma Service.
+# Blueprint: blueprints-uptime.yaml. Guide: https://integrations.goauthentik.io/monitoring/uptime-kuma/
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: uptime
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: lab
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - uptime.lab.jacobdrury.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: authentik-server
+          port: 80
+          weight: 1

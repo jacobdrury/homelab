@@ -1,0 +1,32 @@
+# Uptime Kuma — status / HTTP monitors. Auth via Authentik Proxy Provider (not native OIDC).
+# Chart: https://artifacthub.io/packages/helm/uptime-kuma/uptime-kuma
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: uptime-kuma
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "12"
+spec:
+  project: default
+  sources:
+    - repoURL: https://helm.irsigler.cloud
+      chart: uptime-kuma
+      targetRevision: 4.2.0
+      helm:
+        releaseName: uptime-kuma
+        valueFiles:
+          - $values/clusters/prd/apps/uptime-kuma/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: uptime-kuma
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
