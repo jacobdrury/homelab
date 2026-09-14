@@ -17,7 +17,8 @@ Live on Talos `prd` (Container install, not HA OS). Config on **scarif-iscsi**; 
 
 Envoy → Service (native HA + OIDC custom component). **Not** Authentik Proxy. Redirect URI: `https://homeassistant.lab.jacobdrury.com/auth/oidc/callback`. Blueprint: `clusters/prd/apps/authentik/blueprints-homeassistant.yaml`.
 
-**SSO ↔ local user:** Linked (HA + Authentik username **`jacob`**). `automatic_user_linking` is off; re-enable only if you need to link another account.
+**SSO ↔ local user:** Linked as owner via Authentik group **`authentik Admins`** → HA `system-admin`. `automatic_user_linking` may be on briefly after upgrades; set `false` after one good Authentik login.
+
 
 ## Secrets
 
