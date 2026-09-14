@@ -37,6 +37,11 @@ spec:
       labels:
         app.kubernetes.io/name: home-assistant
     spec:
+      # Avoid ndots:5 search-path delays on public names (HACS/GitHub/Nabu Casa).
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "2"
       securityContext:
         fsGroup: 0
       initContainers:

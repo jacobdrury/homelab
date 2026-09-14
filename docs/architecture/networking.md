@@ -44,6 +44,8 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 - **Homelab → Isolated (Guest/Camera):** deny  
 - **IoT / Isolated → Pi-hole:** DNS only  
 - **Homelab → Internet:** External zone defaults (allow)  
+
+**DNS from Homelab:** Pods/nodes must resolve the public internet quickly (HACS, Nabu Casa, HA alerts). Homelab→Pi-hole **UDP/53** was flaky with `tcp_udp`+port-group (TCP/53 worked); policy uses `protocol = all` and Talos nameservers prefer Cloudflare (`1.1.1.1` / `1.0.0.1`) before Pi-hole. CoreDNS may forward directly to Cloudflare until node resolv order is applied — [firewall.tf](../../infrastructure/unifi/firewall.tf).
 - Codify static reservations for scarif, yavin, and `k8s.lab` target  
 - Don’t IaC every Wi‑Fi tweak on day one  
 

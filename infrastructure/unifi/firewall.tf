@@ -82,20 +82,22 @@ resource "unifi_firewall_zone_policy" "drury_to_homelab" {
 resource "unifi_firewall_zone_policy" "homelab_to_pihole_dns" {
   name                      = "Allow Homelab DNS to Pi-hole"
   action                    = "ALLOW"
-  protocol                  = "tcp_udp"
+  # Port-group + tcp_udp did not pass UDP/53 from Homelab (hostNetwork also timed out;
+  # TCP/53 and HTTP/80 worked). Allow all IP protocols to the Pi-hole host so node DNS
+  # works; tighten again after Pi-hole moves to Homelab/k8s.
+  protocol                  = "all"
   enabled                   = true
   auto_allow_return_traffic = true
   ip_version                = "IPV4"
-  description               = "Cluster DNS until Pi-hole is on Homelab / k8s"
+  description               = "Homelab → Pi-hole host (DNS UDP was blocked with port-group)"
 
   source = {
     zone_id = unifi_firewall_zone.homelab.id
   }
 
   destination = {
-    zone_id       = unifi_firewall_zone.drury.id
-    ips           = [local.lab.services.pihole.host]
-    port_group_id = unifi_firewall_group.dns.id
+    zone_id = unifi_firewall_zone.drury.id
+    ips     = [local.lab.services.pihole.host]
   }
 }
 
