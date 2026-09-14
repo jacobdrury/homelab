@@ -32,7 +32,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Postgres (apps) | **CloudNativePG** on `scarif-iscsi`. **Shared multi-DB:** `media-pg` (*arr). **Target:** collapse remaining app Clusters (e.g. Authentik) into one lab Postgres when convenient. Chart-bundled Postgres only for demos |
 | MariaDB (apps) | **Shared MariaDB** (`platform/mariadb/`) — one instance, many databases; Uptime Kuma first consumer. Prefer over SQLite when the app supports MariaDB/MySQL |
 | SQLite | Only when the app cannot use Postgres or MariaDB — RWO PVC on `scarif-iscsi` |
-| Host SSH / sudo | **1Password** + **SSH keys** (1Password agent); `connect/ssh/config` Host aliases (scarif, homelab02, arr, HA, pihole, …); **shared lab admin sudo password** in 1P rotated onto hosts (not NOPASSWD); no private keys in Git; Talos = **talosctl** |
+| Host SSH / sudo | **1Password** + **SSH keys** (1Password agent); Host aliases (scarif, homelab02, arr archive, HA, pihole, …); **shared lab admin sudo password** in 1P; no private keys in Git; Talos = **talosctl** |
 | Mesh | **Tailscale operator** on `prd` advertises **`192.168.5.0/24`** (steady subnet router); **homelab02 interim** until pc (black) leaves; tailnet DNS in **`infrastructure/tailscale/`** |
 | Domain | `lab.jacobdrury.com`; registrar Squarespace → **Cloudflare DNS** (OpenTofu), full Cloudflare transfer later |
 | TLS | cert-manager + **Let’s Encrypt DNS-01** via Cloudflare; wildcard **`*.lab.jacobdrury.com`** on Envoy; **scarif** HTTPS via Envoy proxy to Unraid HTTP |
@@ -42,18 +42,18 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
 | Pi-hole IaC | OpenTofu under `infrastructure/pihole/` — config in Git; migrate **deployment** to k8s last |
 | DNS app | **Pi-hole** in k8s — migrate **last** from pc (black) LXC; **LAN ad blocking**; `*.lab` stays in Cloudflare |
-| Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` on k8s |
+| Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` (`arr.homelab.com` retired Sep 2026) |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
-| Apps (migrate order) | *arr + qBit → Jellyfin → HA → **Pi-hole last**. **URLs first:** Envoy transitional routes to today’s VMs; then move backends. **Homepage** = first GitOps app after Envoy |
+| Apps (migrate order) | ~~*arr + qBit → Jellyfin~~ **done** → HA → **Pi-hole last**. **URLs first:** Envoy transitional routes; swap backends at cutover. **Homepage** = first GitOps app after Envoy |
 | Observability timing | Bootstrap: **`connect/`** + k9s + talosctl. **Homepage** first after Envoy (Uptime Kuma with/after it). **metrics-server** early (Metrics API / Homepage / HPA — not the full stack). **Prometheus/Grafana** Phase 5 |
-| Transitional ingress | After Envoy: `jellyfin.lab` (etc.) → **current** backends on arr/HA/scarif; swap to k8s Services at cutover with **no DNS/URL change** |
+| Transitional ingress | Envoy `*.lab` → in-cluster Services after cutover (media done); remaining HA / Pi-hole / scarif / proxmox still transitional — **no DNS/URL change** at cutover |
 | Games (ATM10) | **Phase 6** — after core platform stable; **itzg/minecraft-server** on k8s; iSCSI block PVC; pin to beefiest node — [games](architecture/games.md) |
 | Friend remote access | **Tailscale per-service expose** (`*.ts.net`); `group:friends` → `tag:shared` only (Jellyfin + Minecraft); **no** subnet routes for friends — [games](architecture/games.md#friend-access--tailscale) |
 | Friend Jellyfin HTTPS | **Tailscale L7 Ingress** (`ingressClassName: tailscale`) — LE cert on `https://jellyfin.<tailnet>.ts.net`; not L3 Service expose (self-signed) |
 | Friend Minecraft | **Tailscale L3 Service expose** — TCP `:25565`; no HTTPS on game port |
 | MagicDNS tailnet suffix | Rename once in **admin console** (word list); **not** OpenTofu; hostname prefixes in k8s GitOps |
 | qBittorrent VPN | Peers via **Mullvad WireGuard sidecar** + qBit **bind to `wg0`**; UI at **`qbittorrent.lab.jacobdrury.com`** (not Gluetun on k8s) |
-| Media UI auth | **Authentik Proxy** for Sonarr ×2 / Prowlarr / qBit (same pattern as Uptime Kuma); *arr `AuthenticationMethod=External`; Homepage widgets use `/api` skip_path + API keys — [media](architecture/media.md) |
+| Media UI auth | **Authentik Proxy** for Sonarr ×2 / Prowlarr / qBit; Jellyfin = Envoy → Service (native accounts). Homepage widgets use API keys — [media](architecture/media.md) |
 | Power | Prefer fewer always-on watts when cheap (strip white GPU; black off when gaming-only); **not** a reason to defer k8s/GitOps |
 | Laptops | Precision optional NVENC/burst; Inspiron **out of lab plan** |
 | Backups | **Decide after Unraid is up** (parity ≠ backup; UD has no parity) |

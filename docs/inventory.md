@@ -7,7 +7,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Host | Codename (target) | Node / name (today) | Role today | IP | Notes |
 |------|-------------------|---------------------|------------|-----|-------|
 | **Mac Mini** | **yavin** | `yavin` | Talos **control-plane** | `192.168.5.11` | Bare-metal Talos 1.12.7 · Cilium · `allowSchedulingOnControlPlanes` |
-| **pc (black)** | — | `homelab02` | Proxmox (**sole node**) | `192.168.1.12` | arr + HA + Pi-hole + discord bots; **leaving lab** → gaming |
+| **pc (black)** | — | `homelab02` | Proxmox (**sole node**) | `192.168.1.12` | HA + Pi-hole + discord-bots; **arr stopped**; **leaving lab** → gaming |
 | **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.5.10` | NAS · Homelab VLAN 5 · 24TB UD + NFS · hosts **naboo** VM |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |

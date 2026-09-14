@@ -1,11 +1,11 @@
 # Media stack (*arr + qBittorrent + Jellyfin)
 
-**On Talos `prd`** under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) — configs copied from the Proxmox arr VM (not fresh installs).
+**Live on Talos `prd`** under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) — configs copied from the Proxmox arr VM (not fresh installs). **arr VM 101 is stopped** (`onboot=0`); `arr.lab` / `arr.homelab.com` DNS retired.
 
 | App | Auth | Data |
 |-----|------|------|
 | qBittorrent, Sonarr ×2, Prowlarr | **Authentik Proxy** ([Sonarr guide](https://integrations.goauthentik.io/media/sonarr/)) | Shared CNPG **`media-pg`**; NFS libraries/downloads |
-| Jellyfin | Envoy → Service (native Jellyfin accounts) | SQLite on iSCSI config PVC; NFS `/anime` + `/tv` (read-only). GPU notes: [gpu](gpu.md) |
+| Jellyfin (`10.11.11`) | Envoy → Service (native Jellyfin accounts) | SQLite on iSCSI config PVC; NFS `/anime` + `/tv` (read-only). GPU notes: [gpu](gpu.md) |
 
 ## Runtime shape
 
@@ -32,14 +32,15 @@ k8s Deployments use **`PUID=99` / `PGID=100`** (`fsGroup: 100`). Static NFS PVs 
 
 ## Config + Postgres migration (one-shot; already done)
 
-| App | Source on arr | k8s PVC |
-|-----|---------------|---------|
+| App | Source on arr (archive) | k8s PVC |
+|-----|-------------------------|---------|
 | qBittorrent | `/home/arr/docker/arr-stack/qbittorrent/` | `qbittorrent-config` |
 | Sonarr anime | `…/sonarr-anime/` | `sonarr-anime-config` |
 | Sonarr TV | `…/sonarr-tv/` | `sonarr-tv-config` |
 | Prowlarr | `…/prowlarr/` | `prowlarr-config` |
+| Jellyfin | `…/jellyfin/config/` | `jellyfin-config` (cache = `emptyDir`) |
 
-Scripts (keep for rebuilds): [`copy-configs-from-arr.sh`](../../clusters/prd/apps/media/scripts/copy-configs-from-arr.sh), [`migrate-arr-to-postgres.sh`](../../clusters/prd/apps/media/scripts/migrate-arr-to-postgres.sh).
+Scripts (keep for rebuilds): [`copy-configs-from-arr.sh`](../../clusters/prd/apps/media/scripts/copy-configs-from-arr.sh), [`migrate-arr-to-postgres.sh`](../../clusters/prd/apps/media/scripts/migrate-arr-to-postgres.sh), [`copy-jellyfin-from-arr.sh`](../../clusters/prd/apps/media/scripts/copy-jellyfin-from-arr.sh).
 
 Post-copy wiring (live today):
 
@@ -47,7 +48,8 @@ Post-copy wiring (live today):
 2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080`
 3. Prowlarr apps → `sonarr-anime` / `sonarr-tv` in-cluster Services
 4. Sonarr **indexers** → `http://prowlarr.media.svc.cluster.local:9696/…`
-5. Mounts keep Compose paths: `/home/data/{anime,tv,downloads}`
+5. *arr mounts keep Compose paths: `/home/data/{anime,tv,downloads}`
+6. Jellyfin mounts: `/anime`, `/tv`, `/config` (Compose paths preserved)
 
 ### Postgres (*arr)
 
@@ -86,4 +88,4 @@ flowchart TB
 
 ## Monitoring
 
-Uptime Kuma probes Authentik **skip paths** that reach the app (`/api` → 401 for *arr; qBit `/api/v2/app/version` → 200), not the unauthenticated `/` redirect to Authentik. See [`infrastructure/uptime-kuma/monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf).
+Uptime Kuma probes Authentik **skip paths** that reach the app (`/api` → 401 for *arr; qBit `/api/v2/app/version` → 200), not the unauthenticated `/` redirect to Authentik. Jellyfin monitor hits `/` (native auth, no Authentik). See [`infrastructure/uptime-kuma/monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf).

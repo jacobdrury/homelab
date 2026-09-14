@@ -6,16 +6,16 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 
 | | Today | Target |
 |---|--------|--------|
-| Compute | Talos `prd`: **yavin** (CP) + **naboo** (worker on scarif) · Proxmox **homelab02** (legacy apps) | Expand to **3 BM CPs** (hoth/endor); drain naboo |
-| Access | Tailscale + **`https://argocd.lab`** via Envoy `.21`; scarif still HTTP | Same URLs · more `https://*.lab` routes · operator replaces homelab02 |
+| Compute | Talos `prd`: **yavin** (CP) + **naboo** (worker on scarif) · Proxmox **homelab02** (HA / Pi-hole / bots) | Expand to **3 BM CPs** (hoth/endor); drain naboo |
+| Access | Tailscale + **`https://*.lab`** via Envoy `.21` | Same URLs · k8s Connector replaces homelab02 for Homelab |
 | Storage | **scarif** — 24TB UD · **NFS** + **iSCSI** (`scarif-nfs` / `scarif-iscsi`) · naboo on NVMe | Same + optional array/parity |
-| pc (black) | arr + HA (media via NFS) | **Personal gaming** (after cutover) |
-| Network | Homelab **VLAN 5** + UniFi **ZBF** · Drury (arr, Pi-hole) | Full lab on VLAN + Tailscale |
-| Apps | Pi-hole, HA, Jellyfin, *arr, qBit, Prowlarr | Same on k8s + Homepage; HA after media |
+| pc (black) | HA + Pi-hole + discord-bots · **arr VM stopped** | **Personal gaming** (after HA/Pi-hole cutover) |
+| Network | Homelab **VLAN 5** + UniFi **ZBF** · Drury (Pi-hole, Proxmox) | Full lab on VLAN + Tailscale |
+| Apps | **Media on k8s** (Jellyfin / *arr / qBit) · Homepage / Authentik / Kuma · HA + Pi-hole still transitional | HA + Pi-hole on k8s |
 | Delivery | **Argo CD** · `https://argocd.lab.jacobdrury.com` | Same |
 | Secrets | **1Password** → Connect → ESO (`ClusterSecretStore/onepassword`) | Same |
 
-**Next:** Phase **2** — **transitional `*.lab` routes** (+ Tailscale operator) → **Homepage** (first GitOps app).
+**Next:** Phase **3** — **Home Assistant** → optional Discord bots → **Pi-hole last**.
 
 ## Docs
 

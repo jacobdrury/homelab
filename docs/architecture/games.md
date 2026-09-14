@@ -326,7 +326,7 @@ Tied to [roadmap](../roadmap.md). Do not block core migration on this.
 | **1** (done) | — |
 | **1 optional** | scarif SSD pool + iSCSI target (enables block PVCs for DBs and games) |
 | **2** | Tailscale **operator** on `prd`; iSCSI CSI; subnet router moves off homelab02 |
-| **3** | Jellyfin on k8s — add **Tailscale L7 Ingress** (`ingress-friends.yaml`) when friend access is wanted |
+| **3** | ~~Jellyfin on k8s~~ **done** — add **Tailscale L7 Ingress** (`ingress-friends.yaml`) when friend access is wanted |
 | **4** | **Preferred ATM10 deploy window** — hoth/endor joined; pin server to beefiest node; confirm RAM/CPU |
 | **5** | Monitoring, backup drill for game PVC |
 | **6** | Deploy ATM10, tighten ACLs, invite friends — [checklist](../roadmap.md#phase-6--games-atm10) |

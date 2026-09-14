@@ -12,7 +12,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | GitOps | **Argo CD** | Live — `https://argocd.lab.jacobdrury.com`; root → `clusters/prd/applications` |
 | Secrets | **1Password** + Connect + ESO | Live — [secrets](secrets.md) |
 | Storage | **NFS CSI + iSCSI CSI → Unraid** | Live — `scarif-nfs`, `scarif-iscsi` — [storage](storage.md) |
-| Ingress | **Envoy Gateway** | Live — VIP **`192.168.5.21`**, wildcard LE — [networking](networking.md#https) |
+| Ingress | **Envoy Gateway** | Live — VIP **`192.168.5.21`** (secondary IP on yavin + hostNetwork; HA in Phase 4) — [networking](networking.md#https) |
 | Identity | **Authentik** | Live path — `auth.lab.jacobdrury.com`; OIDC for Argo/Grafana/etc.; CNPG Postgres |
 | Postgres | **CloudNativePG** | Operator in `platform/cloudnative-pg/`; **todo:** one shared `Cluster` (many DBs) |
 | MariaDB | **Shared Bitnami MariaDB** | `platform/mariadb/` — many DBs; Kuma first |
@@ -30,7 +30,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 
 **Interim worker (Phase 2):** **naboo** — **live** on `prd` (Sep 2026). Unraid KVM on **scarif**, Homelab `192.168.5.14`, 6 vCPU / 20 GB, SSD vdisk on `/mnt/disks/naboo-ssd`. Same cluster secrets / Talos **1.12.7** as yavin; **worker** only (ROLE `<none>` in k8s is expected). scarif maintenance takes naboo down — acceptable stopgap. Does **not** replace “Unraid = storage only” for apps (no Unraid Docker).
 
-**Scale-out (Phase 4):** when **hoth** and **endor** arrive, **join them as control planes** to the existing cluster (**1→3** etcd members). Drain workloads off **naboo**, then delete the VM. Use the same cluster secrets and a **stable API endpoint** (DNS or VIP) defined at first bootstrap. Media stays on **scarif NFS** — expansion does not touch library data.
+**Scale-out (Phase 4):** when **hoth** and **endor** arrive, **join them as control planes** to the existing cluster (**1→3** etcd members). Drain workloads off **naboo**, then delete the VM. Use the same cluster secrets and a **stable API endpoint** (DNS or VIP `.20`) defined at first bootstrap. Keep Envoy DNS on **`192.168.5.21`** — promote that address to kube-vip/VRRP (or carefully restored Cilium L2) so ingress survives CP loss; see [networking — Phase 4 HTTPS](networking.md#phase-4--keep-21-make-it-ha). Media stays on **scarif NFS** — expansion does not touch library data.
 
 **Bootstrap requirements (day one):**
 

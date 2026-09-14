@@ -18,7 +18,8 @@ Dedicated **homelab VLAN**, isolated from trusted LAN / IoT, with **selective** 
 | **yavin** | `.11` static | Talos CP #1 |
 | **hoth** | `.12` static | Talos CP #2 (Phase 4) |
 | **endor** | `.13` static | Talos CP #3 (Phase 4) |
-| API / VIP | `.20` reserved | Optional future VIP; DNS may point here at 3 CPs |
+| API / VIP | `.20` reserved | Optional future **API** VIP; DNS may point here at 3 CPs |
+| Envoy VIP | `.21` | Ingress front door — real secondary IP on yavin today; HA in Phase 4 |
 | `k8s.lab.jacobdrury.com` | → `.11` (now) | Kubernetes API endpoint — [decisions](../decisions.md) |
 
 ### Unraid IP
@@ -37,7 +38,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 
 - **Zones:** `Drury` · `Homelab` · `Isolated` (IoT + Guest + Camera) — Homelab is **not** in the same zone as Drury  
 - **Drury → Homelab:** allow all (mgmt + NFS); return traffic auto-allowed  
-- **Homelab → Drury:** **Pi-hole DNS only** (`192.168.1.11` port 53 tcp/udp) until Pi-hole is on the cluster  
+- **Homelab → Drury:** Pi-hole DNS + transitional Envoy targets (Pi-hole UI / HA / Proxmox). Media→arr HTTP rule **removed** after cutover.
 - **Homelab → Isolated:** deny  
 - **Isolated → Pi-hole:** DNS only  
 - **Homelab → Internet:** External zone defaults (allow)  
@@ -80,11 +81,11 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 | `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
 | `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker on scarif (**live**) |
 
-**Apps:** `*.lab.jacobdrury.com` A records → **Envoy** on yavin (`.11` or VIP `.20`). Download stack (`sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent`) and Uptime Kuma go Envoy → **Authentik Proxy** → in-cluster Services. Jellyfin goes Envoy → in-cluster Service. HA / Pi-hole still use transitional Envoy → VM backends until cutover. DNS via OpenTofu and/or external-dns from HTTPRoutes.
+**Apps:** `*.lab.jacobdrury.com` A records → **Envoy VIP `192.168.5.21`** (secondary IP on yavin; hostNetwork Envoy). Download stack (`sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent`) and Uptime Kuma go Envoy → **Authentik Proxy** → in-cluster Services. Jellyfin goes Envoy → in-cluster Service. HA / Pi-hole still use transitional Envoy → VM backends until cutover. DNS via OpenTofu and/or external-dns from HTTPRoutes.
 
 ### Transitional reverse-proxy (strangler)
 
-Before apps run on k8s, publish the **final** hostnames:
+Final hostnames were published early; media backends are now in-cluster:
 
 ```text
 Client → https://jellyfin.lab.jacobdrury.com → Envoy → Jellyfin Service in prd
@@ -92,13 +93,13 @@ Client → https://sonarr.lab.jacobdrury.com → Envoy → Authentik → Sonarr 
                                       HA / Pi-hole still → VM until cutover
 ```
 
-Same for other UIs you care about. Homepage links only to `*.lab` names. Cutover = change the HTTPRoute backend, not everyone’s bookmarks.
+`arr.lab.jacobdrury.com` and `arr.homelab.com` are **retired** (no A records). Homepage links only to `*.lab` names. Remaining cutovers = change the HTTPRoute backend, not bookmarks.
 
 **Resolving names on LAN**
 
 Pi-hole forwards `lab.jacobdrury.com` to Cloudflare (`1.1.1.1` / `1.0.0.1`) via `infrastructure/pihole/dns_forward.tf`. Infra and app records live in `infrastructure/dns/` (+ external-dns later). Answers are **RFC1918** (grey cloud only — never proxied).
 
-**Legacy `*.homelab.com`** — local A records in `local_dns.auto.tfvars` only until apps move to k8s and retire those names; not part of the long-term `*.lab` model.
+**Legacy `*.homelab.com`** — shrinking local A records in `local_dns.auto.tfvars` (`arr.homelab.com` gone); not part of the long-term `*.lab` model.
 
 When Pi-hole moves to k8s (Phase 3, last), LAN clients point at the cluster instance; **`*.lab` stays in Cloudflare** — no Tailscale split DNS change (see below).
 
@@ -152,7 +153,15 @@ Single-node: Tofu A record → **yavin** on homelab VLAN. At 3 CPs: same name �
 
 ## HTTPS
 
-**Envoy Gateway** on Homelab VLAN VIP **`192.168.5.21`** (Cilium L2 LB) terminates TLS. **cert-manager + Let’s Encrypt DNS-01** via Cloudflare — wildcard **`*.lab.jacobdrury.com`** Secret `lab-wildcard-tls` on `Gateway/lab`.
+**Envoy Gateway** terminates TLS on Homelab VLAN ingress VIP **`192.168.5.21`**. Today that address is a **real secondary IP on yavin** with Envoy on **hostNetwork** `:80`/`:443` (not Cilium L2 LB — same-node Tailscale FORWARD to an L2-announced VIP hairpins and fails). **cert-manager + Let’s Encrypt DNS-01** via Cloudflare — wildcard **`*.lab.jacobdrury.com`** Secret `lab-wildcard-tls` on `Gateway/lab`.
+
+### Phase 4 — keep `.21`, make it HA
+
+Do **not** change Cloudflare `app_hosts` when **hoth** / **endor** join. Only change what answers ARP for `.21`:
+
+1. Prefer **kube-vip** (or VRRP) owning `192.168.5.21` on control-plane nodes, with Envoy as a DaemonSet / `hostNetwork` (or anti-affinity Deployment) on CPs so the VIP holder always has a local Envoy.
+2. Alternative: restore Cilium L2 for `.21` only if the Tailscale Connector and L2 lease / Envoy backends are not forced onto the same-node FORWARD path that broke remote `*.lab` access.
+3. API VIP stays separate (**`.20`**) — do not conflate Envoy `.21` with `k8s.lab`.
 
 ### Certificates
 
@@ -170,7 +179,7 @@ Same hostname and certificate — e.g. **`https://argocd.lab.jacobdrury.com`** (
 
 1. DNS → Pi-hole (LAN) or Cloudflare (Tailscale split DNS) → **`192.168.5.21`**
 2. **LAN:** route to Envoy VIP `:443`
-3. **Away:** split DNS → Cloudflare + subnet router → Envoy `:443`
+3. **Away:** split DNS → Cloudflare + subnet router → Envoy `:443` (real host IP — works through Tailscale Connector)
 4. Envoy → HTTPRoute → pod **or** legacy VM/Unraid HTTP (transitional)
 
 ```mermaid

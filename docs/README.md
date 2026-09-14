@@ -12,7 +12,7 @@ Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live
 | [Networking](architecture/networking.md) | UniFi VLAN, DNS/TLS, Tailscale, domains |
 | [IaC](architecture/iac.md) | OpenTofu vs Helm/Argo; what lives in Git; manual exceptions |
 | [GPU](architecture/gpu.md) | Jellyfin encode (optional; direct play OK) |
-| [Media / VPN](architecture/media.md) | *arr + qBittorrent; Mullvad for peers, UI off-VPN |
+| [Media / VPN](architecture/media.md) | *arr + qBit + Jellyfin on k8s; Mullvad for peers, UI off-VPN |
 | [Games (ATM10)](architecture/games.md) | Minecraft server + friend access via Tailscale `.ts.net` |
 | [Secrets](architecture/secrets.md) | 1Password → cluster |
 | [Agent access](architecture/agents.md) | Cursor / AI operators on the tailnet |
