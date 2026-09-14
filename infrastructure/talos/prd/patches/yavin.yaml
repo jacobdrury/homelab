@@ -20,6 +20,8 @@ machine:
         dhcp: false
         addresses:
           - 192.168.5.11/24
+          # Envoy ingress VIP — real host address (not Cilium L2). HA in Phase 4.
+          - 192.168.5.21/24
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.5.1

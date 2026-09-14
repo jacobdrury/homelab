@@ -1,20 +1,57 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: envoy-gateway-system
+  labels:
+    # Envoy dataplane uses hostNetwork to bind ingress VIP .21 on the node.
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
+---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
   name: lab
   namespace: envoy-gateway-system
 spec:
+  # Avoid clash with cilium-envoy on the host (also uses --base-id 0 + host netns sockets).
+  extraArgs:
+    - --base-id
+    - "1"
   provider:
     type: Kubernetes
     kubernetes:
+      # Listen on host :80/:443 (binds 192.168.5.11 and ingress VIP .21).
+      # Cilium L2 LB VIP hairpins fail through the Tailscale subnet router on the same node.
+      useListenerPortAsContainerPort: true
       envoyService:
-        type: LoadBalancer
-        # Required for Cilium L2 announcements (Local is incompatible).
-        externalTrafficPolicy: Cluster
-        annotations:
-          lbipam.cilium.io/ips: "192.168.5.21"
-        labels:
-          lb-pool: lab-homelab
+        type: ClusterIP
+      envoyDeployment:
+        container:
+          securityContext:
+            allowPrivilegeEscalation: true
+            runAsNonRoot: false
+            runAsUser: 0
+            runAsGroup: 0
+            capabilities:
+              add:
+                - NET_BIND_SERVICE
+                - CHOWN
+                - SETUID
+                - SETGID
+              drop:
+                - ALL
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              # hostNetwork cannot surge on a single node (ports 80/443/admin).
+              strategy:
+                type: Recreate
+              template:
+                spec:
+                  hostNetwork: true
+                  dnsPolicy: ClusterFirstWithHostNet
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass

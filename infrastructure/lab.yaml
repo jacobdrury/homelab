@@ -13,7 +13,7 @@ dns:
     - 1.0.0.1
   # Legacy guest IPs retired when VMs stop (arr media stack → k8s).
   transitional_hosts: {}
-  # App / transitional UI frontends → Envoy VIP (Cilium L2 LB).
+  # App / transitional UI frontends → Envoy ingress VIP (.21 on yavin; hostNetwork).
   # Storage DNS (scarif-direct → Unraid IP) is derived in dns/lab_locals.tf from hosts.scarif.
   app_hosts:
     argocd: 192.168.5.21
@@ -69,7 +69,9 @@ networks:
         role: talos_worker # Unraid VM on scarif · interim until Phase 4
       envoy:
         ip: 192.168.5.21
-        role: envoy_vip # Cilium L2 LoadBalancer for Gateway/lab
+        # Real secondary IP on yavin (Envoy hostNetwork). Not Cilium L2.
+        # Phase 4: HA via kube-vip/VRRP — keep this address in app_hosts.
+        role: envoy_vip
 
 services:
   pihole:

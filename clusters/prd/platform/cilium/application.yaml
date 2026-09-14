@@ -18,11 +18,8 @@ spec:
     - repoURL: https://github.com/jacobdrury/homelab.git
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/jacobdrury/homelab.git
-      targetRevision: main
-      path: clusters/prd/platform/cilium
-      directory:
-        include: resources.yaml
+  # L2 LoadBalancer pool/policy removed — Envoy uses hostNetwork VIP .21 on yavin.
+  # Phase 4 HA for .21: docs/architecture/networking.md § HTTPS.
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

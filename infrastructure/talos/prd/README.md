@@ -78,10 +78,10 @@ DNS `naboo.lab.jacobdrury.com` → `192.168.5.14` is in `lab.yaml` / Cloudflare.
 
 | NIC | MAC | Switch | Address |
 |-----|-----|--------|---------|
-| USB 2.5G `enp8s0u2` | `6c:1f:f7:21:c6:16` | Pro Max **Port 13** | static `192.168.5.11/24` (primary, metric 100) |
+| USB 2.5G `enp8s0u2` | `6c:1f:f7:21:c6:16` | Pro Max **Port 13** | static `192.168.5.11/24` (primary) + `192.168.5.21/24` (Envoy VIP) |
 | Onboard 1G `enp4s0` | `68:fe:f7:10:39:b9` | Pro Max **Port 5** | static `192.168.5.111/24` (fallback, metric 200) |
 
-Both on Homelab VLAN 5. Kubelet `nodeIP.validSubnets` is `192.168.5.11/32` so NodeInternalIP stays on the USB address.
+Both on Homelab VLAN 5. Kubelet `nodeIP.validSubnets` is `192.168.5.11/32` so NodeInternalIP stays on the USB address. Envoy VIP `.21` is a host secondary IP (not Cilium L2).
 
 ## etcd snapshots
 
