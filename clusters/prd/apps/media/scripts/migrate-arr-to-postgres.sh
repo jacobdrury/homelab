@@ -122,7 +122,7 @@ cnpg_psql() {
   local db="$1"
   local sql="$2"
   kubectl -n "${NS}" exec -i media-pg-1 -c postgres -- \
-    env PGPASSWORD="${PGPASS}" psql -U "${PGUSER}" -d "${db}" -v ON_ERROR_STOP=1 <<< "${sql}"
+    env PGPASSWORD="${PGPASS}" psql -h 127.0.0.1 -U "${PGUSER}" -d "${db}" -v ON_ERROR_STOP=1 <<< "${sql}"
 }
 
 migrate_one() {
