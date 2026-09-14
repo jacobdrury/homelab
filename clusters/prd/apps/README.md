@@ -3,11 +3,11 @@
 | App | Path |
 |-----|------|
 | Homepage | `homepage/` |
-| Authentik | `authentik/` — SSO IdP at `auth.lab`; CNPG Postgres + Helm |
+| Authentik | `authentik/` — SSO IdP at `auth.lab`; CNPG Postgres + Helm; **blueprints** for OIDC apps |
 | Transitional | `transitional/` — Envoy HTTPS → legacy jellyfin/*arr/HA/Pi-hole/scarif |
 
 Each app: `application.yaml` + optional `values.yaml` / `resources.yaml` (HTTPRoutes, etc.).
 
 **No app `install.sh`.** Argo owns workloads after platform handoff — [agents](../../../docs/architecture/agents.md#bootstrap-scripts-installsh-vs-argo).
 
-**Authentik:** create Homelab 1Password items `prd Authentik secret key` + `prd Authentik Postgres`, merge Git, wait for sync. Initial admin: `https://auth.lab.jacobdrury.com/setup`.
+**Authentik:** create Homelab 1Password items `prd Authentik secret key`, `prd Authentik Postgres`, and (for Argo SSO) `prd Argo CD OIDC` (password = client secret). Directory config is **blueprints** under this app (not OpenTofu). Merge Git, wait for sync. Initial admin: `https://auth.lab.jacobdrury.com/setup`. Add your user to Authentik group **Argo CD Admins** for Argo SSO.

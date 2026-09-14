@@ -2,6 +2,8 @@
 
 **Principle:** manage configuration in Git and apply with automation **as much as possible, where it makes sense**. The UI and SSH are for bootstrap, break-glass, and things that have no sensible API — not the steady-state workflow.
 
+**GitOps first:** if Argo (or another in-cluster reconciler) can own it, prefer that over OpenTofu. OpenTofu is for **external** APIs with no GitOps-native path. Authentik apps/providers use **blueprints** in Git (mounted by the Helm chart), not `infrastructure/authentik/`. Agent rule: [agents](agents.md#gitops-first-opentofu-when-needed).
+
 Locked leans: [decisions](../decisions.md). Apply tooling: [local-tools](../setup/local-tools.md), [infrastructure README](../../infrastructure/README.md).
 
 ## Source of truth
@@ -14,6 +16,7 @@ Locked leans: [decisions](../decisions.md). Apply tooling: [local-tools](../setu
 | Tailscale (policy, DNS, routes, keys, device settings) | **OpenTofu** | `infrastructure/tailscale/` | `moon run tailscale:apply` |
 | Talos machine / cluster config | **OpenTofu** (+ generated YAML) | `infrastructure/talos/prd/` | TBD at Phase 2 |
 | Kubernetes platform + apps | **Helm** via **Argo CD** | `apps/`, `clusters/prd/` | Git push → sync |
+| Authentik directory (OIDC apps, groups, …) | **Blueprints** via Authentik Helm | `clusters/prd/apps/authentik/` | Argo → worker applies |
 | Dynamic app DNS (`jellyfin.lab`, …) | **external-dns** | Helm values in `clusters/prd/platform/` | Argo |
 | TLS certificates | **cert-manager** | Helm | Argo |
 | Runtime secrets | **1Password** + External Secrets | Not in Git | Connect / ESO |
@@ -89,7 +92,7 @@ Full checklist: [roadmap Phase 2b](../roadmap.md#phase-2b--opentofu-ci-github-ac
 
 ## Adding a new managed surface
 
-1. Pick the tool: OpenTofu (API-backed infra/DNS/firewall), Helm (in-cluster), or both.
-2. Add `infrastructure/<name>/` or `apps/...` + moon/Argo wiring.
+1. Prefer GitOps (Helm/manifests/blueprints). Use OpenTofu only if there is no in-cluster reconciler.
+2. Add `clusters/prd/...` + Argo, or `infrastructure/<name>/` + moon when OpenTofu is required.
 3. Bootstrap: import or export once if state already exists, then **Git owns it**.
 4. Document in this file and [decisions](../decisions.md).

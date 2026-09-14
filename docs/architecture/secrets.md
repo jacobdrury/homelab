@@ -28,6 +28,8 @@ flowchart LR
 
 Homelab items: **`prd Connect credentials`** (document), **`prd Connect token`** (password). Platform `install.sh` scripts pull them with `op` for bootstrap/DR. Steady-state: Argo owns Connect/ESO; app secrets use `ExternalSecret` → this store. Re-seed Connect Secrets only if lost.
 
+App SSO: **`prd Argo CD OIDC`** (password = OAuth client secret) is shared by Authentik blueprints (`!Env`) and Argo `argocd-secret` merge — create before enabling OIDC sync.
+
 ## Host shell access (SSH / sudo)
 
 Separate from in-cluster secrets. Goal: **stop memorizing per-host passwords**; easy SSH during Phase 3 migrations.

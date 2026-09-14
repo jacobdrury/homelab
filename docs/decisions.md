@@ -11,7 +11,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Cluster scale-out | **Expand in place** (join CPs to existing etcd) when mini PCs arrive — **not** a full cluster rebuild |
 | Cluster API endpoint | **`k8s.lab.jacobdrury.com`** — stable DNS from first bootstrap; VIP or DNS update at 3 CPs |
 | Homelab VLAN | **Before Talos bootstrap** — UniFi network name **`Homelab`**, VLAN **5**, `192.168.5.0/24` (reuses former Work VLAN; Teleport holds `.6`) |
-| IaC | **Prefer IaC wherever it makes sense** — OpenTofu (DNS, UniFi, Pi-hole, Talos), Helm + Argo (cluster/apps), external-dns for app names; secrets via 1Password — [iac](architecture/iac.md) |
+| IaC | **GitOps first** (Helm/Argo/blueprints); **OpenTofu only** when no GitOps-native path (DNS, UniFi, Pi-hole, Tailscale, Talos); secrets via 1Password — [iac](architecture/iac.md) · [agents](architecture/agents.md#gitops-first-opentofu-when-needed) |
 | Infra DNS | `*.lab.jacobdrury.com` in Cloudflare (OpenTofu) — see [networking](architecture/networking.md#infra-dns) |
 | yavin networking | **USB 2.5G** (UGREEN RTL8156BG) **primary**; onboard **1G** **secondary**; pin interfaces by MAC in Talos machine config |
 | Cluster availability | **No HA** until 3 CPs; single-node downtime acceptable (matches today) |
@@ -28,7 +28,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | GitOps | **Argo CD** + this GitHub repo |
 | Ingress | **Envoy Gateway** (Gateway API) |
 | Secrets | **1Password** + Connect + External Secrets |
-| Identity / SSO | **Authentik** at `auth.lab.jacobdrury.com` — OIDC-first for apps that support it; forward auth later for legacy UIs |
+| Identity / SSO | **Authentik** at `auth.lab.jacobdrury.com` — OIDC-first; directory config via **blueprints** in Git (not OpenTofu); forward auth later for legacy UIs |
 | Postgres (apps) | **CloudNativePG** on `scarif-iscsi` (operator in `platform/cloudnative-pg/`; `Cluster` CRs with consuming apps). Chart-bundled Postgres only for demos |
 | Host SSH / sudo | **1Password** + **SSH keys** (1Password agent); `connect/ssh/config` Host aliases (scarif, homelab02, arr, HA, pihole, …); **shared lab admin sudo password** in 1P rotated onto hosts (not NOPASSWD); no private keys in Git; Talos = **talosctl** |
 | Mesh | **Tailscale operator** on `prd` advertises **`192.168.5.0/24`** (steady subnet router); **homelab02 interim** until pc (black) leaves; tailnet DNS in **`infrastructure/tailscale/`** |

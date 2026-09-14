@@ -9,9 +9,18 @@ configs:
     timeout.reconciliation: 120s
     # Homepage widget — https://gethomepage.dev/widgets/services/argocd/
     accounts.homepage: apiKey
+    # Direct OIDC (dex stays disabled). Issuer slug must match Authentik blueprint.
+    oidc.config: |
+      name: Authentik
+      issuer: https://auth.lab.jacobdrury.com/application/o/argocd/
+      clientID: argocd
+      clientSecret: $oidc.authentik.clientSecret
+      requestedScopes: ["openid", "profile", "email"]
+      requestedIDTokenClaims: {"groups": {"essential": true}}
   rbac:
     policy.csv: |
       g, homepage, role:readonly
+      g, Argo CD Admins, role:admin
 
 server:
   replicas: 1

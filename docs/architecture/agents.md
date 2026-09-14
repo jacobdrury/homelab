@@ -40,6 +40,19 @@ Details: [networking](networking.md#tailscale) (split DNS, subnet router timelin
 3. **In-repo agent docs** — `AGENTS.md` / `.agents/skills`: context, hostnames ([naming](naming.md)), “no secrets in Git”  
 4. **Least privilege later** — optional agent Tailscale identity + limited RBAC  
 
+## GitOps first; OpenTofu when needed
+
+**Prefer a GitOps-native path** (Helm values, manifests, CRDs, Authentik **blueprints** mounted into the IdP) whenever the thing lives in-cluster or can be reconciled from Git by a controller.
+
+Use **OpenTofu** under `infrastructure/` only when there is **no** sensible GitOps-native approach — typically external APIs outside the cluster (Cloudflare DNS, UniFi, Pi-hole, Tailscale policy). Do **not** add OpenTofu for Authentik apps/providers, in-cluster config, or anything Argo + a controller can own.
+
+| Prefer | Use when |
+|--------|----------|
+| Argo + Helm / YAML / blueprints | In-cluster apps and their config (incl. Authentik directory via blueprints) |
+| OpenTofu (`moon run …:apply`) | External systems with no in-cluster reconciler |
+
+Details: [iac](iac.md).
+
 ## Bootstrap scripts (`install.sh`) vs Argo
 
 **Rule:** leave `install.sh` only for components that **must** be installed manually **before Argo exists**. Anything Argo can own entirely from Git must **never** get an install script.
@@ -81,7 +94,7 @@ If you helm-applied something in a pinch, get it into Git and let Argo adopt it 
 |-------|------|
 | **Now** | Tailscale IaC; **homelab02** interim subnet router; `https://*.lab` via Envoy |
 | **2 (done)** | **`connect/`**; CSI; Connect + ESO; **Argo CD**; **Envoy** + LE; Homepage; Authentik (IdP) |
-| **2 (next)** | Transitional HTTPRoutes polish; **Tailscale operator**; Argo OIDC via Authentik |
+| **2 (next)** | Transitional HTTPRoutes polish; **Tailscale operator**; more Authentik blueprints as apps land |
 | **3+** | Remove homelab02 subnet routes before pc (black) retires; retire legacy `*.homelab.com` Pi-hole records |
 | **5** | Agent RBAC, optional MCP, skills |
 

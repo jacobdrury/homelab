@@ -43,5 +43,7 @@ Details: `connect/README.md`
 
 ## GitOps / bootstrap
 
+**Prefer GitOps-native config** (Helm, manifests, Authentik blueprints) over OpenTofu. Use OpenTofu only for external APIs with no in-cluster reconciler (DNS, UniFi, Pi-hole, Tailscale). Details: `docs/architecture/agents.md` (§ GitOps first).
+
 **Leave `install.sh` only for what must be installed before Argo exists** (CNI, CSI, Connect/`op` seeding, ESO, Argo + root). Anything Argo can own entirely from Git must never get an install script. Details: `docs/architecture/agents.md` (§ Bootstrap scripts).
 

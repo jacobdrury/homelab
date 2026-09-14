@@ -53,6 +53,29 @@ spec:
         key: prd Authentik Postgres
         property: password
 ---
+# Shared with Argo CD ExternalSecret (same 1Password item).
+# Blueprint reads ARGOCD_OIDC_CLIENT_SECRET from worker env (values.yaml).
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: argocd-oidc
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: argocd-oidc
+    creationPolicy: Owner
+  data:
+    - secretKey: client_secret
+      remoteRef:
+        key: prd Argo CD OIDC
+        property: password
+---
 # Single-instance CNPG on scarif-iscsi. Scale instances at Phase 4 (3 CPs).
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
