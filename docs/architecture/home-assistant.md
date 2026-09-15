@@ -37,11 +37,10 @@ Without the groups claim + `authentik Admins` mapping, SSO logins demote the lin
 - **Companion app:** one URL — `https://homeassistant.lab.jacobdrury.com` (LAN + Tailscale). No `192.168.2.8`.
 - **HACS / custom components:** live on the PVC under `custom_components/` (not Git). Image bumps may need HACS + integration updates (e.g. HACS **2.0.5** for 2026.8).
 - **DNS:** HA Deployment sets `dnsConfig.ndots: "2"`. Cluster CoreDNS should reach Cloudflare quickly — Homelab→Pi-hole UDP/53 is unreliable; see [networking](networking.md).
-- **Recorder migrate:** `scripts/migrate-recorder-to-postgres.sh` resets Postgres sequences after pgloader (required or schema upgrades fail).
 
 ## Legacy VM
 
-Proxmox VM 105 (`192.168.2.8`, VLAN 2) was the HA OS source. Config + SQLite→Postgres cutover done. **Stopped** / `onboot=0`; keep disk until trusted. Scripts under `apps/home-assistant/scripts/` are reference-only.
+Proxmox VM 105 (`192.168.2.8`, VLAN 2) was the HA OS source. Config + SQLite→Postgres cutover done. **Stopped** / `onboot=0`; keep disk until trusted.
 
 ## Related
 

@@ -11,16 +11,6 @@ qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Je
 2. **1Password** **`prd Media Postgres`** — CNPG owner (`username` / `password`).
 3. Scarif media tree owned for NFS squash: `nobody:users` (`99:100`) — see [media.md](../../../docs/architecture/media.md).
 
-## Rebuild / migration scripts
-
-Configs originally came from the Proxmox arr VM (not a fresh install):
-
-```bash
-./clusters/prd/apps/media/scripts/copy-configs-from-arr.sh
-./clusters/prd/apps/media/scripts/migrate-arr-to-postgres.sh   # after media-pg Ready
-./clusters/prd/apps/media/scripts/copy-jellyfin-from-arr.sh    # Jellyfin config only (~2.7G)
-```
-
 Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; indexers → `prowlarr.media.svc.cluster.local:9696`; *arr mounts `/home/data/{anime,tv,downloads}`; Jellyfin mounts `/anime` + `/tv`.
 
 ## Layout
@@ -33,7 +23,6 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 | `sonarr-*.yaml` / `prowlarr.yaml` | *arr Deployments |
 | `jellyfin.yaml` | Jellyfin Deployment + Service + HTTPRoute + iSCSI config |
 | `httproutes.yaml` | Stub — *arr/qBit URLs owned by Authentik (`resources-media-routes.yaml`) |
-| `scripts/` | One-shot VM → PVC and SQLite → Postgres (*arr) |
 
 ## Auth
 

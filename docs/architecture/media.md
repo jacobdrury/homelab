@@ -30,19 +30,9 @@ chmod -R ug+rwX,o+rX /mnt/disks/ZXA0VZBA/media
 
 k8s Deployments use **`PUID=99` / `PGID=100`** (`fsGroup: 100`). Static NFS PVs mount the existing tree (not dynamic `scarif-nfs` subdirs).
 
-## Config + Postgres migration (one-shot; already done)
+## Config + wiring
 
-| App | Source on arr (archive) | k8s PVC |
-|-----|-------------------------|---------|
-| qBittorrent | `/home/arr/docker/arr-stack/qbittorrent/` | `qbittorrent-config` |
-| Sonarr anime | `…/sonarr-anime/` | `sonarr-anime-config` |
-| Sonarr TV | `…/sonarr-tv/` | `sonarr-tv-config` |
-| Prowlarr | `…/prowlarr/` | `prowlarr-config` |
-| Jellyfin | `…/jellyfin/config/` | `jellyfin-config` (cache = `emptyDir`) |
-
-Scripts (keep for rebuilds): [`copy-configs-from-arr.sh`](../../clusters/prd/apps/media/scripts/copy-configs-from-arr.sh), [`migrate-arr-to-postgres.sh`](../../clusters/prd/apps/media/scripts/migrate-arr-to-postgres.sh), [`copy-jellyfin-from-arr.sh`](../../clusters/prd/apps/media/scripts/copy-jellyfin-from-arr.sh).
-
-Post-copy wiring (live today):
+Configs live on iSCSI PVCs (originally copied from the arr VM). Live wiring:
 
 1. qBit → Network interface **`wg0`**; WebUI port **8080**
 2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080`

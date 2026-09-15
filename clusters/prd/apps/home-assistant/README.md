@@ -12,7 +12,6 @@ Live on Talos `prd` (Container install, not HA OS). Config on **scarif-iscsi**; 
 | `home-assistant-pg.yaml` | ExternalSecrets + CNPG Cluster |
 | `homelab-package.yaml` | GitOps `packages/homelab.yaml` (`recorder` / `auth_oidc` only — **no `http:`**) |
 | `home-assistant.yaml` | PVC, Deployment (`dnsConfig.ndots: "2"`), Service, HTTPRoute |
-| `scripts/` | One-time HA OS → PVC copy + SQLite → Postgres (complete; sequence reset included) |
 
 ## Auth
 
