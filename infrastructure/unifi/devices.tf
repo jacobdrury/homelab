@@ -18,7 +18,7 @@ resource "unifi_device" "pro_max_16" {
     number                = 2
     name                  = "Port 2"
     forward               = "customize"
-    native_networkconf_id = data.unifi_network.iot.id
+    native_networkconf_id = unifi_network.lan["iot"].id
     setting_preference    = "manual"
     tagged_vlan_mgmt      = "auto"
   }
@@ -27,7 +27,7 @@ resource "unifi_device" "pro_max_16" {
     number                = 3
     name                  = "Port 3"
     forward               = "customize"
-    native_networkconf_id = data.unifi_network.iot.id
+    native_networkconf_id = unifi_network.lan["iot"].id
     setting_preference    = "manual"
     tagged_vlan_mgmt      = "auto"
   }
@@ -36,7 +36,7 @@ resource "unifi_device" "pro_max_16" {
     number                = 4
     name                  = "Port 4"
     forward               = "all"
-    native_networkconf_id = data.unifi_network.drury.id
+    native_networkconf_id = unifi_network.lan["drury"].id
     setting_preference    = "manual"
     tagged_vlan_mgmt      = "auto"
   }
@@ -55,7 +55,7 @@ resource "unifi_device" "pro_max_16" {
     number                = 11
     name                  = "Port 11"
     forward               = "all"
-    native_networkconf_id = data.unifi_network.drury.id
+    native_networkconf_id = unifi_network.lan["drury"].id
     setting_preference    = "manual"
     tagged_vlan_mgmt      = "auto"
   }
@@ -64,7 +64,7 @@ resource "unifi_device" "pro_max_16" {
     number                = 12
     name                  = "Port 12"
     forward               = "all"
-    native_networkconf_id = data.unifi_network.drury.id
+    native_networkconf_id = unifi_network.lan["drury"].id
     setting_preference    = "manual"
     tagged_vlan_mgmt      = "auto"
   }

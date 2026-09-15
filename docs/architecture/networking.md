@@ -87,7 +87,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 | `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
 | `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker on scarif (**live**) |
 
-**Apps:** `*.lab.jacobdrury.com` A records → **Envoy VIP `192.168.5.21`** (secondary IP on yavin; hostNetwork Envoy). Download stack (`sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent`) and Uptime Kuma go Envoy → **Authentik Proxy** → in-cluster Services. Jellyfin and Home Assistant go Envoy → in-cluster Service (HA uses Authentik **OIDC** custom component). Pi-hole still uses transitional Envoy → LXC until cutover. DNS via OpenTofu and/or external-dns from HTTPRoutes.
+**Apps:** `*.lab.jacobdrury.com` A records → **Envoy VIP `192.168.5.21`** (secondary IP on yavin; hostNetwork Envoy). Download stack (`sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent`) and Uptime Kuma go Envoy → **Authentik Proxy** → in-cluster Services. Jellyfin and Home Assistant go Envoy → in-cluster Service (HA uses Authentik **OIDC** custom component). Pi-hole admin → Authentik Proxy → in-cluster Service. DNS via OpenTofu and/or external-dns from HTTPRoutes.
 
 ### Transitional reverse-proxy (strangler)
 
@@ -204,9 +204,7 @@ flowchart LR
   Envoy --> App
 ```
 
-- **LAN (Phase 2–3):** Pi-hole on pc (black) at `.11` until k8s cutover (**last** in Phase 3)
-- **LAN (steady):** cluster Pi-hole on Homelab VLAN
-- **Remote:** Tailscale split DNS → **Cloudflare** + subnet router — **same URLs**, not `*.ts.net`
+- **LAN:** cluster Pi-hole VIP **`192.168.5.22`** (DHCP DNS on all VLANs via OpenTofu)- **Remote:** Tailscale split DNS → **Cloudflare** + subnet router — **same URLs**, not `*.ts.net`
 - **Not** public by default; add Cloudflare Tunnel / Funnel only if needed later
 
 ## Tailscale

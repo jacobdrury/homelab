@@ -31,10 +31,46 @@ dns:
 
 
 networks:
-  # Primary trusted LAN (UniFi VLAN 1). Pi-hole, Proxmox, IoT gateway path.
+  # Primary trusted LAN (UniFi native / VLAN 1). Proxmox, clients; DNS → Homelab Pi-hole VIP.
   drury:
     unifi_name: Drury
+    # Native LAN — no vlan_id in UniFi resource (provider shows 0).
+    gateway_cidr: 192.168.1.1/24
     route_cidr: 192.168.1.0/24 # Tailscale interim — drop when pc (black) leaves lab
+    dhcp:
+      start: 192.168.1.6
+      stop: 192.168.1.254
+    unifi_id: 62e83ed5dfd87906d68f64e3 # import into infrastructure/unifi
+
+  iot:
+    unifi_name: Drury - IoT
+    vlan_id: 2
+    gateway_cidr: 192.168.2.1/24
+    route_cidr: 192.168.2.0/24
+    dhcp:
+      start: 192.168.2.6
+      stop: 192.168.2.254
+    unifi_id: 62f46882a72f49373da0410f
+
+  guest:
+    unifi_name: Drury - Guest
+    vlan_id: 3
+    gateway_cidr: 192.168.3.1/24
+    route_cidr: 192.168.3.0/24
+    dhcp:
+      start: 192.168.3.6
+      stop: 192.168.3.254
+    unifi_id: 62f46a0ca72f49373da04170
+
+  camera:
+    unifi_name: Drury - Camera
+    vlan_id: 4
+    gateway_cidr: 192.168.4.1/24
+    route_cidr: 192.168.4.0/24
+    dhcp:
+      start: 192.168.4.6
+      stop: 192.168.4.254
+    unifi_id: 63ed4c46f2c44b350d4ff31b
 
   # Isolated homelab VLAN (UniFi VLAN 5). Talos CPs, Unraid, cluster workloads.
   homelab:
@@ -46,6 +82,7 @@ networks:
       # Leave .10–.22 for static infra (scarif, Talos, Envoy .21, Pi-hole DNS .22).
       start: 192.168.5.50
       stop: 192.168.5.254
+    unifi_id: 6a9391bffbf2c016aea02b37
     # Infra A records on this VLAN — Cloudflare grey-cloud in infrastructure/dns/.
     hosts:
       scarif:

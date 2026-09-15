@@ -31,7 +31,7 @@ resource "unifi_firewall_group" "envoy_http" {
 # Homelab must be its own zone — same zone as Drury would allow unrestricted lateral traffic.
 resource "unifi_firewall_zone" "drury" {
   name     = "Drury"
-  networks = [data.unifi_network.drury.id]
+  networks = [unifi_network.lan["drury"].id]
 }
 
 resource "unifi_firewall_zone" "homelab" {
@@ -42,14 +42,14 @@ resource "unifi_firewall_zone" "homelab" {
 # IoT is separate so Homelab (HA) can reach devices without opening Guest/Camera.
 resource "unifi_firewall_zone" "iot" {
   name     = "IoT"
-  networks = [data.unifi_network.iot.id]
+  networks = [unifi_network.lan["iot"].id]
 }
 
 resource "unifi_firewall_zone" "isolated" {
   name = "Isolated"
   networks = [
-    data.unifi_network.guest.id,
-    data.unifi_network.camera.id,
+    unifi_network.lan["guest"].id,
+    unifi_network.lan["camera"].id,
   ]
 }
 
