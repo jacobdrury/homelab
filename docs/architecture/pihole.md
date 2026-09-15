@@ -7,89 +7,34 @@ LAN DNS / ad blocking on Talos `prd`. Leans: [decisions](../decisions.md) · app
 | Piece | Choice |
 |-------|--------|
 | Runtime | Official `pihole/pihole:**2026.07.2**` (pinned digest), **Deployment** |
-| Replicas | **2** with soft `podAntiAffinity` (may co-locate if one node is down) |
+| Replicas | **2** with soft `podAntiAffinity` (yavin + naboo) |
 | State | **Stateless** — `emptyDir` for `/etc/pihole`; gravity rebuilt per pod |
-| Config SoT | **ConfigMaps** in Git (`pihole-settings`, `pihole-policy`, `pihole-dnsmasq`) + sync sidecar |
-| DNS | Cilium L2 LoadBalancer VIP **`192.168.5.22`** — UDP/TCP **53** (`Service/pihole-dns`) |
-| Admin | ClusterIP `:80` → Envoy HTTPRoute + **Authentik Proxy** (lab ingress; not nginx Ingress) |
-
-```mermaid
-flowchart TB
-  dhcp[UniFi DHCP]
-  vip["LB VIP .22 :53"]
-  pods[Pi-hole Deployment x2]
-  cm[ConfigMaps]
-  sync[config-sync sidecar]
-  envoy["Envoy .21"]
-  ak[Authentik Proxy]
-  admin[ClusterIP :80]
-
-  dhcp --> vip --> pods
-  cm --> pods
-  cm --> sync
-  sync -->|"v6 API localhost"| pods
-  browser[Browser] --> envoy --> ak --> admin --> pods
-```
-
-## Match to the common k8s recipe
-
-| Blog / recipe | This lab |
-|---------------|----------|
-| Deployment ≥2 replicas | Yes |
-| ConfigMaps for settings + lists | Yes |
-| LoadBalancer DNS :53 TCP/UDP | Yes — Cilium L2 `.22` |
-| ClusterIP admin :80 | Yes |
-| Ingress for admin | **Envoy HTTPRoute + Authentik** (same role; lab standard) |
-
-**Not** StatefulSet + OpenTofu dual-apply. ConfigMaps + sidecar replace Nebula Sync and multi-target TF.
-
-## Why Cilium L2 for `.22` is OK (Envoy `.21` is not)
-
-Envoy left Cilium L2 because **Tailscale FORWARD → L2 VIP on the same node hairpins**. Pi-hole VIP is **LAN DNS only**. Away clients use split DNS → Cloudflare. Admin UI uses Envoy `.21`, never Tailscale→`.22`. L2 `nodeSelector: {}` — do not pin to workers.
-
-## Config maps
-
-| ConfigMap | Purpose |
-|-----------|---------|
-| `pihole-settings` | `FTLCONF_*` via `envFrom` (upstreams, listeningMode, …) — **rollout** to apply |
-| `pihole-policy` | Block/allow list URLs + per-domain allow/deny JSON — sidecar reconciles |
-| `pihole-dnsmasq` | `*.lab` → Cloudflare forward + transitional `*.homelab.com` hosts |
-| `pihole-sync` | Python reconciler (stdlib only) |
-
-Do **not** edit lists in the UI — the sidecar reverts drift on the next loop.
+| Config SoT | **ConfigMaps** in Git + sync sidecar |
+| DNS | Cilium L2 LoadBalancer VIP **`192.168.5.22`** — UDP/TCP **53** |
+| Admin | ClusterIP `:80` → Envoy + **Authentik Proxy** |
+| DHCP / ZBF | UniFi → **`.22`** (Homelab DHCP + IoT/Isolated DNS allows) |
 
 ## Stats (ephemeral)
 
-Query counts, blocked totals, and history live in each pod’s FTL DB on `emptyDir` — **lost on restart** and **not merged** across replicas. Homepage has a **link only** (no Pi-hole widget).
+Query counts are per-pod / lost on restart. Homepage is **link-only**. **Follow-up:** Prometheus + Grafana.
 
-**Follow-up:** scrape Pi-hole (or an exporter) with **Prometheus** and graph totals in Grafana so lab-wide DNS stats survive pod churn.
+## Auth
 
-## Parallel soak (careful cutover)
+Authentik Proxy; Pi-hole web password **disabled**. Config-sync uses localhost (no public `/api` skip).
+
+## Cutover status (Sep 2026)
 
 | Path | Backend |
 |------|---------|
-| DHCP / LAN DNS | Still LXC **`192.168.1.11`** |
-| k8s VIP | **`192.168.5.22`** — test with `dig @192.168.5.22` |
-| `pihole.lab` UI | **Authentik Proxy** → in-cluster Service (LXC UI route removed) |
+| LAN DNS / DHCP | **`192.168.5.22`** (k8s) |
+| `pihole.lab` UI | Authentik → in-cluster |
+| LXC `.11` | Keep running briefly as break-glass; stop VMID **106** when soak is trusted |
+| OpenTofu `infrastructure/pihole/` | Still targets LXC (`services.pihole.lxc`) — **retire** after LXC stop |
 
-OpenTofu [`infrastructure/pihole/`](../../infrastructure/pihole/) stays **LXC-only** until DHCP cutover, then **retire** (policy lives in ConfigMaps).
+**Manual:** set Drury / IoT / Guest / Camera **DHCP DNS** to `.22` in UniFi if those networks are not Git-managed (only Homelab `dhcp_dns` is in OpenTofu).
 
-## Auth (SSO)
-
-| Piece | Detail |
-|-------|--------|
-| Blueprint | `authentik/blueprints-pihole.yaml` |
-| Route | `authentik/resources-pihole-routes.yaml` |
-| Skip paths | `/api` — Uptime Kuma (and any future API clients) |
-| After login | Web password **disabled** (`FTLCONF_webserver_api_password: ""`); Authentik only |
-
-## Remaining cutover checklist
-
-1. Reserve UniFi DHCP so nothing leases **`.22`**.
-2. Optional: `dhcp_dns = [.22, .11]` soak, then `[.22]` only.
-3. `lab.yaml` `services.pihole.host` → `.22`; UniFi ZBF IoT/Isolated DNS → Homelab `.22`.
-4. Stop LXC 106; archive/remove `infrastructure/pihole/` OpenTofu project.
+**Talos:** patches set nameservers to `.22` first — `./gen.sh` then `talosctl apply-config` on yavin + naboo when convenient.
 
 ## Related
 
-- [networking](networking.md) · [agents](agents.md) · Cilium: `clusters/prd/platform/cilium/resources.yaml`
+- [networking](networking.md) · Cilium: `clusters/prd/platform/cilium/resources.yaml`

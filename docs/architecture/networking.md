@@ -13,13 +13,15 @@ Dedicated **homelab VLAN**, isolated from trusted LAN / IoT, with **selective** 
 | Resource | IP | Notes |
 |----------|-----|--------|
 | Subnet | `192.168.5.0/24` | UniFi network **`Homelab`** (VLAN 5) |
-| DHCP pool | `.6–.254` | Same convention as Drury / IoT / Guest / Camera |
+| DHCP pool | `.50–.254` | Leaves `.10–.22` for static infra / VIPs |
 | **scarif** | `.10` static | NFS/iSCSI — static on host + reservation |
 | **yavin** | `.11` static | Talos CP #1 |
 | **hoth** | `.12` static | Talos CP #2 (Phase 4) |
 | **endor** | `.13` static | Talos CP #3 (Phase 4) |
+| **naboo** | `.14` static | Talos worker (interim) |
 | API / VIP | `.20` reserved | Optional future **API** VIP; DNS may point here at 3 CPs |
 | Envoy VIP | `.21` | Ingress front door — real secondary IP on yavin today; HA in Phase 4 |
+| Pi-hole DNS VIP | `.22` | Cilium L2 LoadBalancer (UDP/TCP 53) |
 | `k8s.lab.jacobdrury.com` | → `.11` (now) | Kubernetes API endpoint — [decisions](../decisions.md) |
 
 ### Unraid IP
@@ -37,19 +39,19 @@ Example scheme (pick numbers that fit your UniFi site): see table above. **scari
 OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Firewall** (UniFi OS 9+) via `unifi_firewall_zone` + `unifi_firewall_zone_policy` — not legacy LAN_IN.
 
 - **Zones:** `Drury` · `Homelab` · **`IoT`** · `Isolated` (Guest + Camera)  
-- **Drury → Homelab:** allow all (mgmt + NFS); return traffic auto-allowed  
-- **Homelab → Drury:** Pi-hole DNS + transitional Envoy targets (Pi-hole UI / Proxmox)  
+- **Drury → Homelab:** allow all (mgmt + NFS + Pi-hole DNS VIP); return traffic auto-allowed  
+- **Homelab → Drury:** transitional Envoy → Proxmox only  
 - **Homelab → IoT:** **allow all** (HA on k8s reaches devices; return traffic auto-allowed)  
-- **IoT → Homelab:** Envoy VIP `.21` **:80/:443** only (device webhooks → `https://homeassistant.lab`)  
+- **IoT → Homelab:** Envoy VIP `.21` **:80/:443** + Pi-hole DNS VIP `.22` **:53**  
 - **Homelab → Isolated (Guest/Camera):** deny  
-- **IoT / Isolated → Pi-hole:** DNS only  
+- **Isolated → Homelab:** Pi-hole DNS VIP `.22` **:53** only  
 - **Homelab → Internet:** External zone defaults (allow)  
 
-**DNS from Homelab:** Pods need fast public DNS (HACS, Nabu Casa, HA alerts). Homelab→Pi-hole **UDP/53** still times out (ICMP/HTTP/TCP to `.11` work); UniFi allow is broad (`protocol = all` to the Pi-hole host) but UDP remains broken — check Proxmox/LXC firewall or leftover classic Traffic Rules. **Mitigation:** CoreDNS forwards to Cloudflare (`1.1.1.1` / `1.0.0.1`); Talos patches prefer Cloudflare before Pi-hole ([yavin](../../infrastructure/talos/prd/patches/yavin.yaml) / [naboo](../../infrastructure/talos/prd/patches/naboo.yaml) — apply machine config when convenient). HA Deployment uses `dnsConfig.ndots: "2"`.
+**DNS from Homelab:** LAN DNS is k8s Pi-hole VIP **`192.168.5.22`** (same VLAN). Talos patches prefer `.22` then Cloudflare — re-apply machine config when convenient. HA uses `dnsConfig.ndots: "2"`.
 - Codify static reservations for scarif, yavin, and `k8s.lab` target  
 - Don’t IaC every Wi‑Fi tweak on day one  
 
-**Prerequisite:** ~~enable ZBF on the UDM~~ **Done** (Sep 2026). Zones + policies in `infrastructure/unifi/firewall.tf`. After migration, disable leftover classic **Traffic Rules** / broken Internal-zone leftovers in the UI so only Git-owned policies apply. Pi-hole must use `dns.listeningMode=ALL` (`infrastructure/pihole/listening.tf`) so Homelab/Isolated clients are answered.
+**Prerequisite:** ~~enable ZBF on the UDM~~ **Done** (Sep 2026). Zones + policies in `infrastructure/unifi/firewall.tf`. After migration, disable leftover classic **Traffic Rules** / broken Internal-zone leftovers in the UI so only Git-owned policies apply.
 
 ## Domain & DNS
 

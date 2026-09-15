@@ -17,10 +17,10 @@ machine:
             gateway: 192.168.5.1
             metric: 100
     nameservers:
-      # Prefer Cloudflare from Homelab until Pi-hole UDP/53 from VLAN 5 is reliable.
+      # LAN DNS = k8s Pi-hole VIP on Homelab (same VLAN). Cloudflare backup.
+      - 192.168.5.22
       - 1.1.1.1
       - 1.0.0.1
-      - 192.168.1.11
   install:
     disk: /dev/vda
     wipe: false

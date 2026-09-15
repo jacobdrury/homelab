@@ -16,7 +16,7 @@ data:
     server=/lab.jacobdrury.com/1.0.0.1
   02-local-dns.conf: |
     # Transitional LAN names — retire as apps move to *.lab.
-    host-record=pihole.homelab.com,192.168.1.11
+    host-record=pihole.homelab.com,192.168.5.22
     host-record=proxmox.homelab.com,192.168.1.12
     host-record=docker.homelab.com,192.168.1.217
     host-record=home-assistant.homelab.com,192.168.2.8

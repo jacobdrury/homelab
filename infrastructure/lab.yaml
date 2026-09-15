@@ -43,7 +43,8 @@ networks:
     gateway_cidr: 192.168.5.1/24 # UniFi network subnet (gateway at .1)
     route_cidr: 192.168.5.0/24   # Tailscale subnet router (steady: k8s operator)
     dhcp:
-      start: 192.168.5.6
+      # Leave .10–.22 for static infra (scarif, Talos, Envoy .21, Pi-hole DNS .22).
+      start: 192.168.5.50
       stop: 192.168.5.254
     # Infra A records on this VLAN — Cloudflare grey-cloud in infrastructure/dns/.
     hosts:
@@ -81,10 +82,10 @@ networks:
 
 services:
   pihole:
-    # LAN DNS VIP after cutover (Cilium L2 LoadBalancer). Keep LXC host until DHCP flips.
-    host: 192.168.1.11 # LXC on homelab02 · Drury · live until cutover
-    dns_vip: 192.168.5.22 # k8s LoadBalancer — parallel soak; not DHCP yet
-    # Reserve .22 in UniFi (DHCP pool overlaps) so a client cannot claim the VIP.
+    # LAN DNS — Cilium L2 LoadBalancer VIP on Homelab (DHCP + UniFi ZBF).
+    host: 192.168.5.22
+    # Legacy LXC (OpenTofu only until LXC 106 is stopped). Not for DHCP.
+    lxc: 192.168.1.11
   homeassistant:
     host: 192.168.2.8 # legacy HA OS VM (IoT); live HA is k8s → Envoy .21 — stop when soak done
   proxmox:

@@ -37,11 +37,11 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Domain | `lab.jacobdrury.com`; registrar Squarespace → **Cloudflare DNS** (OpenTofu), full Cloudflare transfer later |
 | TLS | cert-manager + **Let’s Encrypt DNS-01** via Cloudflare; wildcard **`*.lab.jacobdrury.com`** on Envoy; **scarif** HTTPS via Envoy proxy to Unraid HTTP |
 | Remote `*.lab` URLs | **Same names** home and away: Cloudflare RFC1918 A records; LAN via Pi-hole forward; Tailscale **split DNS → Cloudflare** + **subnet router** — [networking](architecture/networking.md#same-urls-at-home-and-away) |
-| Homelab firewall | **Zone-Based Firewall** (UniFi OS 9+): Drury → Homelab allow all; **Homelab → IoT allow** (HA devices + return); **IoT → Homelab Envoy `.21:80/443`** (webhooks); Homelab → Guest/Camera deny; Homelab → Drury = Pi-hole DNS (+ transitional Envoy); IoT/Isolated → Pi-hole DNS — [networking](architecture/networking.md) |
+| Homelab firewall | **Zone-Based Firewall** (UniFi OS 9+): Drury → Homelab allow all; **Homelab → IoT allow**; **IoT → Homelab Envoy `.21:80/443`**; Homelab → Guest/Camera deny; **IoT/Isolated → Pi-hole DNS `.22`**; Homelab → Drury = transitional Proxmox only — [networking](architecture/networking.md) |
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
 | DNS app | **Pi-hole** in k8s — **Deployment ×2**, ConfigMaps SoT, Cilium L2 VIP `.22`; migrate **last** from LXC; Authentik Proxy for UI |
-| Pi-hole IaC | **k8s:** ConfigMaps in GitOps. **LXC (until cutover):** OpenTofu `infrastructure/pihole/` — then retire |
+| Pi-hole IaC | **k8s:** ConfigMaps in GitOps. **LXC OpenTofu** (`services.pihole.lxc`) until LXC stopped, then retire |
 | Legacy DNS | **`*.homelab.com`** Pi-hole local records — **transitional**; retire as apps move to `*.lab` (`arr.homelab.com` retired Sep 2026) |
 | Media GPU | Jellyfin in k8s; **GPU/QSV optional** (720/1080 direct play today). Mini iGPU later if needed |
 | Apps (migrate order) | ~~*arr + qBit → Jellyfin → HA~~ **done** → **Pi-hole last**. **URLs first:** Envoy transitional routes; swap backends at cutover. **Homepage** = first GitOps app after Envoy |

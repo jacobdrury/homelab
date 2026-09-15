@@ -12,10 +12,15 @@ if [[ -z "${PIHOLE_URL:-}" ]]; then
   HOST="$(python3 - "${LAB_YAML}" <<'PY'
 import pathlib, re, sys
 text = pathlib.Path(sys.argv[1]).read_text()
-m = re.search(r"(?m)^[ \t]*pihole:[ \t]*\n[ \t]+host:[ \t]*([^\s#]+)", text)
-if not m:
-    raise SystemExit(f"pihole.host not found in {sys.argv[1]}")
-print(m.group(1))
+# Prefer lxc (legacy OpenTofu) when present, else host.
+m_lxc = re.search(r"(?m)^[ \t]*pihole:[ \t]*\n(?:.*\n)*?[ \t]+lxc:[ \t]*([^\s#]+)", text)
+m_host = re.search(r"(?m)^[ \t]*pihole:[ \t]*\n(?:.*\n)*?[ \t]+host:[ \t]*([^\s#]+)", text)
+if m_lxc:
+    print(m_lxc.group(1))
+elif m_host:
+    print(m_host.group(1))
+else:
+    raise SystemExit(f"pihole.lxc/host not found in {sys.argv[1]}")
 PY
 )"
   PIHOLE_URL="http://${HOST}"

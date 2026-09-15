@@ -160,7 +160,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 
 | Service | Where | Reach | Data / notes |
 |---------|-------|-------|--------------|
-| Pi-hole | pc (black) LXC **106** | `192.168.1.11` · `:53`/admin UI | LAN DNS · config in **`infrastructure/pihole/`** (OpenTofu) · `*.lab` → Cloudflare forward |
+| Pi-hole | k8s `pihole` (GitOps) | VIP `192.168.5.22` · `:53`; UI `pihole.lab` → Authentik | ConfigMaps SoT · LXC **106** @ `.11` stop after soak |
 | Home Assistant | k8s `home-assistant` (GitOps; **2026.8.3**) | `homeassistant.lab` → Envoy → pod + Authentik OIDC (`authentik Admins` → owner) | Migrated from VM 105; HTTP settings in UI; no USB radios |
 | **NFS (media)** | **scarif** | `scarif.lab.jacobdrury.com:/mnt/disks/ZXA0VZBA` (`192.168.5.10`) | ~8.7 TB library |
 | Jellyfin | k8s `media` | `jellyfin.lab` → Envoy → pod `:8096` | NFS `media/{anime,tv}` RO; SQLite on iSCSI config |
@@ -176,7 +176,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | Concern | Today |
 |---------|--------|
 | Gateway | UDM Pro · `192.168.1.1` · AT&T |
-| LAN DNS | Pi-hole · `192.168.1.11` |
+| LAN DNS | Pi-hole k8s VIP · `192.168.5.22` |
 | Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · **scarif live**) · `192.168.6.0/24` (Teleport) |
 | Public / lab DNS | Cloudflare — **`infrastructure/dns/`** · LAN via Pi-hole forward for `*.lab` |
 | Remote | Tailscale IaC (`infrastructure/tailscale/`): split DNS → Cloudflare; **homelab02** interim subnet router — `http://scarif.lab` verified away (Aug 2026) |
