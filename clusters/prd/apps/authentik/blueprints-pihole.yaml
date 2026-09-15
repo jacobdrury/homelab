@@ -27,7 +27,9 @@ data:
           internal_host_ssl_validation: false
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
-          # No skip_path — Pi-hole has no web password; do not expose /api publicly.
+          # Explicit empty — clear any prior /api skip (no web password).
+          skip_path_regex: ""
+
       - model: authentik_core.application
         id: app-pihole
         state: present
