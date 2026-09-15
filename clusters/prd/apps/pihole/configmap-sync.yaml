@@ -118,8 +118,15 @@ data:
             list_path = f"/api/lists?type={list_type}"
             item_path = f"/api/lists/{enc}?type={list_type}"
             if key not in current:
-                st, resp = http_json("POST", list_path, body, sid=sid)
-                if st not in (200, 201):
+                st, resp = None, None
+                for attempt in range(5):
+                    st, resp = http_json("POST", list_path, body, sid=sid)
+                    if st in (200, 201):
+                        break
+                    err = (resp or {}).get("error") or {}
+                    if err.get("key") == "database_error" and attempt < 4:
+                        time.sleep(2 * (attempt + 1))
+                        continue
                     raise RuntimeError(f"POST list {address}: {st} {resp}")
                 print(f"list add {list_type} {address}", flush=True)
                 needs_gravity = True
