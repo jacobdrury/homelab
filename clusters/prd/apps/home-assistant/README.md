@@ -33,4 +33,4 @@ Envoy → Service (native HA + OIDC). **Not** Authentik Proxy. Blueprint: `../au
 - IoT: UniFi Homelab→IoT + IoT→Envoy `.21:80/443`.
 - Homepage + Uptime Kuma: `homeassistant.lab.jacobdrury.com`.
 - Custom components (HACS, etc.) live on the PVC — bump with Core upgrades as needed.
-- Legacy HA OS VM 105 @ `192.168.2.8` — stop / `onboot=0` after soak.
+- Legacy HA OS VM 105 @ `192.168.2.8` — **stopped** / `onboot=0`.

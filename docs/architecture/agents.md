@@ -116,10 +116,9 @@ If you helm-applied something in a pinch, get it into Git and let Argo adopt it 
 
 | Phase | What |
 |-------|------|
-| **Now** | Tailscale IaC; **homelab02** interim subnet router; `https://*.lab` via Envoy |
-| **2 (done)** | **`connect/`**; CSI; Connect + ESO; **Argo CD**; **Envoy** + LE; Homepage; Authentik; Kuma; shared MariaDB; transitional routes |
-| **2 (next)** | Shared CNPG (deferred); smoke `https://*.lab` away via k8s Homelab route |
-| **3 (nearly done)** | **Media + HA + Pi-hole** on k8s; Discord bots **won't migrate**; stop soak guests |
+| **Now** | Tailscale IaC; Homelab via k8s Connector; Drury still via homelab02; `https://*.lab` via Envoy |
+| **2 (done)** | **`connect/`**; CSI; Connect + ESO; **Argo CD**; **Envoy** + LE; Homepage; Authentik; Kuma; shared MariaDB; per-app CNPG (no lab-wide collapse) |
+| **3 (nearly done)** | **Media + HA + Pi-hole** on k8s; only Pi-hole LXC soak left |
 | **5** | Agent RBAC, optional MCP, skills |
 
 **Non-goal:** public kube API or Unraid for agents. Agents use the **tailnet**.

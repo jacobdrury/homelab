@@ -10,8 +10,8 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Tailscale in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; interim subnet router on homelab02 |
-| **2** Talos `prd` | **In progress** | Platform + Homepage/Kuma/Authentik live; remaining: shared CNPG collapse |
-| **3** Migrate workloads | **Nearly done** | **Media + HA + Pi-hole** on k8s. Discord bots **won't migrate**. Stop leftover Proxmox guests after soak |
+| **2** Talos `prd` | **Done** | Platform + Homepage/Kuma/Authentik; Homelab via k8s Connector. Per-app CNPG kept (no lab-wide collapse) |
+| **3** Migrate workloads | **Nearly done** | **Media + HA + Pi-hole** on k8s. Only **Pi-hole LXC 106** left to stop after DNS soak |
 | **4–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
@@ -19,25 +19,20 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 
 **DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/dns/`). LAN: k8s Pi-hole VIP **`.22`** (DHCP on all VLANs) forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare. **`arr.lab` / `arr.homelab.com` retired** (Sep 2026).
 
-**Remote access (verified):** split DNS + homelab02 subnet router (`192.168.1.0/24`, `192.168.5.0/24`) · policy/keys in `infrastructure/tailscale/`. Homelab route moving to k8s Connector when operator is stable.
+**Remote access (verified):** split DNS · Homelab VLAN via **k8s Connector**; Drury (`192.168.1.0/24`) still via homelab02 · policy/keys in `infrastructure/tailscale/`.
 
 ## What's next — Phase 3 wrap-up
 
-Media, Home Assistant, and **Pi-hole** are on `prd`. Discord bots (**VM 103**) are **retired from the migration plan** — stop/delete when convenient; do not move to k8s.
+Media, Home Assistant, and **Pi-hole** are on `prd`. Remaining soak guest:
 
 | Guest | Action |
 |-------|--------|
-| arr VM **101** | Already **stopped** / `onboot=0` |
-| HA VM **105** | Stop / `onboot=0` after soak |
-| Pi-hole LXC **106** | Stop after DNS soak (clients renew to `.22`) |
-| discord-bots VM **103** | **Won't migrate** — stop/delete anytime |
+| arr VM **101** | **Stopped** / `onboot=0` |
+| HA VM **105** | **Stopped** / `onboot=0` |
+| discord-bots VM **103** | **Stopped** / retired (won't migrate) |
+| Pi-hole LXC **106** | **Waiting** — stop after DNS soak (clients renew to `.22`) |
 
-Phase 2 leftovers (non-blocking):
-
-| Step | Action |
-|------|--------|
-| Shared CNPG | Collapse Authentik (etc.) onto one lab Postgres when convenient |
-| Smoke | Confirm `https://*.lab` away via k8s Homelab Connector (not only homelab02) |
+**Won't do:** lab-wide shared CNPG collapse (keep per-app clusters: `authentik-pg`, `media-pg`, HA Postgres).
 
 **Deliberately later:** Prometheus / Grafana / Discord alert wiring — **Phase 5**. Optional anytime: array/parity ([Phase 1b](#phase-1b--array--parity-when-you-can)).
 
@@ -51,7 +46,7 @@ Tools: `cd connect/prd` · `moon run connect:sync` · [tailscale README](../infr
 4. **Migrate once** — apps to GitOps on `prd` (**Pi-hole last**)  
 5. **Expand later** — join **hoth** + **endor** as CPs (**1→3**); free pc (black) → gaming
 
-pc (black) **stays in lab during transition** — media + HA + Pi-hole cutovers **done**; stop leftover guests (HA VM, Pi-hole LXC, discord-bots) after soak, then free the box in Phase 4.
+pc (black) **stays in lab during transition** — media + HA + Pi-hole cutovers **done**; stop Pi-hole LXC after DNS soak, then free the box in Phase 4.
 
 ```mermaid
 flowchart LR
@@ -163,14 +158,14 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [x] Argo CD → `clusters/prd` (app-of-apps root; UI now `https://argocd.lab`)  
 - [x] Envoy + cert-manager; LE wildcard `*.lab.jacobdrury.com` (VIP `192.168.5.21` — host address on yavin; was Cilium L2)  
 - [x] **Shared MariaDB** — `platform/mariadb/`; Uptime Kuma consumer  
-- [ ] **Shared CNPG Postgres** — one lab `Cluster`, many DBs; migrate Authentik off dedicated `authentik-pg`  
+- [x] **Per-app CNPG** — Authentik / media / HA each keep their own Cluster (**won't** collapse to one lab Postgres)  
 - [x] **Tailscale operator** on `prd` — Connector advertises `192.168.5.0/24`; Homelab route off homelab02 admin  
 - [x] **Transitional HTTPRoutes** — Envoy proxies to legacy VMs/LXCs; media routes cut over to in-cluster Services (Sep 2026)  
 - [x] **Homepage** via Argo (+ Uptime Kuma)  
 - [x] **Authentik** at `auth.lab`  
 - [x] **metrics-server**  
 - [x] **etcd snapshot cadence** — CronJob every 6h → `scarif-iscsi` PVC (keep 14)  
-- [ ] Confirm GitOps + CSI + **`https://*.lab`** (incl. proxied legacy backends) on LAN and away via Tailscale (Homelab via k8s Connector)  
+- [x] Confirm GitOps + CSI + **`https://*.lab`** on LAN and away via Tailscale (Homelab via k8s Connector)  
 
 **Defer:** Prometheus / Grafana / Discord alerts → [Phase 5](#phase-5--hardening). Bootstrap troubleshooting: **`connect/`**, k9s, talosctl (no early metrics stack on 16 GB yavin).
 
@@ -185,9 +180,9 @@ Do this for break-glass + migration SSH predictability. Scope is **light** — n
 | **scarif** | `192.168.5.10` | Unraid root / UI |
 | **homelab02** | `192.168.1.12` | Proxmox |
 | **arr** | `192.168.1.9` | VM 101 — **stopped** / `onboot=0`; media configs archived |
-| **home-assistant** | `192.168.2.8` | VM 105 — HA OS (VLAN 2); live HA is k8s — stop when soak done |
+| **home-assistant** | `192.168.2.8` | VM 105 — **stopped** / `onboot=0`; live HA is k8s |
 | **pihole** | `192.168.1.11` | LXC 106 — stop after DNS soak |
-| **discord-bots** | `192.168.1.18` | VM 103 — **won't migrate**; stop/delete anytime |
+| **discord-bots** | `192.168.1.18` | VM 103 — **stopped** / retired (won't migrate) |
 
 Skip Talos (**yavin** / **naboo**) — use `talosctl` via `connect/prd`.
 
@@ -311,17 +306,17 @@ Cut over workloads → GitOps on `prd`. Remaining Proxmox guests on **pc (black)
 1. ~~*arr + qBittorrent (Mullvad WG sidecar + config copy; Authentik Proxy; `media-pg`)~~ **done** — see [media](architecture/media.md)  
 2. ~~Jellyfin (library on **scarif NFS**; SQLite on iSCSI; GPU/QSV optional)~~ **done** — `apps/media/jellyfin.yaml`  
    - arr VM **stopped** / `onboot=0`; `arr.lab` + `arr.homelab.com` DNS retired  
-3. ~~Home Assistant (Container + CNPG recorder + Authentik OIDC)~~ **done** — [home-assistant](architecture/home-assistant.md); stop VM 105 after soak  
-4. ~~Discord bots~~ **won't migrate** — VM **103** retired from plan; stop/delete when convenient  
-5. ~~**Pi-hole** — final cutover from LXC → k8s~~ **done** (Sep 2026) — VIP `.22`, ConfigMaps, Authentik UI; stop LXC **106** after soak  
+3. ~~Home Assistant (Container + CNPG recorder + Authentik OIDC)~~ **done** — [home-assistant](architecture/home-assistant.md); VM **105** stopped  
+4. ~~Discord bots~~ **won't migrate** — VM **103** stopped / retired  
+5. ~~**Pi-hole** — final cutover from LXC → k8s~~ **done** (Sep 2026) — VIP `.22`, ConfigMaps, Authentik UI; stop LXC **106** after DNS soak  
 
 **Already on cluster:** Homepage, Uptime Kuma, full **media** stack, **Home Assistant**, **Pi-hole**; **`*.lab` URLs** on Envoy.
 
 Each migrate: `apps/` → Argo → `*.lab.jacobdrury.com` → retire old guest.
 
-pc (black) retained until leftover guests are stopped; then idle / gaming (Phase 4).
+pc (black) retained until Pi-hole LXC is stopped; then idle / gaming (Phase 4).
 
-**Exit:** Listed apps on `prd`; old guests retired (discord bots deleted, not migrated).
+**Exit:** Listed apps on `prd`; soak guests retired (discord bots deleted, not migrated).
 
 ## Phase 4 — Expand to 3 CPs + free pc (black)
 

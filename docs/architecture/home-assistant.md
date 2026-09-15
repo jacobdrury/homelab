@@ -41,7 +41,7 @@ Without the groups claim + `authentik Admins` mapping, SSO logins demote the lin
 
 ## Legacy VM
 
-Proxmox VM 105 (`192.168.2.8`, VLAN 2) was the HA OS source. Config + SQLite→Postgres cutover done. **Stop / `onboot=0`** when soak is finished; keep disk until trusted. Scripts under `apps/home-assistant/scripts/` are reference-only.
+Proxmox VM 105 (`192.168.2.8`, VLAN 2) was the HA OS source. Config + SQLite→Postgres cutover done. **Stopped** / `onboot=0`; keep disk until trusted. Scripts under `apps/home-assistant/scripts/` are reference-only.
 
 ## Related
 

@@ -7,15 +7,15 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | | Today | Target |
 |---|--------|--------|
 | Compute | Talos `prd`: **yavin** (CP) + **naboo** (worker on scarif) · Proxmox **homelab02** (leftover guests soaking) | Expand to **3 BM CPs** (hoth/endor); drain naboo |
-| Access | Tailscale + **`https://*.lab`** via Envoy `.21` | Same URLs · k8s Connector replaces homelab02 for Homelab |
+| Access | Tailscale + **`https://*.lab`** via Envoy `.21` · Homelab via k8s Connector | Same URLs · Drury still via homelab02 until black retires |
 | Storage | **scarif** — 24TB UD · **NFS** + **iSCSI** (`scarif-nfs` / `scarif-iscsi`) · naboo on NVMe | Same + optional array/parity |
-| pc (black) | Stop leftover guests (HA / Pi-hole LXC / discord-bots) after soak | **Personal gaming** (Phase 4) |
+| pc (black) | Stop Pi-hole LXC after DNS soak (arr / HA / discord-bots already stopped) | **Personal gaming** (Phase 4) |
 | Network | Homelab **VLAN 5** + UniFi **ZBF** · DHCP DNS → Pi-hole VIP `.22` | Full lab on VLAN + Tailscale |
 | Apps | **Media + HA + Pi-hole on k8s** · Homepage / Authentik / Kuma | Same + Phase 5/6 |
 | Delivery | **Argo CD** · `https://argocd.lab.jacobdrury.com` | Same |
 | Secrets | **1Password** → Connect → ESO (`ClusterSecretStore/onepassword`) | Same |
 
-**Next:** Phase **3 wrap-up** — stop soak guests → Phase **4** expand to 3 CPs / free pc (black).
+**Next:** Stop Pi-hole LXC after DNS soak → Phase **4** expand to 3 CPs / free pc (black).
 
 ## Docs
 

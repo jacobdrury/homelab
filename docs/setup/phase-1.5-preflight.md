@@ -83,8 +83,9 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 
 | Name | VMID | Status |
 |------|------|--------|
-| Pi-hole LXC | **106** | Cut over to k8s — stop after soak |
-| discord-bots VM | **103** | **Won't migrate** — stop/delete anytime |
+| Pi-hole LXC | **106** | Cut over to k8s — stop after DNS soak |
+| discord-bots VM | **103** | **Stopped** — won't migrate |
+| HA VM | **105** | **Stopped** / `onboot=0` — HA on k8s |
 
 ## Deferred
 

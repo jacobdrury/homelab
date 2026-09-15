@@ -29,7 +29,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Ingress | **Envoy Gateway** (Gateway API) |
 | Secrets | **1Password** + Connect + External Secrets |
 | Identity / SSO | **Authentik** at `auth.lab.jacobdrury.com` — OIDC-first; directory config via **blueprints** in Git (not OpenTofu); forward auth later for legacy UIs |
-| Postgres (apps) | **CloudNativePG** on `scarif-iscsi`. **Shared multi-DB:** `media-pg` (*arr). **Target:** collapse remaining app Clusters (e.g. Authentik) into one lab Postgres when convenient. Chart-bundled Postgres only for demos |
+| Postgres (apps) | **CloudNativePG** on `scarif-iscsi`. Per-app Clusters (`media-pg`, `authentik-pg`, HA Postgres) — **won't** collapse to one lab-wide Postgres. Chart-bundled Postgres only for demos |
 | MariaDB (apps) | **Shared MariaDB** (`platform/mariadb/`) — one instance, many databases; Uptime Kuma first consumer. Prefer over SQLite when the app supports MariaDB/MySQL |
 | SQLite | Only when the app cannot use Postgres or MariaDB — RWO PVC on `scarif-iscsi` |
 | Host SSH / sudo | **1Password** + **SSH keys** (1Password agent); Host aliases (scarif, homelab02, arr archive, HA, pihole LXC until stopped, …); **shared lab admin sudo password** in 1P; no private keys in Git; Talos = **talosctl** |

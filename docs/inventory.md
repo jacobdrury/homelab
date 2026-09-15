@@ -7,7 +7,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Host | Codename (target) | Node / name (today) | Role today | IP | Notes |
 |------|-------------------|---------------------|------------|-----|-------|
 | **Mac Mini** | **yavin** | `yavin` | Talos **control-plane** | `192.168.5.11` | Bare-metal Talos 1.12.7 · Cilium · `allowSchedulingOnControlPlanes` |
-| **pc (black)** | — | `homelab02` | Proxmox (**sole node**) | `192.168.1.12` | Leftover guests soaking (HA / Pi-hole LXC / discord-bots); **arr stopped**; **leaving lab** → gaming |
+| **pc (black)** | — | `homelab02` | Proxmox (**sole node**) | `192.168.1.12` | Guests: **arr / HA / discord-bots stopped**; Pi-hole LXC soaking; **leaving lab** → gaming |
 | **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.5.10` | NAS · Homelab VLAN 5 · 24TB UD + NFS · hosts **naboo** VM |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
@@ -63,9 +63,9 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | VMID | Type | Name | IP | VLAN | RAM | Notes |
 |------|------|------|-----|------|-----|-------|
 | 101 | VM | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | **Stopped** · `onboot=0` · media configs archived; stack on k8s |
-| 105 | VM | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · **cut over to k8s** — stop / `onboot=0` when soak done ([home-assistant](architecture/home-assistant.md)) |
+| 105 | VM | `home-assistant` | `192.168.2.8` | **2** | 4 GB | **Stopped** · `onboot=0` · HA on k8s ([home-assistant](architecture/home-assistant.md)) |
 | — | LXC | `Pi-Hole` | `192.168.1.11` | untagged | 1 GB / 8 GB | VMID **106** · **cut over to k8s** — stop after DNS soak |
-| 103 | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Won't migrate** — stop/delete when convenient |
+| 103 | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Stopped** · won't migrate |
 
 **Must migrate or retire all guests before wipe → personal gaming.**
 
@@ -193,7 +193,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | `.12` | pc (black) / `homelab02` |
 | `.13` | USW Aggregation |
 | `.15` | **yavin** (Mac Mini) · today `homelab03` |
-| `.18` | discord-bots VM **103** (**won't migrate**) |
+| `.18` | discord-bots VM **103** (**stopped**; won't migrate) |
 | `.70` | USP PDU Pro |
 | `.82` | U6 Pro (Hallway) |
 | `.107` | Bedroom client |
@@ -202,7 +202,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | `.175` | Laptop (Precision) |
 | `.197` | USW Pro Max 16 PoE |
 | `.225` | USW Flex Mini |
-| `.2.8` | HA OS VM 105 (VLAN 2) — retired after k8s cutover |
+| `.2.8` | HA OS VM 105 (VLAN 2) — **stopped** / `onboot=0` |
 | `.2.171` | Lutron bridge (IoT) |
 | `.2.211` | IoT device |
 
