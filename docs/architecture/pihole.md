@@ -81,7 +81,7 @@ OpenTofu [`infrastructure/pihole/`](../../infrastructure/pihole/) stays **LXC-on
 | Blueprint | `authentik/blueprints-pihole.yaml` |
 | Route | `authentik/resources-pihole-routes.yaml` |
 | Skip paths | `/api` — Uptime Kuma (and any future API clients) |
-| After login | Optionally disable Pi-hole web password (keep API password for config-sync) |
+| After login | Web password **disabled** (`FTLCONF_webserver_api_password: ""`); Authentik only |
 
 ## Remaining cutover checklist
 

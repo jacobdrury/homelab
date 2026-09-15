@@ -64,10 +64,10 @@ locals {
     }
     pihole = {
       name                  = "Pi-hole"
-      # Authentik Proxy — probe skip_path (not /admin 302). Bare /api is 404; /api/auth is 401.
-      url                   = "https://pihole.${local.zone}/api/auth"
+      # In-cluster (Authentik gates the public URL; no web password / no public API skip).
+      url                   = "http://pihole.pihole.svc.cluster.local/admin/"
       group                 = "Infrastructure"
-      accepted_status_codes = ["401"]
+      accepted_status_codes = ["200-399"]
     }
     scarif = {
       name  = "scarif"

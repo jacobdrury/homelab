@@ -55,12 +55,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: pihole-settings
-          env:
-            - name: FTLCONF_webserver_api_password
-              valueFrom:
-                secretKeyRef:
-                  name: pihole
-                  key: password
           readinessProbe:
             httpGet:
               path: /admin/
@@ -100,11 +94,6 @@ spec:
               value: /config/policy.json
             - name: SYNC_INTERVAL_SECONDS
               value: "60"
-            - name: PIHOLE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: pihole
-                  key: password
           resources:
             requests:
               cpu: 10m

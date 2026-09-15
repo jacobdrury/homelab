@@ -14,7 +14,7 @@ spec:
     targetRevision: main
     path: clusters/prd/apps/pihole
     directory:
-      include: '{namespace,secret,configmap-settings,configmap-policy,configmap-dnsmasq,configmap-sync,pihole,services}.yaml'
+      include: '{namespace,configmap-settings,configmap-policy,configmap-dnsmasq,configmap-sync,pihole,services}.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: pihole

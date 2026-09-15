@@ -27,10 +27,7 @@ data:
           internal_host_ssl_validation: false
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
-          # Uptime Kuma probe (after cutover). Config-sync uses localhost.
-          skip_path_regex: |
-            ^/api(/.*)?$
-
+          # No skip_path — Pi-hole has no web password; do not expose /api publicly.
       - model: authentik_core.application
         id: app-pihole
         state: present
