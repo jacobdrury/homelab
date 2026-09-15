@@ -70,26 +70,25 @@ Query counts, blocked totals, and history live in each pod’s FTL DB on `emptyD
 |------|---------|
 | DHCP / LAN DNS | Still LXC **`192.168.1.11`** |
 | k8s VIP | **`192.168.5.22`** — test with `dig @192.168.5.22` |
-| `pihole.lab` UI | Transitional → LXC until HTTPRoute flip |
+| `pihole.lab` UI | **Authentik Proxy** → in-cluster Service (LXC UI route removed) |
 
 OpenTofu [`infrastructure/pihole/`](../../infrastructure/pihole/) stays **LXC-only** until DHCP cutover, then **retire** (policy lives in ConfigMaps).
 
-## Auth (SSO) — after UI cutover
+## Auth (SSO)
 
 | Piece | Detail |
 |-------|--------|
 | Blueprint | `authentik/blueprints-pihole.yaml` |
-| Route | `resources-pihole-routes.yaml` (include at cutover; remove transitional pihole route) |
+| Route | `authentik/resources-pihole-routes.yaml` |
 | Skip paths | `/api` — Uptime Kuma (and any future API clients) |
+| After login | Optionally disable Pi-hole web password (keep API password for config-sync) |
 
-## Cutover checklist
+## Remaining cutover checklist
 
 1. Reserve UniFi DHCP so nothing leases **`.22`**.
-2. Confirm both pods Ready; `dig @192.168.5.22` + a blocked name.
-3. Optional: `dhcp_dns = [.22, .11]` soak, then `[.22]` only.
-4. Flip UI to Authentik route; remove transitional Backend.
-5. `lab.yaml` `services.pihole.host` → `.22`; UniFi ZBF DNS targets → `.22`.
-6. Stop LXC 106; archive/remove `infrastructure/pihole/` OpenTofu project.
+2. Optional: `dhcp_dns = [.22, .11]` soak, then `[.22]` only.
+3. `lab.yaml` `services.pihole.host` → `.22`; UniFi ZBF IoT/Isolated DNS → Homelab `.22`.
+4. Stop LXC 106; archive/remove `infrastructure/pihole/` OpenTofu project.
 
 ## Related
 

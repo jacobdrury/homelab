@@ -63,9 +63,11 @@ locals {
       group = "Home"
     }
     pihole = {
-      name  = "Pi-hole"
-      url   = "https://pihole.${local.zone}/admin/"
-      group = "Infrastructure"
+      name                  = "Pi-hole"
+      # Authentik Proxy — probe skip_path /api (not /admin 302).
+      url                   = "https://pihole.${local.zone}/api"
+      group                 = "Infrastructure"
+      accepted_status_codes = ["401"]
     }
     scarif = {
       name  = "scarif"

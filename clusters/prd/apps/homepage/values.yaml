@@ -252,7 +252,7 @@ config:
                 - wlan_users
         - Pi-hole:
             href: https://pihole.lab.jacobdrury.com/admin/
-            description: DNS / adblock (no widget — multi-pod stats are ephemeral; Prometheus later)
+            description: DNS / adblock (Authentik; no widget — Prometheus later)
             icon: pi-hole.png
             siteMonitor: https://pihole.lab.jacobdrury.com/admin/
         - scarif:

@@ -1,45 +1,8 @@
 # Phase 2 transitional routes: TLS on Envoy, backends stay on legacy hosts.
 # DNS A records → 192.168.5.21 Envoy VIP on yavin (infrastructure/lab.yaml dns.app_hosts).
 # Uses Envoy Gateway Backend CRD (Argo excludes EndpointSlice by default).
-# Cut over to in-cluster: Jellyfin, *arr/qBit (Authentik Proxy), Home Assistant (OIDC).
-# Remaining: Pi-hole / scarif / proxmox.
----
-# Pi-hole UI — Envoy Backend directly to LXC (no sidecar proxy).
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: Backend
-metadata:
-  name: pihole
-  namespace: transitional
-spec:
-  endpoints:
-    - ip:
-        address: 192.168.1.11
-        port: 80
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: pihole
-  namespace: transitional
-spec:
-  parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: lab
-      namespace: envoy-gateway-system
-      sectionName: https
-  hostnames:
-    - pihole.lab.jacobdrury.com
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - group: gateway.envoyproxy.io
-          kind: Backend
-          name: pihole
-          weight: 1
+# Cut over to in-cluster: Jellyfin, *arr/qBit (Authentik Proxy), Home Assistant (OIDC), Pi-hole (Authentik).
+# Remaining: scarif / proxmox.
 ---
 # scarif Unraid UI — LE on Envoy; Unraid stays HTTP on :80.
 # NFS/iSCSI clients use scarif-direct.lab.jacobdrury.com (Unraid IP; not Envoy).

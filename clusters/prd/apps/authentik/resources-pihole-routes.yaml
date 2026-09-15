@@ -1,9 +1,5 @@
-# HTTPRoute for pihole.lab → Authentik Proxy (cutover only).
-# Until cutover: transitional/resources.yaml still points Envoy → LXC .11.
-# Cutover steps: see docs/architecture/pihole.md
-# 1. Confirm k8s DNS VIP .22 answers + OpenTofu applied to pod(s)
-# 2. Include this file in authentik Application directory.include
-# 3. Remove the pihole Backend + HTTPRoute from transitional/resources.yaml
+# HTTPRoute: pihole.lab → Authentik Proxy → pihole.pihole.svc:80
+# Blueprint: blueprints-pihole.yaml. LAN DNS still LXC until DHCP cutover.
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

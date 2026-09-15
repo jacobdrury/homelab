@@ -1,6 +1,6 @@
 # Authentik blueprint — Pi-hole Proxy Provider (admin UI).
-# Do not flip the transitional HTTPRoute until k8s DNS has soaked — see docs/architecture/pihole.md.
-# Traffic (after cutover): Envoy pihole.lab → authentik-server → pihole.pihole.svc:80
+# Traffic: Envoy pihole.lab → authentik-server → pihole.pihole.svc:80
+# LAN DNS still LXC until DHCP cutover — docs/architecture/pihole.md.
 apiVersion: v1
 kind: ConfigMap
 metadata:
