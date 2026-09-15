@@ -20,10 +20,19 @@ data:
     import urllib.parse
     import urllib.request
 
+    import hashlib
+
     BASE = os.environ.get("PIHOLE_URL", "http://127.0.0.1").rstrip("/")
     POLICY_PATH = os.environ.get("POLICY_PATH", "/config/policy.json")
     PASSWORD = os.environ.get("PIHOLE_PASSWORD", "")
     INTERVAL = int(os.environ.get("SYNC_INTERVAL_SECONDS", "60"))
+
+    def norm_comment(value):
+        return (value or "").strip()
+
+    def policy_digest():
+        with open(POLICY_PATH, "rb") as fh:
+            return hashlib.sha256(fh.read()).hexdigest()
 
     def http_json(method, path, body=None, sid=None):
         data = None
@@ -95,13 +104,15 @@ data:
             raise RuntimeError(f"GET /api/lists: {status} {payload}")
         current = {(row["address"], row.get("type", "block")): row for row in payload.get("lists") or []}
 
-        changed = False
+        # Gravity only when membership or enabled changes — not comment-only edits.
+        needs_gravity = False
+        touched = False
         for key, item in desired.items():
             address, list_type = key
             body = {
                 "address": address,
                 "enabled": bool(item.get("enabled", True)),
-                "comment": item.get("comment") or "",
+                "comment": norm_comment(item.get("comment")),
             }
             enc = urllib.parse.quote(address, safe="")
             list_path = f"/api/lists?type={list_type}"
@@ -110,17 +121,26 @@ data:
                 st, resp = http_json("POST", list_path, body, sid=sid)
                 if st not in (200, 201):
                     raise RuntimeError(f"POST list {address}: {st} {resp}")
-                changed = True
+                print(f"list add {list_type} {address}", flush=True)
+                needs_gravity = True
+                touched = True
                 continue
             cur = current[key]
-            if bool(cur.get("enabled", True)) != body["enabled"] or (cur.get("comment") or "") != body["comment"]:
-                st, resp = http_json("PUT", item_path, body, sid=sid)
-                if st != 200:
-                    http_json("DELETE", item_path, sid=sid)
-                    st2, resp2 = http_json("POST", list_path, body, sid=sid)
-                    if st2 not in (200, 201):
-                        raise RuntimeError(f"replace list {address}: {st}/{st2} {resp}/{resp2}")
-                changed = True
+            enabled_diff = bool(cur.get("enabled", True)) != body["enabled"]
+            comment_diff = norm_comment(cur.get("comment")) != body["comment"]
+            if not enabled_diff and not comment_diff:
+                continue
+            st, resp = http_json("PUT", item_path, body, sid=sid)
+            if st != 200:
+                http_json("DELETE", item_path, sid=sid)
+                st2, resp2 = http_json("POST", list_path, body, sid=sid)
+                if st2 not in (200, 201):
+                    raise RuntimeError(f"replace list {address}: {st}/{st2} {resp}/{resp2}")
+                needs_gravity = True
+            elif enabled_diff:
+                needs_gravity = True
+            print(f"list update {list_type} {address} enabled_diff={enabled_diff} comment_diff={comment_diff}", flush=True)
+            touched = True
 
         for key in list(current):
             if key in desired:
@@ -130,8 +150,10 @@ data:
             st, resp = http_json("DELETE", f"/api/lists/{enc}?type={list_type}", sid=sid)
             if st not in (200, 204):
                 raise RuntimeError(f"DELETE list {address}: {st} {resp}")
-            changed = True
-        return changed
+            print(f"list delete {list_type} {address}", flush=True)
+            needs_gravity = True
+            touched = True
+        return touched, needs_gravity
 
     def sync_domains(sid, policy):
         desired = {}
@@ -156,30 +178,35 @@ data:
             for row in domains:
                 current[(row["domain"], row.get("type"), row.get("kind") or row.get("match_type"))] = row
 
-        changed = False
+        touched = False
         for key, item in desired.items():
             domain, list_type, kind = key
             body = {
                 "domain": domain,
-                "comment": item.get("comment") or "",
+                "comment": norm_comment(item.get("comment")),
                 "enabled": bool(item.get("enabled", True)),
             }
             if key not in current:
                 st, resp = http_json("POST", f"/api/domains/{list_type}/{kind}", body, sid=sid)
                 if st not in (200, 201):
                     raise RuntimeError(f"POST domain {domain}: {st} {resp}")
-                changed = True
+                print(f"domain add {list_type}/{kind} {domain}", flush=True)
+                touched = True
                 continue
             cur = current[key]
-            if bool(cur.get("enabled", True)) != body["enabled"] or (cur.get("comment") or "") != body["comment"]:
-                enc = urllib.parse.quote(domain, safe="")
-                st, resp = http_json("PUT", f"/api/domains/{list_type}/{kind}/{enc}", body, sid=sid)
-                if st != 200:
-                    http_json("DELETE", f"/api/domains/{list_type}/{kind}/{enc}", sid=sid)
-                    st2, resp2 = http_json("POST", f"/api/domains/{list_type}/{kind}", body, sid=sid)
-                    if st2 not in (200, 201):
-                        raise RuntimeError(f"replace domain {domain}: {st}/{st2} {resp}/{resp2}")
-                changed = True
+            enabled_diff = bool(cur.get("enabled", True)) != body["enabled"]
+            comment_diff = norm_comment(cur.get("comment")) != body["comment"]
+            if not enabled_diff and not comment_diff:
+                continue
+            enc = urllib.parse.quote(domain, safe="")
+            st, resp = http_json("PUT", f"/api/domains/{list_type}/{kind}/{enc}", body, sid=sid)
+            if st != 200:
+                http_json("DELETE", f"/api/domains/{list_type}/{kind}/{enc}", sid=sid)
+                st2, resp2 = http_json("POST", f"/api/domains/{list_type}/{kind}", body, sid=sid)
+                if st2 not in (200, 201):
+                    raise RuntimeError(f"replace domain {domain}: {st}/{st2} {resp}/{resp2}")
+            print(f"domain update {list_type}/{kind} {domain} enabled_diff={enabled_diff} comment_diff={comment_diff}", flush=True)
+            touched = True
 
         for key in list(current):
             if key in desired:
@@ -191,35 +218,39 @@ data:
             st, resp = http_json("DELETE", f"/api/domains/{list_type}/{kind}/{enc}", sid=sid)
             if st not in (200, 204):
                 raise RuntimeError(f"DELETE domain {domain}: {st} {resp}")
-            changed = True
-        return changed
+            print(f"domain delete {list_type}/{kind} {domain}", flush=True)
+            touched = True
+        return touched
 
     def gravity(sid):
         st, resp = http_json("POST", "/api/action/gravity", sid=sid)
         if st not in (200, 201, 202):
             raise RuntimeError(f"gravity: {st} {resp}")
-        print(f"gravity done: {resp}", flush=True)
+        # Gravity returns ANSI text; keep the log short.
+        print("gravity done", flush=True)
 
     def once():
         wait_ready()
         sid = login()
         policy = load_policy()
-        lists_changed = sync_lists(sid, policy)
-        domains_changed = sync_domains(sid, policy)
-        if lists_changed or domains_changed:
-            print("policy changed — running gravity", flush=True)
+        lists_touched, needs_gravity = sync_lists(sid, policy)
+        domains_touched = sync_domains(sid, policy)
+        if needs_gravity:
+            print("blocklists changed — running gravity", flush=True)
             gravity(sid)
+        elif lists_touched or domains_touched:
+            print("policy metadata updated (no gravity)", flush=True)
         else:
             print("policy already in sync", flush=True)
 
     def main():
-        last_mtime = None
+        last_digest = None
         while True:
             try:
-                mtime = os.path.getmtime(POLICY_PATH)
-                if last_mtime != mtime:
+                digest = policy_digest()
+                if digest != last_digest:
                     once()
-                    last_mtime = mtime
+                    last_digest = digest
             except Exception as exc:
                 print(f"sync error: {exc}", file=sys.stderr, flush=True)
             time.sleep(INTERVAL)
