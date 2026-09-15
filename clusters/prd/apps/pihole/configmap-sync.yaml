@@ -38,7 +38,10 @@ data:
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 raw = resp.read().decode() or "{}"
-                return resp.status, json.loads(raw)
+                try:
+                    return resp.status, json.loads(raw)
+                except json.JSONDecodeError:
+                    return resp.status, {"raw": raw}
         except urllib.error.HTTPError as exc:
             raw = exc.read().decode() if exc.fp else ""
             try:
@@ -186,6 +189,7 @@ data:
         st, resp = http_json("POST", "/api/action/gravity", sid=sid)
         if st not in (200, 201, 202):
             raise RuntimeError(f"gravity: {st} {resp}")
+        print(f"gravity done: {resp}", flush=True)
 
     def once():
         wait_ready()
