@@ -32,7 +32,7 @@ App SSO: **`prd Argo CD OIDC`** (password = OAuth client secret) is shared by Au
 
 Databases: **`prd MariaDB`** (Bitnami keys `mariadb-root-password` / `mariadb-password` / `mariadb-replication-password`); per-app items like **`prd Uptime Kuma MariaDB`** (username, password, database).
 
-Homepage widgets: **`prd Homepage media API keys`** (jellyfin / sonarr-anime / sonarr-tv / prowlarr); **`prd Homepage Proxmox API token`** (`root@pam!homepage`); **`prd Homepage Authentik API token`**; **`Unifi API Key (opentofu-homelab)`** (shared with OpenTofu); **`qBittorrent`** (WebUI username/password); plus existing Argo/Unraid items. Pi-hole Homepage tile is **link-only** (no widget); **`Pi-hole API`** remains for LXC OpenTofu / k8s config-sync.
+Homepage widgets: **`prd Homepage media API keys`** (jellyfin / sonarr-anime / sonarr-tv / prowlarr); **`prd Homepage Proxmox API token`** (`root@pam!homepage`); **`prd Homepage Authentik API token`**; **`Unifi API Key (opentofu-homelab)`** (shared with OpenTofu); **`qBittorrent`** (WebUI username/password); plus existing Argo/Unraid items. Pi-hole Homepage tile is **link-only** (no widget).
 
 ## Host shell access (SSH / sudo)
 
@@ -42,7 +42,7 @@ Separate from in-cluster secrets. Goal: **stop memorizing per-host passwords**; 
 |-------|------|
 | 1Password Homelab items | Per-host SSH/UI notes + **shared lab admin sudo password** |
 | **1Password SSH agent** | Private keys stay in 1Password; pubkey on hosts |
-| `connect/ssh/config` | Committed Host aliases (scarif, homelab02, **arr**, **home-assistant**, pihole, discord-bots) — **no** private keys in Git |
+| `connect/ssh/config` | Committed Host aliases (scarif, homelab02, **arr**, **home-assistant**, pihole LXC until stopped) — **no** private keys in Git |
 | Talos nodes | **No** classic SSH — `talosctl` via `connect/prd` |
 | sudo | Password required; same rotated secret on hosts, stored in 1Password (not NOPASSWD for now) |
 

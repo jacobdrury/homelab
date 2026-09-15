@@ -32,7 +32,7 @@ Authentik Proxy; Pi-hole web password **disabled**. Config-sync uses localhost (
 | Policy / local DNS | GitOps ConfigMaps (LXC OpenTofu **retired**) |
 | LXC `.11` (VMID **106**) | Stop when soak is trusted |
 
-**Still open:** renew DHCP leases if needed; stop LXC **106** after soak.
+**Still open:** DHCP clients renew automatically (lease **24h**, typically ~**12h** at T1); force renew to pick up `.22` sooner. Then stop LXC **106**.
 
 ## Related
 

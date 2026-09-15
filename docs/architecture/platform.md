@@ -60,7 +60,7 @@ Machine configs live under `infrastructure/talos/prd/`; keep CP patches consiste
 |----------|--------|--------|
 | Jellyfin | k8s | NFS `media/`; GPU worker — [gpu](gpu.md) |
 | Sonarr ×2, Prowlarr, qBittorrent | k8s | NFS downloads; **peers via Mullvad WG**, **UI/API off-VPN** — [media](media.md) |
-| Pi-hole | k8s | Migrate **last** from pc (black) LXC — `.11` until cutover |
+| Pi-hole | k8s | VIP `.22` · ConfigMaps · Authentik UI — [pihole](pihole.md) |
 | Homepage | k8s | **First** GitOps app after Envoy; tiles use `*.lab` (media stack in-cluster) — [gethomepage.dev](https://gethomepage.dev) |
 | Authentik | k8s | SSO IdP — blueprints in Git for OIDC apps; Argo wired first |
 | Home Assistant | k8s | Before Pi-hole; Container + CNPG recorder + Authentik OIDC — [home-assistant](home-assistant.md) |
@@ -84,13 +84,12 @@ homelab/
       stg/                         # reserved
     dns/                           # OpenTofu Cloudflare
     unifi/                         # OpenTofu UniFi
-    pihole/                        # OpenTofu Pi-hole config (API)
     tailscale/                     # OpenTofu Tailscale
   bootstrap/                       # Argo install notes
   clusters/
     prd/
       platform/                    # cilium, CSI, Connect/ESO, Argo, cert-manager, Envoy, CNPG
-      apps/                        # homepage, authentik (+ future workloads)
+      apps/                        # homepage, authentik, media, pihole, …
   apps/                            # optional workload notes (media/home/games)
 ```
 

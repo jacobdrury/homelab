@@ -7,7 +7,7 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 | Host | Codename (target) | Node / name (today) | Role today | IP | Notes |
 |------|-------------------|---------------------|------------|-----|-------|
 | **Mac Mini** | **yavin** | `yavin` | Talos **control-plane** | `192.168.5.11` | Bare-metal Talos 1.12.7 · Cilium · `allowSchedulingOnControlPlanes` |
-| **pc (black)** | — | `homelab02` | Proxmox (**sole node**) | `192.168.1.12` | Pi-hole + discord-bots; **arr stopped**; HA cut over to k8s; **leaving lab** → gaming |
+| **pc (black)** | — | `homelab02` | Proxmox (**sole node**) | `192.168.1.12` | Leftover guests soaking (HA / Pi-hole LXC / discord-bots); **arr stopped**; **leaving lab** → gaming |
 | **pc (white)** | **scarif** | `scarif` | **Unraid** | `192.168.5.10` | NAS · Homelab VLAN 5 · 24TB UD + NFS · hosts **naboo** VM |
 | **Laptop (Precision)** | — | `KatherinesLaptop` | Idle (Win11) | `192.168.1.175` | Optional / burst only |
 | **Laptop (Inspiron)** | — | — | Idle / reinstalling | — | **Out of lab plan** |
@@ -64,8 +64,8 @@ What exists **today**. Target design: [architecture](architecture/overview.md) �
 |------|------|------|-----|------|-----|-------|
 | 101 | VM | `arr` | `192.168.1.9` | untagged | 22 GB (10 cores) | **Stopped** · `onboot=0` · media configs archived; stack on k8s |
 | 105 | VM | `home-assistant` | `192.168.2.8` | **2** | 4 GB | HA OS · **cut over to k8s** — stop / `onboot=0` when soak done ([home-assistant](architecture/home-assistant.md)) |
-| — | LXC | `Pi-Hole` | `192.168.1.11` | untagged | 1 GB / 8 GB | VMID **106** · ex homelab03 · k8s cutover **last** |
-| 103 | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Migrated from homelab03** |
+| — | LXC | `Pi-Hole` | `192.168.1.11` | untagged | 1 GB / 8 GB | VMID **106** · **cut over to k8s** — stop after DNS soak |
+| 103 | VM | `discord-bots` | `192.168.1.18` | untagged | 1 GB / 32 GB | **Won't migrate** — stop/delete when convenient |
 
 **Must migrate or retire all guests before wipe → personal gaming.**
 
@@ -167,7 +167,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | Sonarr (anime / TV) | k8s `media` | `sonarr` / `sonarr-tv`.lab → Authentik → pods | NFS libraries; Postgres `media-pg` |
 | qBittorrent | k8s `media` | `qbittorrent.lab` → Authentik → pod | downloads on NFS · Mullvad WG sidecar |
 | Prowlarr | k8s `media` | `prowlarr.lab` → Authentik → pod | Postgres `media-pg` |
-| Discord bots | pc (black) VM **103** | `192.168.1.18` | outbound only · ex homelab03 |
+| Discord bots | pc (black) VM **103** | `192.168.1.18` | **Won't migrate** — stop/delete; outbound-only legacy |
 
 ---
 
@@ -189,11 +189,11 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 |----|--------|
 | `.1` | UDM Pro |
 | `.9` | `arr` VM (**stopped**, onboot off) |
-| `.11` | Pi-hole |
+| `.11` | Pi-hole LXC **106** (stop after soak; LAN DNS is `.5.22`) |
 | `.12` | pc (black) / `homelab02` |
 | `.13` | USW Aggregation |
 | `.15` | **yavin** (Mac Mini) · today `homelab03` |
-| `.18` | discord-bots VM |
+| `.18` | discord-bots VM **103** (**won't migrate**) |
 | `.70` | USP PDU Pro |
 | `.82` | U6 Pro (Hallway) |
 | `.107` | Bedroom client |
@@ -229,7 +229,7 @@ AT&T → UDM Pro (.1)
                     ├─ SFP+ 5 ─ Pro Max 16 (.197)
                     │              ├─ Port 5 ─ yavin onboard 1G → Homelab VLAN 5
                     │              ├─ Port 13 ─ yavin USB 2.5G → Homelab VLAN 5
-                    │              └─ Ports 1–3, … ─ PDU, IoT, clients · Pi-hole (.11) on Drury
+                    │              └─ Ports 1–3, … ─ PDU, IoT, clients · LAN DNS → Homelab `.22`
                     └─ SFP+ 7 ─ UDM Pro
 ```
 
@@ -292,6 +292,6 @@ AT&T → UDM Pro (.1)
 
 - ~~No dedicated NAS~~ → **scarif** live; media on NFS; Phase 1 storage **done**
 - Prefer Talos + GitOps — bare-metal **yavin** → **expand to 3 CPs**; migrate apps **once**
-- **pc (black)** retained until k8s cutover, then personal gaming
+- **pc (black)** retained until leftover guests stopped, then personal gaming
 - ~~Homelab VLAN + OpenTofu before Talos~~ → Phase **1.5 done**; scarif on `.5.10`
 - ~~3-node Proxmox cluster~~ → **homelab02** standalone (Aug 2026); Mini off cluster, ready for Talos

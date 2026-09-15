@@ -25,7 +25,7 @@ Answers captured before OpenTofu work. Source of truth for operators; leans also
 | hoth | `192.168.5.12` |
 | endor | `192.168.5.13` |
 | API VIP (later) | `192.168.5.20` |
-| DHCP | `.6–.254` (same as other VLANs) |
+| DHCP | Homelab `.50–.254` (static infra `.10–.22`); other VLANs keep existing pools |
 
 ### Firewall (intent)
 
@@ -61,15 +61,13 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 
 ## Pi-hole
 
-| Item | Decision |
+| Item | Decision (1.5) → **now (Sep 2026)** |
 |------|----------|
-| Instance | LXC **106** on pc (black) · `192.168.1.11` |
-| Config IaC | **GitOps** ConfigMaps — `clusters/prd/apps/pihole/` (LXC OpenTofu retired) |
-| API auth | **1Password:** `Pi-hole API` (app password) |
-| Write access | **`webserver.api.app_sudo`** = true (All settings) |
-| `*.lab.jacobdrury.com` | **Forward** to Cloudflare (`1.1.1.1`, `1.0.0.1`) — records live in `infrastructure/dns/` only |
-| `*.homelab.com` | **Local** A records in `local_dns.auto.tfvars` — **transitional**; retire when apps use `*.lab` on k8s |
-| Migrate to k8s | Phase 3 **last** — same OpenTofu module, new `pihole_url` |
+| Instance | Was LXC **106** @ `.11` → **k8s VIP `192.168.5.22`** (stop LXC after soak) |
+| Config IaC | **GitOps** ConfigMaps — `clusters/prd/apps/pihole/` |
+| `*.lab.jacobdrury.com` | **Forward** to Cloudflare — records in `infrastructure/dns/` |
+| `*.homelab.com` | Local host-records in ConfigMap dnsmasq — transitional |
+| Migrate to k8s | **Done** (Sep 2026) |
 
 ## OpenTofu
 
@@ -81,12 +79,12 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 | Moon projects | `dns`, `unifi`, … — tag `opentofu` |
 | IaC policy | [architecture/iac.md](../architecture/iac.md) |
 
-## homelab02 guests (migrated from Mini)
+## homelab02 guests (from Mini)
 
-| Name | VMID |
-|------|------|
-| Pi-hole LXC | **106** |
-| discord-bots VM | **103** |
+| Name | VMID | Status |
+|------|------|--------|
+| Pi-hole LXC | **106** | Cut over to k8s — stop after soak |
+| discord-bots VM | **103** | **Won't migrate** — stop/delete anytime |
 
 ## Deferred
 

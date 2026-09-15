@@ -8,22 +8,29 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 |-------|--------|--------|
 | **0** Docs & inventory | **Done** | |
 | **1** Unraid NAS | **Done** (Aug 2025) | scarif · 24TB UD · NFS |
-| **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Pi-hole in Git |
+| **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Tailscale in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; interim subnet router on homelab02 |
 | **2** Talos `prd` | **In progress** | Platform + Homepage/Kuma/Authentik live; remaining: shared CNPG collapse |
-| **3** Migrate workloads | **In progress** | **Media + HA done**. Next: optional Discord bots → **Pi-hole last** |
+| **3** Migrate workloads | **Nearly done** | **Media + HA + Pi-hole** on k8s. Discord bots **won't migrate**. Stop leftover Proxmox guests after soak |
 | **4–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
-**IaC live today:** `infrastructure/dns/`, `unifi/`, `pihole/`, **`tailscale/`** — `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Policy: [iac](architecture/iac.md).
+**IaC live today:** `infrastructure/dns/`, `unifi/`, **`tailscale/`** — `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Pi-hole policy = GitOps ConfigMaps. Policy: [iac](architecture/iac.md).
 
-**DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/dns/`). LAN: Pi-hole forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare (no per-record Tailscale changes). **`arr.lab` / `arr.homelab.com` retired** (Sep 2026).
+**DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/dns/`). LAN: k8s Pi-hole VIP **`.22`** (DHCP on all VLANs) forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare. **`arr.lab` / `arr.homelab.com` retired** (Sep 2026).
 
 **Remote access (verified):** split DNS + homelab02 subnet router (`192.168.1.0/24`, `192.168.5.0/24`) · policy/keys in `infrastructure/tailscale/`. Homelab route moving to k8s Connector when operator is stable.
 
-## What's next — Phase 3 (media done)
+## What's next — Phase 3 wrap-up
 
-Media stack is on `prd` ([media](architecture/media.md)); arr VM 101 is **stopped** (`onboot=0`). **Home Assistant** is live on k8s ([apps/home-assistant](../clusters/prd/apps/home-assistant/), [arch](architecture/home-assistant.md)) — stop VM 105 when soak is done. Remaining: optional Discord bots, **Pi-hole last**.
+Media, Home Assistant, and **Pi-hole** are on `prd`. Discord bots (**VM 103**) are **retired from the migration plan** — stop/delete when convenient; do not move to k8s.
+
+| Guest | Action |
+|-------|--------|
+| arr VM **101** | Already **stopped** / `onboot=0` |
+| HA VM **105** | Stop / `onboot=0` after soak |
+| Pi-hole LXC **106** | Stop after DNS soak (clients renew to `.22`) |
+| discord-bots VM **103** | **Won't migrate** — stop/delete anytime |
 
 Phase 2 leftovers (non-blocking):
 
@@ -44,7 +51,7 @@ Tools: `cd connect/prd` · `moon run connect:sync` · [tailscale README](../infr
 4. **Migrate once** — apps to GitOps on `prd` (**Pi-hole last**)  
 5. **Expand later** — join **hoth** + **endor** as CPs (**1→3**); free pc (black) → gaming
 
-pc (black) **stays in lab during transition** — media + HA cutovers **done**; Pi-hole / discord-bots still on Proxmox until their Phase 3 steps.
+pc (black) **stays in lab during transition** — media + HA + Pi-hole cutovers **done**; stop leftover guests (HA VM, Pi-hole LXC, discord-bots) after soak, then free the box in Phase 4.
 
 ```mermaid
 flowchart LR
@@ -69,7 +76,7 @@ flowchart LR
 7. Media stays on **scarif NFS**; cluster holds apps only  
 8. **No HA** until 3 CPs; planned downtime is acceptable  
 9. **Homelab VLAN + OpenTofu before Talos** — no bare-metal bootstrap on flat LAN  
-10. **Pi-hole last** — stays on pc (black) through Phase 2–3 until k8s cutover  
+10. **Pi-hole last** — ~~stays on pc (black) through Phase 2–3 until k8s cutover~~ **done** (Sep 2026) — VIP `.22`  
 11. Tailscale + HTTPS via `lab.jacobdrury.com` — split DNS, subnet router on **k8s operator** (homelab02 interim); LE DNS-01 on Envoy  
 12. **Agent-operable** — [agents](architecture/agents.md)  
 13. **OpenTofu apply manual until cluster CI** — `moon run …:apply` from Mac through Phase 1.5–2; shift to GitHub Actions + in-cluster runners in Phase 2b  
@@ -179,8 +186,8 @@ Do this for break-glass + migration SSH predictability. Scope is **light** — n
 | **homelab02** | `192.168.1.12` | Proxmox |
 | **arr** | `192.168.1.9` | VM 101 — **stopped** / `onboot=0`; media configs archived |
 | **home-assistant** | `192.168.2.8` | VM 105 — HA OS (VLAN 2); live HA is k8s — stop when soak done |
-| **pihole** | `192.168.1.11` | LXC 106 |
-| **discord-bots** | `192.168.1.18` | VM 103 (optional but include) |
+| **pihole** | `192.168.1.11` | LXC 106 — stop after DNS soak |
+| **discord-bots** | `192.168.1.18` | VM 103 — **won't migrate**; stop/delete anytime |
 
 Skip Talos (**yavin** / **naboo**) — use `talosctl` via `connect/prd`.
 
@@ -234,7 +241,7 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 | `sonarr` / `sonarr-tv` / `prowlarr` | *arr Services (+ Authentik) | Cut over; `media-pg` |
 | `homeassistant.lab…` | HA Service in `home-assistant` (+ Authentik OIDC) | **Cut over** (Sep 2026) |
 | `scarif.lab…` | Unraid via Envoy | NAS stays |
-| `pihole.lab…` | Pi-hole LXC (transitional) | Migrate **last** |
+| `pihole.lab…` | Pi-hole Service (+ Authentik) | **Cut over** (Sep 2026) — VIP `.22` |
 | `proxmox.lab…` | homelab02 `:8006` (transitional) | Stays until black PC retires |
 | `lab.jacobdrury.com` / `argocd.lab…` | Homepage / Argo | In-cluster |
 
@@ -284,14 +291,14 @@ flowchart LR
 - [ ] GitHub **Environments** (e.g. `homelab-production`) — required reviewers for `apply`  
 - [ ] Tokens via **ESO + 1Password** (preferred) or GitHub Actions secrets — never in repo  
 - [ ] Workflow: **`dns/`** — `runs-on: ubuntu-latest` (public API only)  
-- [ ] Workflow: **`unifi/`**, **`pihole/`** — `runs-on: [self-hosted, homelab]`  
+- [ ] Workflow: **`unifi/`** — `runs-on: [self-hosted, homelab]`  
 - [ ] PR: **plan only**; post plan summary (comment or artifact)  
 - [ ] `main`: **apply** after approval (or manual `workflow_dispatch` for UniFi/Pi-hole at first)  
 - [ ] **No** `pull_request` workflows with secrets from forks — `pull_request` from same repo only, or `push` to `main`  
 
 #### Cutover
 
-- [ ] Migrate `dns`, `unifi`, `pihole` state to remote backend  
+- [ ] Migrate `dns`, `unifi` state to remote backend  
 - [ ] First pipeline apply matches Mac-applied infra (no drift)  
 - [ ] Document: Mac `moon run …:apply` becomes break-glass only  
 
@@ -299,22 +306,22 @@ flowchart LR
 
 ## Phase 3 — Migrate workloads (once stable)
 
-Cut over workloads → GitOps on `prd`. Remaining Proxmox guests on **pc (black)**. **One landing** on k8s (not Unraid Docker first). **Pi-hole** stays on pc (black) LXC until step 5 (last).
+Cut over workloads → GitOps on `prd`. Remaining Proxmox guests on **pc (black)** are soak/retire only. **One landing** on k8s (not Unraid Docker first).
 
 1. ~~*arr + qBittorrent (Mullvad WG sidecar + config copy; Authentik Proxy; `media-pg`)~~ **done** — see [media](architecture/media.md)  
 2. ~~Jellyfin (library on **scarif NFS**; SQLite on iSCSI; GPU/QSV optional)~~ **done** — `apps/media/jellyfin.yaml`  
    - arr VM **stopped** / `onboot=0`; `arr.lab` + `arr.homelab.com` DNS retired  
 3. ~~Home Assistant (Container + CNPG recorder + Authentik OIDC)~~ **done** — [home-assistant](architecture/home-assistant.md); stop VM 105 after soak  
-4. Discord bots (optional — or leave on Proxmox until black PC retires)  
-5. **Pi-hole** — final cutover from pc (black) LXC → k8s; point LAN at cluster Pi-hole  
+4. ~~Discord bots~~ **won't migrate** — VM **103** retired from plan; stop/delete when convenient  
+5. ~~**Pi-hole** — final cutover from LXC → k8s~~ **done** (Sep 2026) — VIP `.22`, ConfigMaps, Authentik UI; stop LXC **106** after soak  
 
-**Already on cluster:** Homepage, Uptime Kuma, full **media** stack, **Home Assistant**; **`*.lab` URLs** on Envoy. Remaining cutovers = retarget transitional HTTPRoutes (Pi-hole) / move pods — not new consumer hostnames.
+**Already on cluster:** Homepage, Uptime Kuma, full **media** stack, **Home Assistant**, **Pi-hole**; **`*.lab` URLs** on Envoy.
 
 Each migrate: `apps/` → Argo → `*.lab.jacobdrury.com` → retire old guest.
 
-pc (black) retained until Pi-hole is validated; then idle / gaming.
+pc (black) retained until leftover guests are stopped; then idle / gaming (Phase 4).
 
-**Exit:** All listed apps on `prd`; old guests retired.
+**Exit:** Listed apps on `prd`; old guests retired (discord bots deleted, not migrated).
 
 ## Phase 4 — Expand to 3 CPs + free pc (black)
 

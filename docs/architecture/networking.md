@@ -97,18 +97,18 @@ Final hostnames were published early; media + Home Assistant backends are now in
 Client → https://jellyfin.lab.jacobdrury.com → Envoy → Jellyfin Service in prd
 Client → https://sonarr.lab.jacobdrury.com → Envoy → Authentik → Sonarr Service
 Client → https://homeassistant.lab.jacobdrury.com → Envoy → HA Service (+ Authentik OIDC in-app)
-                                      Pi-hole still → LXC until cutover
+Client → https://pihole.lab.jacobdrury.com → Envoy → Authentik → Pi-hole Service
 ```
 
-`arr.lab.jacobdrury.com` and `arr.homelab.com` are **retired** (no A records). Homepage links only to `*.lab` names. Remaining transitional cutovers (Pi-hole, etc.) = change the HTTPRoute backend, not bookmarks.
+`arr.lab.jacobdrury.com` and `arr.homelab.com` are **retired** (no A records). Homepage links only to `*.lab` names. Remaining transitional proxies: scarif / proxmox UIs (not app cutovers).
 
 **Resolving names on LAN**
 
 Pi-hole forwards `lab.jacobdrury.com` to Cloudflare (`1.1.1.1` / `1.0.0.1`) via ConfigMap dnsmasq (`clusters/prd/apps/pihole/`). Infra and app records live in `infrastructure/dns/` (+ external-dns later). Answers are **RFC1918** (grey cloud only — never proxied).
 
-**Legacy `*.homelab.com`** — shrinking local A records in `local_dns.auto.tfvars` (`arr.homelab.com` gone); not part of the long-term `*.lab` model.
+**Legacy `*.homelab.com`** — shrinking local host-records in `configmap-dnsmasq.yaml` (`arr.homelab.com` gone); not part of the long-term `*.lab` model.
 
-When Pi-hole moves to k8s (Phase 3, last), LAN clients point at the cluster instance; **`*.lab` stays in Cloudflare** — no Tailscale split DNS change (see below).
+LAN DHCP on all VLANs points at k8s Pi-hole VIP **`192.168.5.22`** (UniFi OpenTofu). **`*.lab` stays in Cloudflare** — no Tailscale split DNS change.
 
 ### Same URLs at home and away
 
@@ -121,7 +121,7 @@ Cloudflare is the **single source of truth** for what IP a `*.lab` name resolves
 | **Tailscale split DNS** | Off-LAN: send `lab.jacobdrury.com` → **Cloudflare** (`1.1.1.1` / `1.0.0.1`) — not via Pi-hole |
 | **Subnet router** | Advertise `192.168.5.0/24` so tailnet clients can reach Homelab RFC1918 addresses |
 
-**Why not Pi-hole on Tailscale?** Same Cloudflare answers either way; direct split DNS drops a tailnet hop and avoids depending on pc (black) / Pi-hole LXC for remote lab DNS. Pi-hole is for **LAN ad blocking**, not required on the tailnet path. Legacy `*.homelab.com` names retire with the k8s migration — not a reason to route tailnet DNS through Pi-hole.
+**Why not Pi-hole on Tailscale?** Same Cloudflare answers either way; direct split DNS drops a tailnet hop. Pi-hole is for **LAN ad blocking**, not required on the tailnet path. Legacy `*.homelab.com` names retire with the k8s migration — not a reason to route tailnet DNS through Pi-hole.
 
 ```mermaid
 flowchart TB
@@ -175,7 +175,7 @@ Do **not** change Cloudflare `app_hosts` when **hoth** / **endor** join. Only ch
 | Scope | How |
 |-------|-----|
 | **k8s apps** (`argocd.lab`, apex `lab.jacobdrury.com` Homepage, …) | Wildcard Certificate → Envoy HTTPS listener |
-| **Legacy UIs during migrate** (`pihole.lab`, …) | Same wildcard; HTTPRoute → VM/LXC IP until cutover |
+| **Legacy UIs** (`scarif.lab`, `proxmox.lab`, …) | Same wildcard; HTTPRoute → host IP |
 | **ACME** | DNS-01 TXT in Cloudflare (ephemeral; not in OpenTofu) |
 | **scarif** (Unraid) | **Envoy reverse-proxy** → `http://192.168.5.10:80` — LE on Envoy; Unraid stays HTTP internally. **Today:** `http://scarif.lab` still works; **next:** HTTPRoute → `https://scarif.lab` |
 | **Not used** | Cloudflare proxy (orange cloud), Cloudflare Tunnel, Tailscale certs for `*.lab` names |
@@ -204,7 +204,8 @@ flowchart LR
   Envoy --> App
 ```
 
-- **LAN:** cluster Pi-hole VIP **`192.168.5.22`** (DHCP DNS on all VLANs via OpenTofu)- **Remote:** Tailscale split DNS → **Cloudflare** + subnet router — **same URLs**, not `*.ts.net`
+- **LAN:** cluster Pi-hole VIP **`192.168.5.22`** (DHCP DNS on all VLANs via OpenTofu)
+- **Remote:** Tailscale split DNS → **Cloudflare** + subnet router — **same URLs**, not `*.ts.net`
 - **Not** public by default; add Cloudflare Tunnel / Funnel only if needed later
 
 ## Tailscale

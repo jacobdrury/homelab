@@ -1,6 +1,6 @@
 # Architecture overview
 
-Ideal end state. Path: **Unraid first** → **VLAN + OpenTofu** → **bare-metal Talos on yavin** → **migrate apps (Pi-hole last)** → **expand to 3 CPs** + free pc (black). See [decisions](../decisions.md) · [roadmap](../roadmap.md).
+Ideal end state. Path: **Unraid first** → **VLAN + OpenTofu** → **bare-metal Talos on yavin** → **migrate apps** → **expand to 3 CPs** + free pc (black). See [decisions](../decisions.md) · [roadmap](../roadmap.md).
 
 ## Design goals
 

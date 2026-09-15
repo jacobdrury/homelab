@@ -1,6 +1,6 @@
 # Homelab docs
 
-Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live under `infrastructure/` (DNS, UniFi, Pi-hole, Tailscale); **Helm/Argo** under `apps/` and `clusters/` starting Phase 2.
+Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live under `infrastructure/` (DNS, UniFi, Tailscale); **Helm/Argo** under `apps/` and `clusters/`.
 
 | Doc | What it is |
 |-----|------------|
@@ -14,7 +14,7 @@ Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live
 | [GPU](architecture/gpu.md) | Jellyfin encode (optional; direct play OK) |
 | [Media / VPN](architecture/media.md) | *arr + qBit + Jellyfin on k8s; Mullvad for peers, UI off-VPN |
 | [Home Assistant](architecture/home-assistant.md) | Container 2026.8.3 + CNPG + Authentik OIDC (groups → owner) |
-| [Pi-hole](architecture/pihole.md) | Stateless Deployment ×2; ConfigMaps; LB VIP `.22`; Authentik UI |
+| [Pi-hole](architecture/pihole.md) | Stateless Deployment ×3; ConfigMaps; LB VIP `.22`; Authentik UI |
 | [Games (ATM10)](architecture/games.md) | Minecraft server + friend access via Tailscale `.ts.net` |
 | [Secrets](architecture/secrets.md) | 1Password → cluster |
 | [Agent access](architecture/agents.md) | Cursor / AI operators on the tailnet |
@@ -27,7 +27,7 @@ Planning and architecture docs for the GitOps homelab. **OpenTofu** modules live
 
 | Doc | What it is |
 |-----|------------|
-| [Infrastructure README](../infrastructure/README.md) | OpenTofu apply order (`dns/`, `unifi/`, `pihole/`, `tailscale/`) |
+| [Infrastructure README](../infrastructure/README.md) | OpenTofu apply order (`dns/`, `unifi/`, `tailscale/`) |
 | [Local tools](setup/local-tools.md) | Homebrew, 1Password CLI, proto/moon, OpenTofu env, **`connect/`** |
 | [Cluster connect](../connect/README.md) | kubectl / talosctl / k9s via direnv + moon |
 | [Phase 1.5 preflight](setup/phase-1.5-preflight.md) | Locked VLAN + DNS answers (**complete** · Aug 2026) |
