@@ -64,8 +64,8 @@ locals {
     }
     pihole = {
       name                  = "Pi-hole"
-      # Authentik Proxy — probe skip_path /api (not /admin 302).
-      url                   = "https://pihole.${local.zone}/api"
+      # Authentik Proxy — probe skip_path (not /admin 302). Bare /api is 404; /api/auth is 401.
+      url                   = "https://pihole.${local.zone}/api/auth"
       group                 = "Infrastructure"
       accepted_status_codes = ["401"]
     }
