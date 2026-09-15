@@ -32,7 +32,7 @@ App SSO: **`prd Argo CD OIDC`** (password = OAuth client secret) is shared by Au
 
 Databases: **`prd MariaDB`** (Bitnami keys `mariadb-root-password` / `mariadb-password` / `mariadb-replication-password`); per-app items like **`prd Uptime Kuma MariaDB`** (username, password, database).
 
-Homepage widgets: **`prd Homepage media API keys`** (jellyfin / sonarr-anime / sonarr-tv / prowlarr); **`prd Homepage Proxmox API token`** (`root@pam!homepage`); **`prd Homepage Authentik API token`**; **`Unifi API Key (opentofu-homelab)`** (shared with OpenTofu); **`qBittorrent`** (WebUI username/password); plus existing Argo/Unraid items. Pi-hole Homepage tile is **link-only** (no widget).
+Homepage widgets: **`prd Homepage media API keys`** (jellyfin / sonarr-anime / sonarr-tv / prowlarr); **`prd Homepage Authentik API token`**; **`Unifi API Key (opentofu-homelab)`** (shared with OpenTofu); **`qBittorrent`** (WebUI username/password); plus existing Argo/Unraid items. Pi-hole Homepage tile is **link-only** (no widget).
 
 ## Host shell access (SSH / sudo)
 

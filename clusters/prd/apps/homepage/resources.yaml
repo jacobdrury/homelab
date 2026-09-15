@@ -122,30 +122,6 @@ spec:
         key: kc62r7k7yesqbd27qx3vgcomwe
         property: password
 ---
-# Homelab item "prd Homepage Proxmox API token" (username = root@pam!homepage).
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
-  name: homepage-proxmox
-  namespace: homepage
-spec:
-  refreshInterval: 1h
-  secretStoreRef:
-    kind: ClusterSecretStore
-    name: onepassword
-  target:
-    name: homepage-proxmox
-    creationPolicy: Owner
-  data:
-    - secretKey: username
-      remoteRef:
-        key: cvlyjjjnkwa3wo6vhb6ij5vewa
-        property: username
-    - secretKey: password
-      remoteRef:
-        key: cvlyjjjnkwa3wo6vhb6ij5vewa
-        property: password
----
 # Homelab item "prd Homepage Authentik API token" (API Token intent for user jacob).
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret

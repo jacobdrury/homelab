@@ -74,11 +74,6 @@ locals {
       url   = "https://scarif.${local.zone}/login"
       group = "Infrastructure"
     }
-    proxmox = {
-      name  = "Proxmox"
-      url   = "https://proxmox.${local.zone}/"
-      group = "Infrastructure"
-    }
   }
 
   # Display order on the status page (matches Homepage sections).
@@ -88,7 +83,7 @@ locals {
     Platform       = ["homepage", "argocd", "authentik"]
     Media          = ["jellyfin", "qbittorrent", "sonarr", "sonarr_tv", "prowlarr"]
     Home           = ["homeassistant"]
-    Infrastructure = ["pihole", "scarif", "proxmox"]
+    Infrastructure = ["pihole", "scarif"]
   }
 }
 

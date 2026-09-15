@@ -66,16 +66,6 @@ env:
       secretKeyRef:
         name: homepage-qbittorrent
         key: password
-  - name: HOMEPAGE_VAR_PROXMOX_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: homepage-proxmox
-        key: username
-  - name: HOMEPAGE_VAR_PROXMOX_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: homepage-proxmox
-        key: password
   - name: HOMEPAGE_VAR_AUTHENTIK_KEY
     valueFrom:
       secretKeyRef:
@@ -271,22 +261,6 @@ config:
                 - cpu
                 - memoryPercent
                 - pool1UsedPercent
-        - Proxmox:
-            href: https://proxmox.lab.jacobdrury.com
-            description: homelab02 (arr host)
-            icon: proxmox.png
-            siteMonitor: https://proxmox.lab.jacobdrury.com
-            widget:
-              type: proxmox
-              url: https://proxmox.lab.jacobdrury.com
-              username: "{{HOMEPAGE_VAR_PROXMOX_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_PROXMOX_PASSWORD}}"
-              node: homelab02
-              fields:
-                - vms
-                - lxc
-                - resources.cpu
-                - resources.mem
 
   # Kubernetes widget (relocated to footer via custom.css). Needs metrics-server.
   widgets:
