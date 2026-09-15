@@ -29,7 +29,7 @@ spec:
         property: mariadb-replication-password
 ---
 # Idempotent DB ensure for consumers beyond chart first-boot auth.
-# Re-runs each sync (BeforeHookCreation). Add blocks as apps land.
+# Re-runs each sync; HookSucceeded avoids lingering Job → OutOfSync/requiresPruning.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -37,7 +37,7 @@ metadata:
   namespace: mariadb
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
     argocd.argoproj.io/sync-wave: "1"
 spec:
   ttlSecondsAfterFinished: 300

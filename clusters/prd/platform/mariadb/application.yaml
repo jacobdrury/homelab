@@ -28,6 +28,19 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: mariadb
+  # Bitnami STS: API defaults / empty arrays drift forever under SSA + selfHeal.
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: mariadb
+      jsonPointers:
+        - /spec/volumeClaimTemplates
+        - /spec/persistentVolumeClaimRetentionPolicy
+      jqPathExpressions:
+        - .spec.template.spec.securityContext.supplementalGroups
+        - .spec.template.spec.securityContext.sysctls
+        - .spec.template.spec.affinity.nodeAffinity
+        - .spec.template.spec.affinity.podAffinity
   syncPolicy:
     automated:
       prune: true
@@ -35,3 +48,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
