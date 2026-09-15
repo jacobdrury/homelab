@@ -107,7 +107,7 @@ Details: [networking](architecture/networking.md) · [preflight](setup/phase-1.5
 
 - [x] OpenTofu: **`infrastructure/dns/`** — GitHub Pages (import) + infra `*.lab` records (applied 2026-08-29)
 - [x] OpenTofu: **`infrastructure/unifi/`** — **Homelab** VLAN 5 + firewall (applied 2026-08-29)
-- [x] OpenTofu: **`infrastructure/pihole/`** — lists, domains, upstreams, `*.homelab.com` local DNS, `*.lab` zone forward to Cloudflare (applied 2026-08-29)
+- [x] OpenTofu: **`infrastructure/pihole/`** — lists, domains, upstreams, local DNS, lab zone forward (applied 2026-08-29; **retired** 2026-09 → k8s ConfigMaps)
 - [x] Cloudflare active; API token in 1Password
 - [x] UniFi API key in 1Password
 - [x] Pi-hole API app-password + `app_sudo` in 1Password / UI

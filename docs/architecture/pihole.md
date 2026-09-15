@@ -13,6 +13,7 @@ LAN DNS / ad blocking on Talos `prd`. Leans: [decisions](../decisions.md) · app
 | DNS | Cilium L2 LoadBalancer VIP **`192.168.5.22`** — UDP/TCP **53** |
 | Admin | ClusterIP `:80` → Envoy + **Authentik Proxy** |
 | DHCP / ZBF | UniFi (all VLANs) → **`.22`** — OpenTofu `infrastructure/unifi/` |
+| Config | ConfigMaps + sync sidecar (`clusters/prd/apps/pihole/`) |
 
 ## Stats (ephemeral)
 
@@ -28,15 +29,10 @@ Authentik Proxy; Pi-hole web password **disabled**. Config-sync uses localhost (
 |------|---------|
 | LAN DNS / DHCP | **`192.168.5.22`** (k8s) |
 | `pihole.lab` UI | Authentik → in-cluster |
-| LXC `.11` | Keep running briefly as break-glass; stop VMID **106** when soak is trusted |
-| OpenTofu `infrastructure/pihole/` | Still targets LXC (`services.pihole.lxc`) — **retire** after LXC stop |
+| Policy / local DNS | GitOps ConfigMaps (LXC OpenTofu **retired**) |
+| LXC `.11` (VMID **106**) | Stop when soak is trusted |
 
-**Cutover done (Sep 2026):** LAN DHCP DNS on Drury / Homelab / IoT / Guest / Camera → `.22` via OpenTofu. ZBF allows IoT/Isolated → Homelab DNS VIP. Talos nameservers → `.22`.
-
-**Still open:**
-1. Renew DHCP leases (or wait) so clients pick up `.22`
-2. After soak: stop Pi-hole LXC **106** on Proxmox
-3. Retire OpenTofu `infrastructure/pihole/` (still targets `services.pihole.lxc`)
+**Still open:** renew DHCP leases if needed; stop LXC **106** after soak.
 
 ## Related
 

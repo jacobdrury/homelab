@@ -64,7 +64,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 | Item | Decision |
 |------|----------|
 | Instance | LXC **106** on pc (black) · `192.168.1.11` |
-| Config IaC | **`infrastructure/pihole/`** — OpenTofu via Pi-hole v6 API |
+| Config IaC | **GitOps** ConfigMaps — `clusters/prd/apps/pihole/` (LXC OpenTofu retired) |
 | API auth | **1Password:** `Pi-hole API` (app password) |
 | Write access | **`webserver.api.app_sudo`** = true (All settings) |
 | `*.lab.jacobdrury.com` | **Forward** to Cloudflare (`1.1.1.1`, `1.0.0.1`) — records live in `infrastructure/dns/` only |
@@ -78,7 +78,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 | Apply from | **This Mac only** |
 | State | **Local** `*.tfstate` on Mac, **gitignored** — Git tracks `.tf` config only |
 | Remote state | Optional later (OpenTofu Cloud / Terraform Cloud); not Phase 1.5 |
-| Moon projects | `dns`, `unifi`, `pihole` — tag `opentofu` |
+| Moon projects | `dns`, `unifi`, … — tag `opentofu` |
 | IaC policy | [architecture/iac.md](../architecture/iac.md) |
 
 ## homelab02 guests (migrated from Mini)
@@ -101,7 +101,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 
 - [x] `infrastructure/dns/` — GitHub Pages + `*.lab.jacobdrury.com` infra records (applied 2026-08-29)
 - [x] `infrastructure/unifi/` — **Homelab** VLAN 5 + firewall (applied 2026-08-29)
-- [x] `infrastructure/pihole/` — full config in Git; zone forward + local `*.homelab.com` (applied 2026-08-29)
+- [x] Pi-hole policy in Git — ConfigMaps under `clusters/prd/apps/pihole/` (LXC OpenTofu retired 2026-09)
 - [x] `dig @192.168.1.11 k8s.lab.jacobdrury.com` → `192.168.5.11` (Cloudflare via forward)
 - [x] `dig @192.168.1.11 scarif.lab.jacobdrury.com` → `192.168.5.10` (Cloudflare via forward)
 - [x] Switch port: scarif on **Homelab** VLAN 5 (Aggregation SFP+ 2)

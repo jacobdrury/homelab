@@ -1,5 +1,4 @@
 # Policy SoT in Git — config-sync sidecar reconciles into each pod via Pi-hole v6 API.
-# Migrated from infrastructure/pihole/*.auto.tfvars (LXC OpenTofu remains until DHCP cutover).
 apiVersion: v1
 kind: ConfigMap
 metadata:

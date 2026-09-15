@@ -22,9 +22,7 @@ Creates **Homelab** VLAN 5 (`192.168.5.0/24`). scarif migrated to `192.168.5.10`
 
 **Switch ports** (`devices.tf`): Pro Max 16 **Ports 13 + 5** → Homelab (**yavin** USB 2.5G + onboard 1G). Existing IoT/Drury overrides on that switch are declared too (provider replaces the full override array).
 
-## Pi-hole (`infrastructure/pihole/`)
-
-Config-only OpenTofu for the LXC at `192.168.1.11` (block lists, domains, upstreams, local `*.homelab.com`, lab zone forward). Edit `*.auto.tfvars` in repo → `moon run pihole:apply`. Details: [pihole/README.md](pihole/README.md).
+**Networks:** Drury / Homelab / IoT / Guest / Camera are managed resources; DHCP DNS → Pi-hole VIP `.22`.
 
 ## Tailscale (`infrastructure/tailscale/`)
 
@@ -59,7 +57,6 @@ Run `moon run <project>:init` manually after clone if you skip the full chain. *
 op signin
 moon run dns:apply
 moon run unifi:apply
-moon run pihole:apply
 moon run tailscale:apply
 moon run uptime-kuma:apply
 ```
@@ -79,7 +76,6 @@ Full setup: [docs/setup/local-tools.md](../docs/setup/local-tools.md)
 ## Order
 
 1. `dns` apply — Cloudflare records (public + `*.lab`)
-2. `unifi` apply — Homelab VLAN + firewall
-3. `pihole` apply — Pi-hole policy (lists, local DNS, lab zone forward)
-4. ~~Move scarif to VLAN 5 (`192.168.5.10`); update arr NFS fstab~~ **Done (2026-08-30)**
-5. Phase 2 — Talos on yavin
+2. `unifi` apply — Homelab VLAN + firewall + DHCP DNS
+3. ~~Move scarif to VLAN 5 (`192.168.5.10`); update arr NFS fstab~~ **Done (2026-08-30)**
+4. Phase 2 — Talos on yavin

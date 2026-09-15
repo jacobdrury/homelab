@@ -121,12 +121,10 @@ services:
   pihole:
     # LAN DNS — Cilium L2 LoadBalancer VIP on Homelab (DHCP + UniFi ZBF).
     host: 192.168.5.22
-    # Legacy LXC (OpenTofu only until LXC 106 is stopped). Not for DHCP.
-    lxc: 192.168.1.11
   homeassistant:
     host: 192.168.2.8 # legacy HA OS VM (IoT); live HA is k8s → Envoy .21 — stop when soak done
   proxmox:
-    host: 192.168.1.12 # homelab02 · Proxmox UI :8006 · hosts arr / Pi-hole / legacy HA VM
+    host: 192.168.1.12 # homelab02 · Proxmox UI :8006 · hosts arr / legacy HA VM (Pi-hole LXC 106 retiring)
   # gateway: 192.168.1.1  # UDM Pro — add when needed for IaC
 
 tailscale:

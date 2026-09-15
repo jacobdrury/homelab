@@ -38,7 +38,6 @@ OpenTofu projects (Phase 1.5):
 op signin
 moon run dns:apply
 moon run unifi:apply
-moon run pihole:apply
 ```
 
 IaC policy: [architecture/iac.md](../architecture/iac.md).

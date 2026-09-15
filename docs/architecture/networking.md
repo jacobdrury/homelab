@@ -104,7 +104,7 @@ Client → https://homeassistant.lab.jacobdrury.com → Envoy → HA Service (+ 
 
 **Resolving names on LAN**
 
-Pi-hole forwards `lab.jacobdrury.com` to Cloudflare (`1.1.1.1` / `1.0.0.1`) via `infrastructure/pihole/dns_forward.tf`. Infra and app records live in `infrastructure/dns/` (+ external-dns later). Answers are **RFC1918** (grey cloud only — never proxied).
+Pi-hole forwards `lab.jacobdrury.com` to Cloudflare (`1.1.1.1` / `1.0.0.1`) via ConfigMap dnsmasq (`clusters/prd/apps/pihole/`). Infra and app records live in `infrastructure/dns/` (+ external-dns later). Answers are **RFC1918** (grey cloud only — never proxied).
 
 **Legacy `*.homelab.com`** — shrinking local A records in `local_dns.auto.tfvars` (`arr.homelab.com` gone); not part of the long-term `*.lab` model.
 
