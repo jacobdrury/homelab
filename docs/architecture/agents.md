@@ -37,7 +37,7 @@ Details: [networking](networking.md#tailscale) (split DNS, subnet router timelin
 
 1. **Prefer Git** — edit this repo → merge to `main` → Argo reconciles  
 2. **Break-glass shell** — diagnose / restart / force-delete stuck pods; do **not** `helm upgrade` or `kubectl apply` as the steady path for anything Argo already owns  
-3. **In-repo agent docs** — `AGENTS.md` / `.agents/skills`: context, hostnames ([naming](naming.md)), “no secrets in Git”  
+3. **In-repo agent docs** — root [`AGENTS.md`](../../AGENTS.md) is the **harness entrypoint** (auto-loaded rules); this file is longer architecture/context. Also `.agents/skills`, hostnames ([naming](naming.md)), “no secrets in Git”  
 4. **Least privilege later** — optional agent Tailscale identity + limited RBAC  
 
 ## GitOps first; OpenTofu when needed
@@ -93,7 +93,7 @@ Order: [platform README](../../clusters/prd/platform/README.md) · [bootstrap/RE
 | **Homepage** | Tile under the right section in [`clusters/prd/apps/homepage/values.yaml`](../../clusters/prd/apps/homepage/values.yaml) (`href` + icon; widget only if useful) |
 | **Uptime Kuma** | HTTP(S) monitor in [`infrastructure/uptime-kuma/monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf) + status page group order; `moon run uptime-kuma:apply`. **Must hit the app**, not Authentik — see below |
 | **DNS** | `infrastructure/lab.yaml` `app_hosts` + `moon run dns:apply` when a new hostname is needed |
-| **Authentik** | Blueprint when the app gets SSO (OIDC or proxy) |
+| **Authentik** | Only when auth should be enforced — rule lives in root [`AGENTS.md`](../../AGENTS.md) (harness entrypoint). Not every app. |
 
 Exceptions (skip Homepage and/or Kuma unless asked): pure operators/controllers, CSI, secret plumbing, one-off jobs, or infra with no human URL.
 

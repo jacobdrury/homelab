@@ -1,5 +1,7 @@
 # Homelab agent instructions
 
+Harness entrypoint — keep this file short and actionable. Longer context (reachability, buildout, Kuma probe details): `docs/architecture/agents.md`.
+
 ## Homelab naming
 
 Physical hosts and Talos/k8s **node names** use **Star Wars planets** (lowercase, no spaces).
@@ -46,6 +48,8 @@ Details: `connect/README.md`
 **Prefer GitOps-native config** (Helm, manifests, Authentik blueprints) over OpenTofu. Use OpenTofu only for external APIs with no in-cluster reconciler (DNS, UniFi, Pi-hole, Tailscale). Details: `docs/architecture/agents.md` (§ GitOps first).
 
 **New user-facing services are incomplete** until added to **Homepage** and **Uptime Kuma** (unless the task says otherwise). Details: `docs/architecture/agents.md` (§ Agent checklist).
+
+**Do not put every app behind Authentik.** Skip Authentik when there is nothing to enforce (client-side / no sensitive backend — e.g. IT-Tools, Homepage): HTTPRoute → app Service. Apps that have (or need) a login go on Authentik — **OIDC** when the app supports SSO, **Proxy** when lab SSO replaces/disables local auth (Kuma, *arr, Pi-hole admin). Do not wrap a no-login utility in Authentik just because other apps use it. Existing direct native-auth apps (e.g. Jellyfin) stay Envoy → Service unless migrating to SSO on purpose.
 
 **Leave `install.sh` only for what must be installed before Argo exists** (CNI, CSI, Connect/`op` seeding, ESO, Argo + root). Anything Argo can own entirely from Git must never get an install script. Details: `docs/architecture/agents.md` (§ Bootstrap scripts).
 
