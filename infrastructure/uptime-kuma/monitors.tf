@@ -29,11 +29,9 @@ locals {
       group = "Platform"
     }
     it_tools = {
-      name = "IT-Tools"
-      # In-cluster (Authentik gates the public URL; no useful public skip).
-      url                   = "http://it-tools.it-tools.svc.cluster.local:8080/"
-      group                 = "Platform"
-      accepted_status_codes = ["200"]
+      name  = "IT-Tools"
+      url   = "https://it-tools.${local.zone}/"
+      group = "Platform"
     }
     jellyfin = {
       name  = "Jellyfin"

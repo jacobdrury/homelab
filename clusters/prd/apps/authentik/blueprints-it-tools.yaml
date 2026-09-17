@@ -1,5 +1,5 @@
-# Authentik blueprint — IT-Tools Proxy Provider.
-# Traffic: Envoy it-tools.lab → authentik-server → it-tools.it-tools.svc:8080
+# Authentik cleanup — remove IT-Tools Proxy Provider (app is direct Envoy now).
+# Safe to delete this ConfigMap after Authentik has applied state: absent once.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,44 +13,14 @@ data:
     metadata:
       name: it-tools-proxy
     entries:
-      - model: authentik_providers_proxy.proxyprovider
-        id: provider-it-tools
-        state: present
-        identifiers:
-          name: IT-Tools
-        attrs:
-          name: IT-Tools
-          mode: proxy
-          external_host: https://it-tools.lab.jacobdrury.com
-          internal_host: http://it-tools.it-tools.svc.cluster.local:8080
-          internal_host_ssl_validation: false
-          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
-          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
-          skip_path_regex: ""
-
       - model: authentik_core.application
         id: app-it-tools
-        state: present
+        state: absent
         identifiers:
           slug: it-tools
-        attrs:
-          name: IT-Tools
-          slug: it-tools
-          provider: !KeyOf provider-it-tools
-          policy_engine_mode: any
-          meta_launch_url: https://it-tools.lab.jacobdrury.com
 
-      - model: authentik_outposts.outpost
-        id: outpost-embedded
-        state: present
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-it-tools
+        state: absent
         identifiers:
-          name: authentik Embedded Outpost
-        attrs:
-          providers:
-            - !Find [authentik_providers_proxy.proxyprovider, [name, Uptime Kuma]]
-            - !Find [authentik_providers_proxy.proxyprovider, [name, Sonarr Anime]]
-            - !Find [authentik_providers_proxy.proxyprovider, [name, Sonarr TV]]
-            - !Find [authentik_providers_proxy.proxyprovider, [name, Prowlarr]]
-            - !Find [authentik_providers_proxy.proxyprovider, [name, qBittorrent]]
-            - !Find [authentik_providers_proxy.proxyprovider, [name, Pi-hole]]
-            - !Find [authentik_providers_proxy.proxyprovider, [name, IT-Tools]]
+          name: IT-Tools

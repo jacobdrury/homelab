@@ -1,5 +1,5 @@
 # IT-Tools (sharevb fork) — client-side developer utilities.
-# Public URL via Authentik Proxy (blueprints-it-tools + resources-it-tools-routes).
+# Lab URL: Envoy → Service (no Authentik).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

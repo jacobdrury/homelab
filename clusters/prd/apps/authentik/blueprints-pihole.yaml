@@ -55,4 +55,3 @@ data:
             - !Find [authentik_providers_proxy.proxyprovider, [name, Prowlarr]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, qBittorrent]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, Pi-hole]]
-            - !Find [authentik_providers_proxy.proxyprovider, [name, IT-Tools]]
