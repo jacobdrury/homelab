@@ -24,7 +24,7 @@ spec:
       targetRevision: main
       path: clusters/prd/apps/authentik
       directory:
-        include: "{resources.yaml,resources-media-routes.yaml,resources-pihole-routes.yaml,blueprints-argocd.yaml,blueprints-uptime.yaml,blueprints-media.yaml,blueprints-homeassistant.yaml,blueprints-pihole.yaml,blueprints-it-tools.yaml}"
+        include: "{resources.yaml,resources-media-routes.yaml,resources-pihole-routes.yaml,blueprints-argocd.yaml,blueprints-uptime.yaml,blueprints-media.yaml,blueprints-homeassistant.yaml,blueprints-pihole.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: authentik
