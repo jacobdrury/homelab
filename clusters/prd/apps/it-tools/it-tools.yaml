@@ -1,0 +1,64 @@
+# sharevb/it-tools — https://github.com/sharevb/it-tools
+# Stateless SPA; auth at Authentik Proxy (not in this file).
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: it-tools
+  namespace: it-tools
+  labels:
+    app.kubernetes.io/name: it-tools
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: it-tools
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: it-tools
+    spec:
+      containers:
+        - name: it-tools
+          image: ghcr.io/sharevb/it-tools:2026.7.11@sha256:5d79e8c7fbf39d6473c282b9c4f86ff85c4900ec22ef766ae3c6f0f9ca8dbb37
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: it-tools
+  namespace: it-tools
+  labels:
+    app.kubernetes.io/name: it-tools
+spec:
+  selector:
+    app.kubernetes.io/name: it-tools
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

@@ -23,6 +23,7 @@ blueprints:
     - authentik-blueprint-media
     - authentik-blueprint-homeassistant
     - authentik-blueprint-pihole
+    - authentik-blueprint-it-tools
 
 global:
   volumes:

@@ -28,6 +28,13 @@ locals {
       url   = "https://auth.${local.zone}/"
       group = "Platform"
     }
+    it_tools = {
+      name = "IT-Tools"
+      # In-cluster (Authentik gates the public URL; no useful public skip).
+      url                   = "http://it-tools.it-tools.svc.cluster.local:8080/"
+      group                 = "Platform"
+      accepted_status_codes = ["200"]
+    }
     jellyfin = {
       name  = "Jellyfin"
       url   = "https://jellyfin.${local.zone}/"
@@ -80,7 +87,7 @@ locals {
   group_order = ["Platform", "Media", "Home", "Infrastructure"]
 
   monitor_order = {
-    Platform       = ["homepage", "argocd", "authentik"]
+    Platform       = ["homepage", "argocd", "authentik", "it_tools"]
     Media          = ["jellyfin", "qbittorrent", "sonarr", "sonarr_tv", "prowlarr"]
     Home           = ["homeassistant"]
     Infrastructure = ["pihole", "scarif"]

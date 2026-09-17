@@ -8,6 +8,7 @@
 | Media | `media/` — qBit (+ Mullvad WG sidecar), Sonarr ×2, Prowlarr, Jellyfin; **configs copied from arr VM** |
 | Home Assistant | `home-assistant/` — Container **2026.8.3** + CNPG recorder + Authentik OIDC (live) |
 | Pi-hole | `pihole/` — Deployment ×2; ConfigMaps; DNS LB `.22`; Authentik Proxy (UI cutover pending) |
+| IT-Tools | `it-tools/` — sharevb fork; Authentik Proxy at `it-tools.lab` |
 | Transitional | `transitional/` — Envoy HTTPS → legacy Pi-hole LXC / scarif / proxmox |
 
 Each app: `application.yaml` + optional `values.yaml` / `resources.yaml` (HTTPRoutes, etc.).

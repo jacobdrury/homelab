@@ -1,0 +1,27 @@
+# IT-Tools (sharevb fork) — client-side developer utilities.
+# Public URL via Authentik Proxy (blueprints-it-tools + resources-it-tools-routes).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: it-tools
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jacobdrury/homelab.git
+    targetRevision: main
+    path: clusters/prd/apps/it-tools
+    directory:
+      include: '{namespace,it-tools}.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: it-tools
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

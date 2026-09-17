@@ -152,6 +152,11 @@ config:
                 - loginsLast24H
                 - failedLoginsLast24H
                 - authorizationsLast24H
+        - IT-Tools:
+            href: https://it-tools.lab.jacobdrury.com
+            description: Developer utilities (Authentik proxy)
+            icon: it-tools.png
+            siteMonitor: https://it-tools.lab.jacobdrury.com
 
     - Media:
         - Jellyfin:

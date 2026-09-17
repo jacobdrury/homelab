@@ -26,6 +26,7 @@ dns:
     prowlarr: 192.168.5.21
     homeassistant: 192.168.5.21
     pihole: 192.168.5.21
+    it-tools: 192.168.5.21 # sharevb IT-Tools (via Authentik proxy)
     scarif: 192.168.5.21 # HTTPS UI via Envoy; NFS/iSCSI use scarif-direct.lab
     proxmox: 192.168.5.21 # homelab02 Proxmox UI
 
