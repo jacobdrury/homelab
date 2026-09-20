@@ -28,27 +28,28 @@ spec:
         key: prd Uptime Kuma MariaDB
         property: database
 ---
-# OpenTofu / CI Socket.IO API — Homelab NodePort (bypasses Authentik on uptime.lab).
-# Hit via Connector subnet route: http://<yavin>:<nodePort> (see lab.yaml).
-# Avoids Tailscale L3 Service expose (TCP to MagicDNS :3001 times out from GHA).
-apiVersion: v1
-kind: Service
+# OpenTofu / CI Socket.IO API — Tailscale L7 Ingress (bypasses Authentik).
+# L7 uses Tailscale Serve and avoids the L3 DNAT path that blackholed TCP :3001.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
   name: uptime-kuma-api
   namespace: uptime-kuma
-  labels:
-    app.kubernetes.io/name: uptime-kuma
-    app.kubernetes.io/component: api
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    tailscale.com/tags: "tag:k8s"
 spec:
-  type: NodePort
-  selector:
-    app.kubernetes.io/instance: uptime-kuma
-    app.kubernetes.io/name: uptime-kuma
-  ports:
-    - name: http
-      port: 3001
-      targetPort: 3001
-      nodePort: 30001
-      protocol: TCP
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - uptime-kuma
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: uptime-kuma
+                port:
+                  number: 3001

@@ -9,5 +9,5 @@ resource "tailscale_tailnet_settings" "homelab" {
   users_approval_on                           = true
   users_role_allowed_to_join_external_tailnet = "admin"
   posture_identity_collection_on              = false
-  https_enabled                               = false
+  https_enabled                               = true
 }

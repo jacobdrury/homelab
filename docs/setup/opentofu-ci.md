@@ -3,7 +3,7 @@
 Thin pipeline: `moon ci` on GitHub-hosted runners. Secrets stay in **1Password**; GitHub stores only a Service Account token.
 
 - **UniFi:** Tailscale Action + Homelab subnet route → gateway from `lab.yaml`
-- **Uptime Kuma:** Homelab **NodePort** on yavin (`lab.yaml` `api_endpoint`) via Connector subnet route (no kubeconfig)
+- **Uptime Kuma:** Tailscale **L7 Ingress** → `https://uptime-kuma.<tailnet>.ts.net` (no kubeconfig)
 
 Workflow: [`.github/workflows/tofu.yml`](../../.github/workflows/tofu.yml)
 
@@ -45,15 +45,15 @@ Or via [1Password Developer](https://developer.1password.com/docs/service-accoun
 3. Tags: **`tag:ci`** (must match ACL `tagOwners` in `infrastructure/tailscale/acl.tf`).
 4. Store client id + secret in 1Password as **Tailscale CI OAuth**.
 
-### 4. Uptime Kuma API (Homelab NodePort)
+### 4. Uptime Kuma API (Tailscale L7 Ingress)
 
-GitOps Service `uptime-kuma-api` (NodePort **30001** on yavin). After Argo syncs:
+GitOps Ingress `uptime-kuma-api` uses Tailscale Serve and bypasses Authentik. Tailnet HTTPS must be enabled (`tailnet_settings.tf`). After Argo syncs:
 
 ```bash
-curl -sf -o /dev/null http://192.168.5.11:30001/
+curl -sf -o /dev/null https://uptime-kuma.ibex-ladon.ts.net/
 ```
 
-Endpoint is in `lab.yaml` → `services.uptime_kuma.api_endpoint` (moon + CI). CI reaches it via Tailscale `--accept-routes` (same path as UniFi).
+Endpoint is in `lab.yaml` → `services.uptime_kuma.api_endpoint` (moon + CI).
 
 ### 5. UniFi URL
 
@@ -66,7 +66,7 @@ OpenTofu talks to the Homelab gateway from `lab.yaml` (`networks.homelab.gateway
 | Secrets | `op signin` + `moon.yml` `TOFU_SECRET_*` | `load-secrets-action` → env; `env.sh` skips `op` when set |
 | State | R2 (`homelab-tofu-state`) | same |
 | UniFi | LAN or Tailscale `--accept-routes` | Tailscale Action + `--accept-routes` |
-| Kuma API | Homelab NodePort (LAN or `--accept-routes`) | same |
+| Kuma API | Tailscale L7 Ingress | same |
 
 ## Break-glass
 

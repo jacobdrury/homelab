@@ -41,9 +41,8 @@ ingress:
 service:
   type: ClusterIP
   port: 3001
-  # No Tailscale L3 expose — operator DNAT timed out TCP :3001 from GHA
-  # (peer path up; Socket.IO blackholed). CI/Mac use Homelab NodePort via
-  # Connector subnet route — Service/uptime-kuma-api in resources.yaml.
+  # CI uses the Tailscale L7 Ingress in resources.yaml. Do not annotate this
+  # Service with tailscale.com/expose; that L3 DNAT path blackholed TCP :3001.
 
 # Still needed for screenshots / local files (DB is remote).
 volume:

@@ -26,7 +26,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
     env:
       # Keep in sync with infrastructure/lab.yaml services.uptime_kuma.api_endpoint
-      UPTIMEKUMA_ENDPOINT: http://192.168.5.11:30001
+      UPTIMEKUMA_ENDPOINT: https://uptime-kuma.ibex-ladon.ts.net
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,7 +57,7 @@ jobs:
           # Tailscale GitHub Action (separate OAuth client tagged tag:ci)
           TS_OAUTH_CLIENT_ID: op://Homelab/Tailscale CI OAuth/client id
           TS_OAUTH_SECRET: op://Homelab/Tailscale CI OAuth/credential
-          # Uptime Kuma API via Homelab NodePort (Connector subnet route; not Authentik)
+          # Uptime Kuma API via Tailscale L7 Ingress (not Authentik)
           UPTIMEKUMA_USERNAME: op://Homelab/Uptime Kuma/username
           UPTIMEKUMA_PASSWORD: op://Homelab/Uptime Kuma/password
 
@@ -67,9 +67,9 @@ jobs:
           oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ env.TS_OAUTH_SECRET }}
           tags: tag:ci
-          args: --accept-routes
-          # Homelab NodePort path (same pattern as UniFi gateway).
-          targets: 192.168.5.11
+          args: --accept-routes --accept-dns
+          # Wait for peer-map propagation before probing the L7 Ingress.
+          targets: uptime-kuma.ibex-ladon.ts.net
 
       - name: Probe Uptime Kuma API
         run: |

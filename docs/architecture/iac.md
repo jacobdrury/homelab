@@ -14,7 +14,7 @@ Locked leans: [decisions](../decisions.md). Apply tooling: [local-tools](../setu
 | UniFi networks + firewall + selected switch ports | **OpenTofu** | `infrastructure/unifi/` | `moon run unifi:apply` |
 | Pi-hole policy (lists, domains, upstreams, local DNS, zone forward) | **ConfigMaps** + sync sidecar | `clusters/prd/apps/pihole/` | Git push → Argo |
 | Tailscale (policy, DNS, routes, keys, device settings) | **OpenTofu** | `infrastructure/tailscale/` | `moon run tailscale:apply` |
-| Uptime Kuma monitors + Lab status page | **OpenTofu** | `infrastructure/uptime-kuma/` | `moon run uptime-kuma:apply` (Homelab NodePort; see README) |
+| Uptime Kuma monitors + Lab status page | **OpenTofu** | `infrastructure/uptime-kuma/` | `moon run uptime-kuma:apply` (Tailscale L7 Ingress; see README) |
 | Talos machine / cluster config | **OpenTofu** (+ generated YAML) | `infrastructure/talos/prd/` | TBD at Phase 2 |
 | Kubernetes platform + apps | **Helm** via **Argo CD** | `apps/`, `clusters/prd/` | Git push → sync |
 | Authentik directory (OIDC apps, groups, …) | **Blueprints** via Authentik Helm | `clusters/prd/apps/authentik/` | Argo → worker applies |
@@ -64,7 +64,7 @@ Thin GitHub Actions + **`moon ci`**. State on R2. LAN reachability via **Tailsca
 |---------|--------------|--------|
 | `cloudflare` | public internet | R2 + DNS API |
 | `unifi` | `ubuntu-latest` + Tailscale | Homelab gateway (`lab.yaml`) |
-| `uptime-kuma` | `ubuntu-latest` + Tailscale | Homelab NodePort on yavin (`lab.yaml`) |
+| `uptime-kuma` | `ubuntu-latest` + Tailscale | L7 Ingress `uptime-kuma.<tailnet>.ts.net` |
 | `tailscale` | public internet | Tailscale API only |
 
 **Security (public repo):**

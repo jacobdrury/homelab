@@ -2,7 +2,7 @@
 
 Manages **HTTP monitors** and the public **Lab** status page (`/status/default`) via the [breml/uptimekuma](https://registry.terraform.io/providers/breml/uptimekuma) provider.
 
-Kuma itself (Helm, MariaDB, Authentik proxy, API NodePort) stays under GitOps: `clusters/prd/apps/uptime-kuma/`.
+Kuma itself (Helm, MariaDB, Authentik proxy, API L7 Ingress) stays under GitOps: `clusters/prd/apps/uptime-kuma/`.
 
 ## Why OpenTofu
 
@@ -10,17 +10,17 @@ There is no in-cluster reconciler for Kuma monitors. Same pattern as UniFi: exte
 
 ## Auth / network
 
-`https://uptime.lab.jacobdrury.com` is Authentik-proxied (browser UI). OpenTofu uses a **Homelab NodePort** instead (bypasses Authentik):
+`https://uptime.lab.jacobdrury.com` is Authentik-proxied (browser UI). OpenTofu uses a **Tailscale L7 Ingress** instead (bypasses Authentik):
 
-`http://192.168.5.11:30001` (`lab.yaml` → `services.uptime_kuma.api_endpoint`)
+`https://uptime-kuma.ibex-ladon.ts.net` (`lab.yaml` → `services.uptime_kuma.api_endpoint`)
 
-Reach it on LAN or via Tailscale **Connector subnet route** (`--accept-routes`). No `kubectl` / port-forward / MagicDNS.
+You must be on the tailnet. No `kubectl`, kubeconfig, port-forward, or subnet route is needed for Kuma.
 
 Credentials: 1Password **`Uptime Kuma`** (`username` / `password`). Native UI auth can stay disabled; API login still works.
 
 ```bash
 op signin
-# LAN or Tailscale with accept-routes
+# Tailscale connected
 moon run uptime-kuma:apply
 ```
 

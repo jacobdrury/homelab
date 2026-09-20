@@ -33,11 +33,11 @@ locals {
         dst = [local.homelab_gateway_ip]
         ip  = ["443"]
       },
-      # GitHub Actions: Uptime Kuma Socket.IO via Homelab NodePort (yavin).
+      # GitHub Actions: Uptime Kuma Socket.IO via Tailscale L7 Ingress.
       {
         src = ["tag:ci"]
-        dst = [local.lab.services.uptime_kuma.api_host]
-        ip  = [tostring(local.lab.services.uptime_kuma.node_port)]
+        dst = ["tag:k8s"]
+        ip  = [tostring(local.lab.services.uptime_kuma.port)]
       },
     ]
 
