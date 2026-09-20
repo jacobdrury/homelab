@@ -2,7 +2,7 @@
 
 Phased path from [inventory](inventory.md) → target. Principles and checklists only; leans live in [decisions](decisions.md).
 
-## Current status (2026-09-14)
+## Current status (2026-09-19)
 
 | Phase | State | Notes |
 |-------|--------|--------|
@@ -11,11 +11,12 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **1.5** VLAN + IaC | **Done** (Aug 2026) | scarif `192.168.5.10`; DNS/UniFi/Tailscale in Git |
 | **1.5+** Remote access | **Done** (Aug 2026) | Tailscale IaC; interim subnet router on homelab02 |
 | **2** Talos `prd` | **Done** | Platform + Homepage/Kuma/Authentik; Homelab via k8s Connector. Per-app CNPG kept (no lab-wide collapse) |
+| **2b** OpenTofu CI | **Done** (Sep 2026) | `moon ci` on GHA + Tailscale `tag:ci`; Kuma via L7 Ingress — [opentofu-ci](setup/opentofu-ci.md) |
 | **3** Migrate workloads | **Nearly done** | **Media + HA + Pi-hole** on k8s. Only **Pi-hole LXC 106** left to stop after DNS soak |
 | **4–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
-**IaC live today:** `infrastructure/cloudflare/`, `unifi/`, **`tailscale/`** — `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Pi-hole policy = GitOps ConfigMaps. Policy: [iac](architecture/iac.md).
+**IaC live today:** `infrastructure/cloudflare/`, `unifi/`, `tailscale/`, `uptime-kuma/` — **apply via GitHub Actions** (`moon ci` on `main`); Mac `moon run …:apply` is break-glass. Pi-hole policy = GitOps ConfigMaps. Policy: [iac](architecture/iac.md).
 
 **DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/cloudflare/`). LAN: k8s Pi-hole VIP **`.22`** (DHCP on all VLANs) forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare. **`arr.lab` / `arr.homelab.com` retired** (Sep 2026).
 
@@ -74,7 +75,7 @@ flowchart LR
 10. **Pi-hole last** — ~~stays on pc (black) through Phase 2–3 until k8s cutover~~ **done** (Sep 2026) — VIP `.22`  
 11. Tailscale + HTTPS via `lab.jacobdrury.com` — split DNS, subnet router on **k8s operator** (homelab02 interim); LE DNS-01 on Envoy  
 12. **Agent-operable** — [agents](architecture/agents.md)  
-13. **OpenTofu apply manual until cluster CI** — `moon run …:apply` from Mac through Phase 1.5–2; shift to GitHub Actions + in-cluster runners in Phase 2b  
+13. ~~**OpenTofu apply manual until cluster CI**~~ **Done (Phase 2b)** — `moon ci` on GHA; Mac apply is break-glass  
 
 ## Phase 0 — Docs & inventory
 
@@ -244,9 +245,9 @@ Stand up **both** StorageClasses during housekeeping so apps can choose RWX vs R
 
 Populate **Homepage** from these names as soon as routes exist.
 
-### Phase 2b — OpenTofu CI (GitHub Actions)
+### Phase 2b — OpenTofu CI (GitHub Actions) — **Done** (Sep 2026)
 
-**Goal:** `plan` / `validate` on PRs; `apply` on `main` via **`moon ci`**. State in **Cloudflare R2**. LAN apps via **Tailscale on GHA** (`tag:ci`) — not ARC.
+**Goal (met):** `plan` / `validate` on PRs; `apply` on `main` via **`moon ci`**. State in **Cloudflare R2**. LAN/tailnet reachability via **Tailscale on GHA** (`tag:ci`) — not ARC.
 
 Setup runbook: [opentofu-ci](setup/opentofu-ci.md). Workflow: [`.github/workflows/tofu.yml`](../.github/workflows/tofu.yml).
 
@@ -263,7 +264,8 @@ flowchart LR
   MoonPlan --> R2[Cloudflare_R2]
   MoonApply --> R2
   MoonApply --> TS[Tailscale_tag_ci]
-  TS --> Homelab[Homelab_192_168_5]
+  TS --> UniFi[Homelab_gateway]
+  TS --> Kuma[L7_uptime_kuma_ts_net]
 ```
 
 #### Checklist
@@ -273,13 +275,12 @@ flowchart LR
 - [x] Workflow — `moon ci` on `ubuntu-latest` (plan on PR, apply on `main`)
 - [x] Secrets — 1Password SA → `OP_SERVICE_ACCOUNT_TOKEN` only in GitHub (see setup doc)
 - [x] Tailscale ACL — `tag:ci` + least-privilege grants; Drury/homelab02 routes retired
-- [x] UniFi API — `https://192.168.5.1` (Homelab gateway)
+- [x] UniFi API — `https://192.168.5.1` (Homelab gateway) via `--accept-routes`
 - [x] GitHub `OP_SERVICE_ACCOUNT_TOKEN` (1Password SA **Homelab CI**, item in Homelab vault)
-- [x] Create **Tailscale CI OAuth** 1Password item (Kuma via Tailscale L7 Ingress — no CI kubeconfig)
-- [ ] First PR green plan; merge apply matches Mac (no drift)
-- [ ] Mac `moon run …:apply` becomes break-glass only
-
-**Exit:** All OpenTofu projects plan on PR; apply via pipeline; local state retired.
+- [x] **Tailscale CI OAuth** 1Password item; Kuma API via **L7 Ingress** (`https://uptime-kuma.…ts.net`) — no CI kubeconfig
+- [x] Tailnet **HTTPS** enabled (`tailnet_settings.tf`) for Serve / L7 certs
+- [x] Cilium `socketLB.hostNamespaceOnly` — Tailscale **L3** DNAT works (needed for future Minecraft, etc.)
+- [x] Pipeline apply on `main` green; Mac `moon run …:apply` is break-glass only
 
 **Non-goal:** ARC / self-hosted runners (replaced by Tailscale-on-GHA).
 
@@ -351,8 +352,8 @@ Target: **yavin + hoth + endor**, all Talos **control planes**, all schedule pod
 - [ ] scarif iSCSI LUN + StorageClass; 80 Gi PVC for world data  
 - [ ] `apps/games/minecraft-atm10/` → Argo Application in `clusters/prd/`  
 - [ ] ESO: CurseForge API key, RCON password (1Password)  
-- [ ] Jellyfin **Tailscale L7 Ingress** (`ingress-friends.yaml`) + HTTPS enabled on tailnet — not Service `expose`  
-- [ ] Minecraft Service: Tailscale **L3** `expose` + `tailscale.com/hostname: minecraft`  
+- [ ] Jellyfin **Tailscale L7 Ingress** (`ingress-friends.yaml`) — tailnet HTTPS already on via OpenTofu; not Service `expose`  
+- [ ] Minecraft Service: Tailscale **L3** `expose` + `tailscale.com/hostname: minecraft` (Cilium `hostNamespaceOnly` already set)  
 - [ ] Tighten `infrastructure/tailscale/acl.tf` — `group:friends` → `tag:shared` only; remove allow-all grant  
 - [ ] Auth keys for friends (`tag:friend`); share `https://jellyfin.ibex-ladon.ts.net` + `minecraft.ibex-ladon.ts.net:25565`  
 - [ ] Minecraft whitelist; Jellyfin accounts for each friend  

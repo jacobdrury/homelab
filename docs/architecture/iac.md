@@ -42,8 +42,8 @@ Avoid duplicating the same records in two IaC modules:
 | Moving a host to a new subnet (IP, fstab, cable) | Physical / OS steps outside API |
 | One-time bootstrap (Talos first boot, Argo install, 1Password items) | Chicken-and-egg |
 | BIOS, Proxmox VM create, disk attach | Hypervisor / hardware |
-| `op signin` on the operator Mac | Session auth for secret injection — until Phase 2b CI |
-| Tailscale **advertise-routes** on subnet router host | Device-local (`tailscale set` on homelab02; k8s operator Helm in Phase 2) — API only **enables** advertised routes |
+| `op signin` on the operator Mac | Break-glass local apply only — steady state uses 1Password SA in CI |
+| Tailscale **advertise-routes** on subnet router host | Device-local (`tailscale set` on homelab02); k8s Connector is steady Homelab router — API only **enables** advertised routes |
 | OpenTofu `plan` / `apply` | Prefer CI (`moon ci`); Mac `moon run …:apply` is break-glass — [opentofu-ci](../setup/opentofu-ci.md) |
 
 Document one-off steps in phase checklists ([roadmap](../roadmap.md), [phase-1.5 preflight](../setup/phase-1.5-preflight.md)); promote to IaC once the API and workflow are stable.
@@ -56,15 +56,22 @@ Document one-off steps in phase checklists ([roadmap](../roadmap.md), [phase-1.5
 - **Vars:** committed `*.auto.tfvars` for project-specific state; **shared lab constants** in [`infrastructure/lab.yaml`](../../infrastructure/lab.yaml). New OpenTofu projects under `infrastructure/` get `lab_locals.tf` on `moon run <project>:init`.
 - **Plan before apply:** `moon run <project>:apply` runs plan → apply; review `.tofu.plan` when unsure.
 
-## CI (Phase 2b)
+## CI (Phase 2b — Done)
 
-Thin GitHub Actions + **`moon ci`**. State on R2. LAN reachability via **Tailscale GitHub Action** (`tag:ci`) — UniFi + Kuma over Homelab subnet route. Setup: [opentofu-ci](../setup/opentofu-ci.md).
+Thin GitHub Actions + **`moon ci`**. State on R2. Tailscale on GHA (`tag:ci`):
+
+| Reach | Path |
+|-------|------|
+| **UniFi** | Homelab subnet route → gateway (`lab.yaml`) |
+| **Uptime Kuma** | L7 Ingress `https://uptime-kuma.<tailnet>.ts.net` (not the subnet) |
+
+Setup: [opentofu-ci](../setup/opentofu-ci.md).
 
 | Project | Runner needs | Notes |
 |---------|--------------|--------|
 | `cloudflare` | public internet | R2 + DNS API |
 | `unifi` | `ubuntu-latest` + Tailscale | Homelab gateway (`lab.yaml`) |
-| `uptime-kuma` | `ubuntu-latest` + Tailscale | L7 Ingress `uptime-kuma.<tailnet>.ts.net` |
+| `uptime-kuma` | `ubuntu-latest` + Tailscale | L7 Ingress (Serve HTTPS) |
 | `tailscale` | public internet | Tailscale API only |
 
 **Security (public repo):**

@@ -1,20 +1,18 @@
 # Shared lab constants — see ../lab.yaml (zone, subnets, hosts, Cloudflare DNS, Pi-hole, Tailscale).
 
-Apply from your Mac on the LAN. **State** lives in Cloudflare R2 (`homelab-tofu-state`); credentials from 1Password **Homelab R2 tofu state**.
+**Steady apply:** GitHub Actions `moon ci` on `main`. Mac `moon run …:apply` is break-glass. **State** in Cloudflare R2 (`homelab-tofu-state`); credentials from 1Password **Homelab R2 tofu state**. Setup: [docs/setup/opentofu-ci.md](../docs/setup/opentofu-ci.md).
 
 **IaC policy:** Git is source of truth for everything here; see [docs/architecture/iac.md](../docs/architecture/iac.md).
 
 **Shared constants:** [lab.yaml](lab.yaml) — structured as `dns`, `networks` (drury / homelab + hosts), `services`, `tailscale`. Each OpenTofu project reads it via `lab_locals.tf`.
 
-Credentials load from each project's `moon.yml` (`TOFU_SECRET_*` / `TOFU_ENV_*`). Sign in first: `op signin`.
+Local break-glass: credentials from each project's `moon.yml` (`TOFU_SECRET_*` / `TOFU_ENV_*`). Sign in first: `op signin`.
 
 ## Cloudflare (`infrastructure/cloudflare/`)
 
 Manages GitHub Pages records (imported), `*.lab.jacobdrury.com` infra A records, and the **R2** bucket `homelab-tofu-state` (OpenTofu remote state).
 
 API token needs **Zone DNS Edit** on `jacobdrury.com` plus **Account Workers R2 Storage Write**.
-
-CI: [docs/setup/opentofu-ci.md](../docs/setup/opentofu-ci.md) — `moon ci` on GitHub Actions.
 
 ## UniFi (`infrastructure/unifi/`)
 
@@ -28,13 +26,15 @@ Creates **Homelab** VLAN 5 (`192.168.5.0/24`). scarif migrated to `192.168.5.10`
 
 **Networks:** Drury / Homelab / IoT / Guest / Camera are managed resources; DHCP DNS → Pi-hole VIP `.22`.
 
+CI reaches the gateway via Tailscale `--accept-routes`.
+
 ## Tailscale (`infrastructure/tailscale/`)
 
-Tailnet DNS + subnet route approval in Git. Split DNS sends `lab.jacobdrury.com` → **Cloudflare** (`1.1.1.1`); enables routes on **homelab02** (interim subnet router). One-time device bootstrap: [tailscale/README.md](tailscale/README.md).
+Tailnet DNS, ACL, HTTPS, and route approval in Git. Split DNS sends `lab.jacobdrury.com` → **Cloudflare**; Homelab routes on **k8s Connector** (homelab02 Homelab advertise off). Details: [tailscale/README.md](tailscale/README.md).
 
 ## Uptime Kuma (`infrastructure/uptime-kuma/`)
 
-HTTP monitors + public **Lab** status page (`/status/default`). Plan/apply port-forward past Authentik. Details: [uptime-kuma/README.md](uptime-kuma/README.md).
+HTTP monitors + public **Lab** status page (`/status/default`). API via Tailscale **L7 Ingress** (`https://uptime-kuma.…ts.net`) — no port-forward. Details: [uptime-kuma/README.md](uptime-kuma/README.md).
 
 ```bash
 moon run uptime-kuma:apply

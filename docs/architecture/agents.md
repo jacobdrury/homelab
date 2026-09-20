@@ -49,7 +49,7 @@ Use **OpenTofu** under `infrastructure/` only when there is **no** sensible GitO
 | Prefer | Use when |
 |--------|----------|
 | Argo + Helm / YAML / blueprints | In-cluster apps and their config (incl. Authentik directory via blueprints) |
-| OpenTofu (`moon run …:apply`) | External systems with no in-cluster reconciler |
+| OpenTofu (`moon ci` / break-glass `moon run …:apply`) | External systems with no in-cluster reconciler |
 
 Details: [iac](iac.md).
 
@@ -116,8 +116,9 @@ If you helm-applied something in a pinch, get it into Git and let Argo adopt it 
 
 | Phase | What |
 |-------|------|
-| **Now** | Tailscale IaC; Homelab via k8s Connector; Drury still via homelab02; `https://*.lab` via Envoy |
+| **Now** | Tailscale IaC; Homelab via k8s Connector; Drury still via homelab02; `https://*.lab` via Envoy; **OpenTofu CI** (`moon ci` + `tag:ci`) |
 | **2 (done)** | **`connect/`**; CSI; Connect + ESO; **Argo CD**; **Envoy** + LE; Homepage; Authentik; Kuma; shared MariaDB; per-app CNPG (no lab-wide collapse) |
+| **2b (done)** | GHA + Tailscale; Kuma L7 Ingress for API; UniFi via subnet — [opentofu-ci](../setup/opentofu-ci.md) |
 | **3 (nearly done)** | **Media + HA + Pi-hole** on k8s; only Pi-hole LXC soak left |
 | **5** | Agent RBAC, optional MCP, skills |
 

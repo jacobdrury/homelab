@@ -7,7 +7,7 @@ Tailnet configuration in Git — applied with `moon run tailscale:apply` (or CI 
 | File | Resource | Purpose |
 |------|----------|---------|
 | `acl.tf` | `tailscale_acl` | Grants (members → Homelab; `tag:ci` → UniFi/kube); SSH check; `autoApprovers`; `tag:k8s` / `tag:ci` |
-| `tailnet_settings.tf` | `tailscale_tailnet_settings` | Externally managed ACL + link to this repo |
+| `tailnet_settings.tf` | `tailscale_tailnet_settings` | Externally managed ACL; **HTTPS enabled** (`https_enabled`); link to this repo |
 | `dns.tf` | `tailscale_dns_split_nameservers` | Split DNS `lab.jacobdrury.com` → Cloudflare |
 | `dns_preferences.tf` | `tailscale_dns_preferences` | MagicDNS on |
 | `devices.tf` | `tailscale_device_*` | k8s Connector routes (+ optional interim router — **off**) |
@@ -60,8 +60,9 @@ curl -sI https://scarif.lab.jacobdrury.com
 
 - Operator Helm chart: `clusters/prd/platform/tailscale-operator/` (OAuth from 1Password **Tailscale OAuth**).
 - Connector `prd-homelab-router` advertises **`192.168.5.0/24`** (`tag:k8s`).
-- Split DNS unchanged.
-- CI: `tag:ci` → Homelab gateway `:443` (UniFi) + `tag:k8s:443` (Kuma L7 Ingress).
+- Split DNS + MagicDNS + **HTTPS** (Serve / L7 certs) via OpenTofu.
+- CI: `tag:ci` → Homelab gateway `:443` (UniFi) + `tag:k8s:443` (Kuma L7 Ingress `uptime-kuma.…ts.net`).
+- **L3 expose** (future Minecraft): needs Cilium `socketLB.hostNamespaceOnly` — already in GitOps.
 
 ## Friend access (Phase 6)
 

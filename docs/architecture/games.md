@@ -74,16 +74,18 @@ Tailscale operator exposure uses **two layers** — pick the right one per servi
 
 | Layer | Use for | HTTPS | How |
 |-------|---------|-------|-----|
-| **L7** (`Ingress`, `ingressClassName: tailscale`) | Web apps (Jellyfin) | **Yes** — Let's Encrypt cert auto-provisioned for the MagicDNS FQDN | `https://jellyfin.<tailnet>.ts.net` |
+| **L7** (`Ingress`, `ingressClassName: tailscale`) | Web apps (Jellyfin; also Kuma API for CI) | **Yes** — Let's Encrypt cert for the MagicDNS FQDN | `https://jellyfin.<tailnet>.ts.net` |
 | **L3** (`Service` + `tailscale.com/expose: "true"`) | TCP (Minecraft) | **No** — game protocol is raw TCP, not HTTP/TLS | `minecraft.<tailnet>.ts.net:25565` |
 
 **L3 expose with a self-signed cert** applies only if you hit the proxy over HTTPS by mistake — Minecraft clients use plain TCP. Do **not** use L3 expose for Jellyfin; friends would get browser cert warnings.
 
 **Prerequisites for L7 HTTPS:**
 
-1. [HTTPS enabled for your tailnet](https://tailscale.com/kb/1153/enabling-https) (admin console → DNS — one-time)
+1. Tailnet **HTTPS** — OpenTofu `https_enabled = true` in `infrastructure/tailscale/tailnet_settings.tf` (**done**)
 2. Friends use the **full FQDN** (`https://jellyfin.ibex-ladon.ts.net`) — short names (`https://jellyfin`) often fail TLS because the cert is issued for the FQDN only
 3. First connection may time out while Let's Encrypt provisions the cert (retry after ~1 min)
+
+**Prerequisite for L3 DNAT (Minecraft):** Cilium `socketLB.hostNamespaceOnly: true` — already set in `clusters/prd/platform/cilium/values.yaml`. Without it, Tailscale L3 Service expose blackholes TCP (Full socket LB steals DNAT).
 
 ---
 
@@ -248,7 +250,7 @@ Apply: `moon run tailscale:apply`.
 
 ### Inviting friends
 
-1. Enable [HTTPS on the tailnet](https://tailscale.com/kb/1153/enabling-https) (one-time, admin console)
+1. Confirm tailnet HTTPS is on (`https_enabled` in OpenTofu — already applied)
 2. Create auth key tagged **`tag:friend`** (one-time or reusable per person)
 3. Friend installs Tailscale and joins with that key
 4. Share hostnames: `https://jellyfin.ibex-ladon.ts.net`, `minecraft.ibex-ladon.ts.net:25565`
@@ -284,8 +286,8 @@ A friend-facing URL has two parts: **`jellyfin`** `.` **`ibex-ladon.ts.net`**
 
 | What | Tool | Path |
 |------|------|------|
-| ACLs, split DNS, MagicDNS on/off, auth keys | **OpenTofu** | `infrastructure/tailscale/` |
-| Tailnet rename, HTTPS enable | **Admin console** | One-time manual — no Terraform resource |
+| ACLs, split DNS, MagicDNS on/off, HTTPS enable, auth keys | **OpenTofu** | `infrastructure/tailscale/` |
+| Tailnet rename (suffix) | **Admin console** | One-time — word list only; not in OpenTofu |
 | Friend service hostnames | **GitOps** (Argo) | `apps/media/jellyfin/`, `apps/games/minecraft-atm10/` |
 | Your `*.lab` URLs | **OpenTofu + Envoy** | `infrastructure/cloudflare/`, HTTPRoutes |
 
