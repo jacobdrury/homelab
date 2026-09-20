@@ -246,58 +246,41 @@ Populate **Homepage** from these names as soon as routes exist.
 
 ### Phase 2b — OpenTofu CI (GitHub Actions)
 
-**Prerequisite:** Phase **2** cluster + Argo + **1Password Connect / ESO** (secrets in-cluster). Until this phase completes, keep applying OpenTofu from your Mac with `moon run <project>:apply`.
+**Goal:** `plan` / `validate` on PRs; `apply` on `main` via **`moon ci`**. State in **Cloudflare R2**. LAN apps via **Tailscale on GHA** (`tag:ci`) — not ARC.
 
-**Goal:** `plan` on PRs; controlled `apply` from pipelines. Replace local `*.tfstate` with a **remote backend**.
-
-**Repo is public** — treat self-hosted runners as **trusted compute with LAN access**. Do not run workflows that use secrets on **fork PRs**; restrict `apply` to `main` (or `workflow_dispatch` + environment approval).
+Setup runbook: [opentofu-ci](setup/opentofu-ci.md). Workflow: [`.github/workflows/tofu.yml`](../.github/workflows/tofu.yml).
 
 ```mermaid
 flowchart LR
   subgraph pr [Pull request]
-    PlanDNS[dns plan - github-hosted]
-    PlanLAN[unifi + pihole plan - ARC]
+    MoonPlan["moon ci validate plan"]
   end
   subgraph main [main branch]
-    Apply[apply - environment approval]
+    MoonApply["moon ci apply"]
   end
-  PlanDNS --> CF[Cloudflare API]
-  PlanLAN --> UDM[UniFi LAN]
-  PlanLAN --> PH[Pi-hole LAN]
-  Apply --> State[(remote state)]
+  MoonPlan --> OP[1Password_SA]
+  MoonApply --> OP
+  MoonPlan --> R2[Cloudflare_R2]
+  MoonApply --> R2
+  MoonApply --> TS[Tailscale_tag_ci]
+  TS --> Homelab[Homelab_192_168_5]
 ```
 
-#### Bootstrap (manual, now → Phase 2b)
+#### Checklist
 
-- [x] OpenTofu modules in Git; apply from Mac (`moon`)  
-- [ ] Remote state backend (OTF Cloud or S3-compatible) + migrate state per project  
-- [ ] Cluster up (Phase 2) before LAN-dependent CI  
+- [x] OpenTofu modules in Git; apply from Mac (`moon`)
+- [x] Remote state — R2 bucket `homelab-tofu-state` + migrate all projects
+- [x] Workflow — `moon ci` on `ubuntu-latest` (plan on PR, apply on `main`)
+- [x] Secrets — 1Password SA → `OP_SERVICE_ACCOUNT_TOKEN` only in GitHub (see setup doc)
+- [x] Tailscale ACL — `tag:ci` + least-privilege grants; Drury/homelab02 routes retired
+- [x] UniFi API — `https://192.168.5.1` (Homelab gateway)
+- [ ] Create **Tailscale CI OAuth** + **Homelab CI kubeconfig** 1Password items; add GitHub `OP_SERVICE_ACCOUNT_TOKEN`
+- [ ] First PR green plan; merge apply matches Mac (no drift)
+- [ ] Mac `moon run …:apply` becomes break-glass only
 
-#### In-cluster runners (ARC)
+**Exit:** All OpenTofu projects plan on PR; apply via pipeline; local state retired.
 
-- [ ] Deploy **Actions Runner Controller** (or official scale-set chart) via Argo — `clusters/prd/platform/`  
-- [ ] Runner image with **OpenTofu 1.9.x** (+ `git`)  
-- [ ] Runner scale set labeled **`homelab`** — ephemeral pod per job  
-- [ ] **NetworkPolicy:** egress to Cloudflare API, `192.168.1.1` (UniFi), `192.168.1.11` (Pi-hole → cluster later), state backend  
-- [ ] Confirm **Homelab → Drury** (or routes) so pods reach UniFi + Pi-hole on VLAN 1  
-
-#### Secrets & workflows
-
-- [ ] GitHub **Environments** (e.g. `homelab-production`) — required reviewers for `apply`  
-- [ ] Tokens via **ESO + 1Password** (preferred) or GitHub Actions secrets — never in repo  
-- [ ] Workflow: **`cloudflare/`** — `runs-on: ubuntu-latest` (public API only)  
-- [ ] Workflow: **`unifi/`** — `runs-on: [self-hosted, homelab]`  
-- [ ] PR: **plan only**; post plan summary (comment or artifact)  
-- [ ] `main`: **apply** after approval (or manual `workflow_dispatch` for UniFi/Pi-hole at first)  
-- [ ] **No** `pull_request` workflows with secrets from forks — `pull_request` from same repo only, or `push` to `main`  
-
-#### Cutover
-
-- [ ] Migrate `cloudflare`, `unifi` state to remote backend  
-- [ ] First pipeline apply matches Mac-applied infra (no drift)  
-- [ ] Document: Mac `moon run …:apply` becomes break-glass only  
-
-**Exit:** All three OpenTofu projects plan on PR; apply via pipeline; local state retired.
+**Non-goal:** ARC / self-hosted runners (replaced by Tailscale-on-GHA).
 
 ## Phase 3 — Migrate workloads (once stable)
 

@@ -35,6 +35,22 @@ tasks:
       - '.terraform'
     options:
       cache: true
+      # Required when plan/validate/apply run in CI (moon rejects CI deps with runInCI false).
+      runInCI: true
+
+  validate:
+    deps:
+      - 'init'
+    script: |
+      # shellcheck source=/dev/null
+      source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
+      exec tofu validate
+    inputs:
+      - '@group(tf-config)'
+      - '@group(tf-lock)'
+    options:
+      cache: false
+      runInCI: true
 
   plan:
     deps:
@@ -52,6 +68,7 @@ tasks:
     options:
       # Always re-plan — remote state (Cloudflare, UniFi) can drift outside Git.
       cache: false
+      runInCI: true
 
   apply:
     deps:
@@ -65,3 +82,4 @@ tasks:
       - '.tofu.plan'
     options:
       cache: false
+      runInCI: true

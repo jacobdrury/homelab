@@ -44,35 +44,32 @@ Avoid duplicating the same records in two IaC modules:
 | BIOS, Proxmox VM create, disk attach | Hypervisor / hardware |
 | `op signin` on the operator Mac | Session auth for secret injection — until Phase 2b CI |
 | Tailscale **advertise-routes** on subnet router host | Device-local (`tailscale set` on homelab02; k8s operator Helm in Phase 2) — API only **enables** advertised routes |
-| OpenTofu `plan` / `apply` | **Manual** (`moon` on Mac) until Phase 2b pipelines — [roadmap](../roadmap.md#phase-2b--opentofu-ci-github-actions) |
+| OpenTofu `plan` / `apply` | Prefer CI (`moon ci`); Mac `moon run …:apply` is break-glass — [opentofu-ci](../setup/opentofu-ci.md) |
 
 Document one-off steps in phase checklists ([roadmap](../roadmap.md), [phase-1.5 preflight](../setup/phase-1.5-preflight.md)); promote to IaC once the API and workflow are stable.
 
 ## OpenTofu conventions
 
 - **State:** Cloudflare R2 bucket `homelab-tofu-state` (`backend "s3"` + `use_lockfile`); AWS keys from 1Password via `moon.yml`. Local `*.tfstate` is legacy/gitignored.
-- **Apply (now):** `moon run <project>:apply` from your Mac — until Phase 2b pipelines.
-- **Secrets:** `TOFU_SECRET_*` in project `moon.yml` → `op read` via `.moon/scripts/tofu/env.sh` — never commit credentials.
+- **Apply:** GitHub Actions `moon ci :apply` on `main`; Mac `moon run <project>:apply` is break-glass. See [opentofu-ci](../setup/opentofu-ci.md).
+- **Secrets:** `TOFU_SECRET_*` in project `moon.yml` → `op read` via `.moon/scripts/tofu/env.sh` (skipped when the target env var is already set — CI path).
 - **Vars:** committed `*.auto.tfvars` for project-specific state; **shared lab constants** in [`infrastructure/lab.yaml`](../../infrastructure/lab.yaml). New OpenTofu projects under `infrastructure/` get `lab_locals.tf` on `moon run <project>:init`.
 - **Plan before apply:** `moon run <project>:apply` runs plan → apply; review `.tofu.plan` when unsure.
 
-## CI (Phase 2b — planned)
+## CI (Phase 2b)
 
-GitHub Actions replaces Mac apply once the cluster can host runners. **This repo is public** — design workflows accordingly.
+Thin GitHub Actions + **`moon ci`**. State on R2. LAN reachability via **Tailscale GitHub Action** (`tag:ci` + Homelab Connector) — **not** ARC. Setup: [opentofu-ci](../setup/opentofu-ci.md).
 
-| Project | Runner | Why |
-|---------|--------|-----|
-| `infrastructure/cloudflare/` | `ubuntu-latest` | Cloudflare is a public API |
-| `infrastructure/unifi/` | In-cluster ARC (`homelab` label) | API at `192.168.1.1` — LAN only |
+| Project | Runner | Path to API |
+|---------|--------|-------------|
+| `cloudflare`, `tailscale` | `ubuntu-latest` | Public APIs |
+| `unifi`, `uptime-kuma` | `ubuntu-latest` + Tailscale | Homelab `192.168.5.0/24` (UniFi at `.1`, kube at `.11`) |
 
 **Security (public repo):**
 
-- Self-hosted runners = arbitrary code execution **with LAN access** — only for trusted workflows.
-- **Plan on PR** from branches in this repo; **never** pass secrets to workflows triggered by **fork PRs**.
-- **`apply`** only on `main` (or `workflow_dispatch`) with a protected **Environment** and required approval.
-- Prefer **ephemeral** ARC runners (one pod per job).
-
-**Prerequisites:** remote state, Phase 2 cluster, ESO + 1Password, ARC Helm chart in `clusters/prd/platform/`.
+- Only one GitHub secret: `OP_SERVICE_ACCOUNT_TOKEN` (loads everything else from 1Password).
+- **Plan on PR** from this repo only; **never** pass secrets to **fork PRs**.
+- **`apply`** on push to `main` (solo lab — no environment approval gate).
 
 Full checklist: [roadmap Phase 2b](../roadmap.md#phase-2b--opentofu-ci-github-actions).
 

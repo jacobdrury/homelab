@@ -28,6 +28,8 @@ flowchart LR
 
 Homelab items: **`prd Connect credentials`** (document), **`prd Connect token`** (password). Platform `install.sh` scripts pull them with `op` for bootstrap/DR. Steady-state: Argo owns Connect/ESO; app secrets use `ExternalSecret` → this store. Re-seed Connect Secrets only if lost.
 
+**OpenTofu CI:** GitHub Actions uses a **1Password Service Account** (`OP_SERVICE_ACCOUNT_TOKEN` in GitHub secrets only). Items: Cloudflare token, **Homelab R2 tofu state**, UniFi key, Tailscale OAuth (+ **Tailscale CI OAuth** for `tag:ci`), Uptime Kuma, **Homelab CI kubeconfig**. Setup: [opentofu-ci](../setup/opentofu-ci.md).
+
 App SSO: **`prd Argo CD OIDC`** (password = OAuth client secret) is shared by Authentik blueprints (`!Env`) and Argo `argocd-secret` merge — create before enabling OIDC sync.
 
 Databases: **`prd MariaDB`** (Bitnami keys `mariadb-root-password` / `mariadb-password` / `mariadb-replication-password`); per-app items like **`prd Uptime Kuma MariaDB`** (username, password, database).

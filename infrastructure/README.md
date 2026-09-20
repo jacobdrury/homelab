@@ -10,9 +10,11 @@ Credentials load from each project's `moon.yml` (`TOFU_SECRET_*` / `TOFU_ENV_*`)
 
 ## Cloudflare (`infrastructure/cloudflare/`)
 
-Manages GitHub Pages records (imported), `*.lab.jacobdrury.com` infra A records, and the **R2** bucket `homelab-tofu-state` (OpenTofu remote state — Phase 2b).
+Manages GitHub Pages records (imported), `*.lab.jacobdrury.com` infra A records, and the **R2** bucket `homelab-tofu-state` (OpenTofu remote state).
 
-API token needs **Zone DNS Edit** on `jacobdrury.com` plus **Account Workers R2 Storage Write**. Expand the existing Homelab 1Password item (or replace the token) before `moon run cloudflare:apply` creates the bucket.
+API token needs **Zone DNS Edit** on `jacobdrury.com` plus **Account Workers R2 Storage Write**.
+
+CI: [docs/setup/opentofu-ci.md](../docs/setup/opentofu-ci.md) — `moon ci` on GitHub Actions.
 
 ## UniFi (`infrastructure/unifi/`)
 

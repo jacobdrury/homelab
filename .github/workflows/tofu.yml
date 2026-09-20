@@ -1,0 +1,89 @@
+# OpenTofu via moon ci — plan/validate on PR, apply on main.
+# Secrets stay in 1Password; GitHub only stores OP_SERVICE_ACCOUNT_TOKEN.
+# Setup: docs/setup/opentofu-ci.md
+name: OpenTofu
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: opentofu-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  tofu:
+    name: moon ci
+    runs-on: ubuntu-latest
+    # Public repo: never run secret-bearing jobs on fork PRs.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - uses: moonrepo/setup-toolchain@v0
+        with:
+          auto-install: true
+
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          # Cloudflare + R2 (all projects use R2 backend)
+          TF_VAR_cloudflare_api_token: op://Homelab/Cloudflare Zone DNS API Token/credential
+          AWS_ACCESS_KEY_ID: op://Homelab/Homelab R2 tofu state/access key id
+          AWS_SECRET_ACCESS_KEY: op://Homelab/Homelab R2 tofu state/secret access key
+          # UniFi
+          TF_VAR_unifi_api_key: op://Homelab/bqbnkqxcyyg6h72orwebvozdjm/credential
+          UNIFI_INSECURE: "true"
+          # Tailscale OpenTofu provider (existing OAuth)
+          TAILSCALE_OAUTH_CLIENT_ID: op://Homelab/Tailscale OAuth/client id
+          TAILSCALE_OAUTH_CLIENT_SECRET: op://Homelab/Tailscale OAuth/credential
+          TAILSCALE_TAILNET: "-"
+          # Tailscale GitHub Action (separate OAuth client tagged tag:ci)
+          TS_OAUTH_CLIENT_ID: op://Homelab/Tailscale CI OAuth/client id
+          TS_OAUTH_SECRET: op://Homelab/Tailscale CI OAuth/credential
+          # Uptime Kuma
+          UPTIMEKUMA_USERNAME: op://Homelab/Uptime Kuma/username
+          UPTIMEKUMA_PASSWORD: op://Homelab/Uptime Kuma/password
+          # kubeconfig for Kuma port-forward (file contents)
+          KUBECONFIG_BODY: op://Homelab/Homelab CI kubeconfig/password
+
+      - name: Write kubeconfig
+        run: |
+          mkdir -p "${HOME}/.kube"
+          printenv KUBECONFIG_BODY > "${HOME}/.kube/config"
+          chmod 600 "${HOME}/.kube/config"
+          echo "KUBECONFIG=${HOME}/.kube/config" >> "${GITHUB_ENV}"
+
+      - name: Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ env.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          args: --accept-routes
+
+      - name: Validate and plan
+        if: github.event_name == 'pull_request'
+        run: moon ci :validate :plan
+
+      - name: Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: moon ci :apply
+
+      - uses: moonrepo/run-report-action@v1
+        if: github.event_name == 'pull_request' && (success() || failure())
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}

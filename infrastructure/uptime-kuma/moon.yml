@@ -27,7 +27,8 @@ tasks:
     inputs:
       - 'with-port-forward.sh'
     options:
-        mergeInputs: append
+      mergeInputs: append
+      runInCI: true
 
   apply:
     script: |
@@ -38,4 +39,5 @@ tasks:
     inputs:
       - 'with-port-forward.sh'
     options:
-        mergeInputs: append
+      mergeInputs: append
+      runInCI: true

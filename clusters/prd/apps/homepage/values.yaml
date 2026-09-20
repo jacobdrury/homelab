@@ -231,13 +231,13 @@ config:
 
     - Infrastructure:
         - UniFi:
-            href: https://192.168.1.1
-            description: UDM Pro (Drury)
+            href: https://192.168.5.1
+            description: UDM Pro (Homelab gateway)
             icon: unifi.png
-            siteMonitor: https://192.168.1.1
+            siteMonitor: https://192.168.5.1
             widget:
               type: unifi
-              url: https://192.168.1.1
+              url: https://192.168.5.1
               # Same Network Integrations API key as OpenTofu (Homelab item).
               key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
               fields:

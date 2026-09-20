@@ -5,15 +5,15 @@ variable "acl_external_link" {
 }
 
 variable "enable_drury_subnet_route" {
-  description = "Approve Drury route on interim subnet router (homelab02)"
+  description = "Approve Drury route on interim subnet router (homelab02) — retired"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "manage_subnet_router" {
-  description = "Manage homelab02 routes + key expiry via API (device must advertise routes for traffic)"
+  description = "Manage interim Drury subnet router (homelab02) — retired"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "create_k8s_operator_auth_key" {

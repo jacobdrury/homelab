@@ -1,37 +1,34 @@
 # Tailscale (OpenTofu)
 
-Tailnet configuration in Git — applied with `moon run tailscale:apply`.
+Tailnet configuration in Git — applied with `moon run tailscale:apply` (or CI on `main`).
 
 ## Managed in Git
 
 | File | Resource | Purpose |
 |------|----------|---------|
-| `acl.tf` | `tailscale_acl` | Policy: allow-all, SSH check, `autoApprovers` for lab subnets, `tag:k8s` |
+| `acl.tf` | `tailscale_acl` | Grants (members → Homelab; `tag:ci` → UniFi/kube); SSH check; `autoApprovers`; `tag:k8s` / `tag:ci` |
 | `tailnet_settings.tf` | `tailscale_tailnet_settings` | Externally managed ACL + link to this repo |
 | `dns.tf` | `tailscale_dns_split_nameservers` | Split DNS `lab.jacobdrury.com` → Cloudflare |
 | `dns_preferences.tf` | `tailscale_dns_preferences` | MagicDNS on |
-| `devices.tf` | `tailscale_device_*` | homelab02: subnet routes enabled, key expiry off |
+| `devices.tf` | `tailscale_device_*` | k8s Connector routes (+ optional interim router — **off**) |
 | `auth_keys.tf` | `tailscale_tailnet_key` | Reusable preauth key `tag:k8s` for Phase 2 operator |
 
-**Not in Terraform** (host/client): `--advertise-routes` on homelab02, `--accept-routes` on clients, Tailscale package install.
+**Not in Terraform** (host/client): `--accept-routes` on clients; Tailscale package / GitHub Action install.
 
-## Remote `http://scarif.lab.jacobdrury.com`
+## Remote `https://scarif.lab.jacobdrury.com`
 
-1. Split DNS → Cloudflare → `192.168.5.10` (applied)
-2. Subnet router routes enabled on homelab02 (applied)
-3. **homelab02 must advertise routes** (SSH once):
+1. Split DNS → Cloudflare → Homelab IPs (applied)
+2. **Steady subnet router:** k8s Connector `prd-homelab-router` advertises **`192.168.5.0/24`**
+3. Mac / CI: `--accept-routes` (Tailscale app or GitHub Action `args`)
 
-```bash
-sudo tailscale set --advertise-routes=192.168.1.0/24,192.168.5.0/24 --advertise-exit-node=false
-```
-
-4. Mac: `Tailscale set --accept-routes=true` (already on)
-
-**HTTPS:** Phase 2 Envoy + cert-manager — same hostname, switch to `https://`.
+**Retired:** homelab02 Drury/Homelab advertise (`enable_drury_subnet_route = false`, `manage_subnet_router = false`).
 
 ## OAuth credentials
 
-1Password item **`Tailscale OAuth`** (`client id`, `credential`). User created with **`all`** scope.
+| Item | Use |
+|------|-----|
+| **Tailscale OAuth** | OpenTofu provider (`moon run tailscale:…`) |
+| **Tailscale CI OAuth** | GitHub Action ephemeral nodes (`tag:ci`) — [opentofu-ci](../../docs/setup/opentofu-ci.md) |
 
 ## Apply
 
@@ -56,18 +53,17 @@ Key ID is in output `k8s_operator_auth_key_id`. Terraform recreates when invalid
 ```bash
 dig scarif.lab.jacobdrury.com +short
 ping -c 1 192.168.5.10
-curl -sI http://scarif.lab.jacobdrury.com
+curl -sI https://scarif.lab.jacobdrury.com
 ```
 
-## Steady state (Phase 2+)
+## Steady state
 
 - Operator Helm chart: `clusters/prd/platform/tailscale-operator/` (OAuth from 1Password **Tailscale OAuth**).
 - Connector `prd-homelab-router` advertises **`192.168.5.0/24`** (`tag:k8s`).
-- After smoke test: `homelab_route_via_k8s=true` + `manage_k8s_subnet_router=true` in tofu vars (or tfvars); drop Homelab from homelab02 advertise list; keep Drury on interim until Pi-hole leaves.
-- OAuth client in Tailscale admin must be tagged **`tag:k8s-operator`** (Devices Core + Auth Keys write).
 - Split DNS unchanged.
+- CI: `tag:ci` → `192.168.5.1:443` (UniFi) + `192.168.5.11:6443` (kube).
 
-## Friend access (Phase 3 / 6)
+## Friend access (Phase 6)
 
 **Admins:** subnet router + `*.lab` URLs (unchanged).
 
@@ -78,26 +74,3 @@ Full design: [docs/architecture/games.md](../../docs/architecture/games.md#frien
 ## MagicDNS & tailnet naming
 
 MagicDNS hostnames look like **`jellyfin.ibex-ladon.ts.net`** — hostname prefix + tailnet suffix (see `lab.yaml`).
-
-| What | Customizable? | Managed in Git? |
-|------|---------------|-----------------|
-| **Tailnet suffix** (`ibex-ladon.ts.net`) | Pick from random word list in [admin DNS](https://login.tailscale.com/admin/dns) → **Rename tailnet** | **No** — recorded in `lab.yaml` |
-| **HTTPS on tailnet** (required for L7 Ingress certs) | Enable in same DNS page | **No** — admin console |
-| **Hostname prefix** (`jellyfin`, `minecraft`) | Yes | **Yes** — k8s manifests via Argo (`spec.tls.hosts` on Ingress; `tailscale.com/hostname` on Service) |
-| **ACLs, split DNS, MagicDNS toggle** | Yes | **Yes** — `acl.tf`, `dns.tf`, `dns_preferences.tf` |
-
-You cannot set an arbitrary tailnet name like `jacobdrury.ts.net`. For branded DNS, keep using `*.lab.jacobdrury.com` (you) — friends stay on `.ts.net`.
-
-After renaming the tailnet, note the chosen suffix here for operators:
-
-```text
-# Tailnet MagicDNS suffix (admin console — also in lab.yaml):
-ibex-ladon.ts.net
-```
-
-**Friend URLs (when Jellyfin + ATM10 are live):**
-
-| Service | URL |
-|---------|-----|
-| Jellyfin | `https://jellyfin.ibex-ladon.ts.net` |
-| Minecraft | `minecraft.ibex-ladon.ts.net:25565` |
