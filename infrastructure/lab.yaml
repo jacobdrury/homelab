@@ -4,7 +4,7 @@
 # =============================================================================
 
 # Public DNS zone for apps and infra (*.lab.jacobdrury.com).
-# Authoritative records: infrastructure/dns/ (+ external-dns in Phase 2+).
+# Authoritative records + R2: infrastructure/cloudflare/ (+ external-dns in Phase 2+).
 dns:
   zone: lab.jacobdrury.com
   # Resolvers for *.lab — Pi-hole forwards here on LAN; Tailscale split DNS away.
@@ -84,7 +84,7 @@ networks:
       start: 192.168.5.50
       stop: 192.168.5.254
     unifi_id: 6a9391bffbf2c016aea02b37
-    # Infra A records on this VLAN — Cloudflare grey-cloud in infrastructure/dns/.
+    # Infra A records on this VLAN — Cloudflare grey-cloud in infrastructure/cloudflare/.
     hosts:
       scarif:
         ip: 192.168.5.10

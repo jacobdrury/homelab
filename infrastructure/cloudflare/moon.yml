@@ -1,0 +1,17 @@
+id: 'cloudflare'
+layer: 'tool'
+stack: 'infrastructure'
+
+project:
+  name: 'cloudflare'
+  description: 'Cloudflare DNS + R2 (jacobdrury.com, tofu state bucket)'
+
+tags:
+  - opentofu
+
+# Token needs Zone DNS Edit on jacobdrury.com + Account Workers R2 Storage Write.
+# op:// refs — use item ID when the 1Password title contains parentheses.
+env:
+  TOFU_SECRET_TF_VAR_cloudflare_api_token: 'op://Homelab/Cloudflare Zone DNS API Token/credential'
+  TOFU_SECRET_AWS_ACCESS_KEY_ID: 'op://Homelab/Homelab R2 tofu state/access key id'
+  TOFU_SECRET_AWS_SECRET_ACCESS_KEY: 'op://Homelab/Homelab R2 tofu state/secret access key'

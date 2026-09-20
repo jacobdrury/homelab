@@ -1,5 +1,5 @@
 # Static NFS → existing scarif media tree (not dynamic scarif-nfs subdirs).
-# Server: scarif-direct.lab.jacobdrury.com (Unraid IP; see infrastructure/dns).
+# Server: scarif-direct.lab.jacobdrury.com (Unraid IP; see infrastructure/cloudflare).
 ---
 apiVersion: v1
 kind: PersistentVolume

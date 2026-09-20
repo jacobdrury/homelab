@@ -15,9 +15,9 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 | **4–5** | Not started | |
 | **6** | Not started | ATM10 + friend Tailscale access — [games](architecture/games.md) |
 
-**IaC live today:** `infrastructure/dns/`, `unifi/`, **`tailscale/`** — `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Pi-hole policy = GitOps ConfigMaps. Policy: [iac](architecture/iac.md).
+**IaC live today:** `infrastructure/cloudflare/`, `unifi/`, **`tailscale/`** — `moon run <project>:apply` on your Mac (**manual until [Phase 2b](#phase-2b--opentofu-ci-github-actions)**). Pi-hole policy = GitOps ConfigMaps. Policy: [iac](architecture/iac.md).
 
-**DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/dns/`). LAN: k8s Pi-hole VIP **`.22`** (DHCP on all VLANs) forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare. **`arr.lab` / `arr.homelab.com` retired** (Sep 2026).
+**DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/cloudflare/`). LAN: k8s Pi-hole VIP **`.22`** (DHCP on all VLANs) forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare. **`arr.lab` / `arr.homelab.com` retired** (Sep 2026).
 
 **Remote access (verified):** split DNS · Homelab VLAN via **k8s Connector**; Drury (`192.168.1.0/24`) still via homelab02 · policy/keys in `infrastructure/tailscale/`.
 
@@ -107,7 +107,7 @@ Details: [storage](architecture/storage.md) · [networking](architecture/network
 
 Details: [networking](architecture/networking.md) · [preflight](setup/phase-1.5-preflight.md) · [iac](architecture/iac.md). **Exit criteria for Phase 2.**
 
-- [x] OpenTofu: **`infrastructure/dns/`** — GitHub Pages (import) + infra `*.lab` records (applied 2026-08-29)
+- [x] OpenTofu: **`infrastructure/cloudflare/`** — GitHub Pages (import) + infra `*.lab` records (applied 2026-08-29)
 - [x] OpenTofu: **`infrastructure/unifi/`** — **Homelab** VLAN 5 + firewall (applied 2026-08-29)
 - [x] OpenTofu: **`infrastructure/pihole/`** — lists, domains, upstreams, local DNS, lab zone forward (applied 2026-08-29; **retired** 2026-09 → k8s ConfigMaps)
 - [x] Cloudflare active; API token in 1Password
@@ -285,7 +285,7 @@ flowchart LR
 
 - [ ] GitHub **Environments** (e.g. `homelab-production`) — required reviewers for `apply`  
 - [ ] Tokens via **ESO + 1Password** (preferred) or GitHub Actions secrets — never in repo  
-- [ ] Workflow: **`dns/`** — `runs-on: ubuntu-latest` (public API only)  
+- [ ] Workflow: **`cloudflare/`** — `runs-on: ubuntu-latest` (public API only)  
 - [ ] Workflow: **`unifi/`** — `runs-on: [self-hosted, homelab]`  
 - [ ] PR: **plan only**; post plan summary (comment or artifact)  
 - [ ] `main`: **apply** after approval (or manual `workflow_dispatch` for UniFi/Pi-hole at first)  
@@ -293,7 +293,7 @@ flowchart LR
 
 #### Cutover
 
-- [ ] Migrate `dns`, `unifi` state to remote backend  
+- [ ] Migrate `cloudflare`, `unifi` state to remote backend  
 - [ ] First pipeline apply matches Mac-applied infra (no drift)  
 - [ ] Document: Mac `moon run …:apply` becomes break-glass only  
 

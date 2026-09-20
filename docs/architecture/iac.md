@@ -10,7 +10,7 @@ Locked leans: [decisions](../decisions.md). Apply tooling: [local-tools](../setu
 
 | Layer | Tool | Repo path | Applies with |
 |-------|------|-----------|--------------|
-| Public DNS (`jacobdrury.com`, `*.lab`) | **OpenTofu** | `infrastructure/dns/` | `moon run dns:apply` |
+| Public DNS (`jacobdrury.com`, `*.lab`) + R2 tofu state bucket | **OpenTofu** | `infrastructure/cloudflare/` | `moon run cloudflare:apply` |
 | UniFi networks + firewall + selected switch ports | **OpenTofu** | `infrastructure/unifi/` | `moon run unifi:apply` |
 | Pi-hole policy (lists, domains, upstreams, local DNS, zone forward) | **ConfigMaps** + sync sidecar | `clusters/prd/apps/pihole/` | Git push → Argo |
 | Tailscale (policy, DNS, routes, keys, device settings) | **OpenTofu** | `infrastructure/tailscale/` | `moon run tailscale:apply` |
@@ -30,7 +30,7 @@ Avoid duplicating the same records in two IaC modules:
 
 | Zone / names | Authoritative IaC | Pi-hole role |
 |--------------|-------------------|--------------|
-| `*.lab.jacobdrury.com` | `infrastructure/dns/` (Cloudflare) | Forward zone to Cloudflare (ConfigMap dnsmasq) |
+| `*.lab.jacobdrury.com` | `infrastructure/cloudflare/` (Cloudflare) | Forward zone to Cloudflare (ConfigMap dnsmasq) |
 | `*.homelab.com` (LAN legacy, **retiring**) | `clusters/prd/apps/pihole/configmap-dnsmasq.yaml` | Local host-records |
 | App hostnames (Phase 2+) | external-dns → Cloudflare | Resolved via forward (LAN) or Tailscale split DNS → Cloudflare (away) |
 
@@ -50,8 +50,8 @@ Document one-off steps in phase checklists ([roadmap](../roadmap.md), [phase-1.5
 
 ## OpenTofu conventions
 
-- **State:** local on the operator Mac (gitignored) until **Phase 2b** remote backend — see [roadmap Phase 2b](../roadmap.md#phase-2b--opentofu-ci-github-actions).
-- **Apply (now):** `moon run <project>:apply` from your Mac on the LAN — manual bootstrap until pipelines exist.
+- **State:** Cloudflare R2 bucket `homelab-tofu-state` (`backend "s3"` + `use_lockfile`); AWS keys from 1Password via `moon.yml`. Local `*.tfstate` is legacy/gitignored.
+- **Apply (now):** `moon run <project>:apply` from your Mac — until Phase 2b pipelines.
 - **Secrets:** `TOFU_SECRET_*` in project `moon.yml` → `op read` via `.moon/scripts/tofu/env.sh` — never commit credentials.
 - **Vars:** committed `*.auto.tfvars` for project-specific state; **shared lab constants** in [`infrastructure/lab.yaml`](../../infrastructure/lab.yaml). New OpenTofu projects under `infrastructure/` get `lab_locals.tf` on `moon run <project>:init`.
 - **Plan before apply:** `moon run <project>:apply` runs plan → apply; review `.tofu.plan` when unsure.
@@ -62,7 +62,7 @@ GitHub Actions replaces Mac apply once the cluster can host runners. **This repo
 
 | Project | Runner | Why |
 |---------|--------|-----|
-| `infrastructure/dns/` | `ubuntu-latest` | Cloudflare is a public API |
+| `infrastructure/cloudflare/` | `ubuntu-latest` | Cloudflare is a public API |
 | `infrastructure/unifi/` | In-cluster ARC (`homelab` label) | API at `192.168.1.1` — LAN only |
 
 **Security (public repo):**

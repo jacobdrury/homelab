@@ -14,6 +14,8 @@ tags:
 env:
   TOFU_SECRET_UPTIMEKUMA_USERNAME: 'op://Homelab/Uptime Kuma/username'
   TOFU_SECRET_UPTIMEKUMA_PASSWORD: 'op://Homelab/Uptime Kuma/password'
+  TOFU_SECRET_AWS_ACCESS_KEY_ID: 'op://Homelab/Homelab R2 tofu state/access key id'
+  TOFU_SECRET_AWS_SECRET_ACCESS_KEY: 'op://Homelab/Homelab R2 tofu state/secret access key'
 
 tasks:
   # Override inherited plan/apply so tofu reaches Kuma behind Authentik.

@@ -36,7 +36,7 @@ OpenTofu projects (Phase 1.5):
 
 ```bash
 op signin
-moon run dns:apply
+moon run cloudflare:apply
 moon run unifi:apply
 ```
 

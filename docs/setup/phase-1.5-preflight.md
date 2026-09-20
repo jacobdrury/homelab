@@ -41,7 +41,7 @@ Answers captured before OpenTofu work. Source of truth for operators; leans also
 |------|----------|
 | Zone status | **Active** — NS on Cloudflare (`poppy` / `skip`) |
 | Registrar | Transfer in progress |
-| GitHub Pages | **Must keep working** at apex + `www` — codified in `infrastructure/dns/` |
+| GitHub Pages | **Must keep working** at apex + `www` — codified in `infrastructure/cloudflare/` |
 | API token | **1Password:** `Cloudflare Zone DNS API Token` |
 | UniFi API | **1Password:** `Unifi API Key (opentofu-homelab)` · item id `bqbnkqxcyyg6h72orwebvozdjm` for `op read` |
 | GitHub Pages (preserve in Tofu) | Apex `jacobdrury.com` → A `185.199.108.153`, `.109`, `.110`, `.111` · `www` → CNAME `jacobdrury.github.io` (DNS only) |
@@ -65,7 +65,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 |------|----------|
 | Instance | Was LXC **106** @ `.11` → **k8s VIP `192.168.5.22`** (stop LXC after soak) |
 | Config IaC | **GitOps** ConfigMaps — `clusters/prd/apps/pihole/` |
-| `*.lab.jacobdrury.com` | **Forward** to Cloudflare — records in `infrastructure/dns/` |
+| `*.lab.jacobdrury.com` | **Forward** to Cloudflare — records in `infrastructure/cloudflare/` |
 | `*.homelab.com` | Local host-records in ConfigMap dnsmasq — transitional |
 | Migrate to k8s | **Done** (Sep 2026) |
 
@@ -76,7 +76,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 | Apply from | **This Mac only** |
 | State | **Local** `*.tfstate` on Mac, **gitignored** — Git tracks `.tf` config only |
 | Remote state | Optional later (OpenTofu Cloud / Terraform Cloud); not Phase 1.5 |
-| Moon projects | `dns`, `unifi`, … — tag `opentofu` |
+| Moon projects | `cloudflare`, `unifi`, … — tag `opentofu` |
 | IaC policy | [architecture/iac.md](../architecture/iac.md) |
 
 ## homelab02 guests (from Mini)
@@ -98,7 +98,7 @@ Homelab uses **VLAN 5 / `192.168.5.0/24`** because UniFi Teleport already reserv
 
 ## Exit checklist
 
-- [x] `infrastructure/dns/` — GitHub Pages + `*.lab.jacobdrury.com` infra records (applied 2026-08-29)
+- [x] `infrastructure/cloudflare/` — GitHub Pages + `*.lab.jacobdrury.com` infra records (applied 2026-08-29)
 - [x] `infrastructure/unifi/` — **Homelab** VLAN 5 + firewall (applied 2026-08-29)
 - [x] Pi-hole policy in Git — ConfigMaps under `clusters/prd/apps/pihole/` (LXC OpenTofu retired 2026-09)
 - [x] `dig @192.168.1.11 k8s.lab.jacobdrury.com` → `192.168.5.11` (Cloudflare via forward)

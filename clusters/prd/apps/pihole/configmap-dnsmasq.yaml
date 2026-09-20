@@ -11,7 +11,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "0"
 data:
   01-lab-zone.conf: |
-    # Authoritative *.lab.jacobdrury.com lives in Cloudflare (infrastructure/dns/).
+    # Authoritative *.lab.jacobdrury.com lives in Cloudflare (infrastructure/cloudflare/).
     server=/lab.jacobdrury.com/1.1.1.1
     server=/lab.jacobdrury.com/1.0.0.1
   02-local-dns.conf: |

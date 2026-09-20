@@ -178,7 +178,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | Gateway | UDM Pro · `192.168.1.1` · AT&T |
 | LAN DNS | Pi-hole k8s VIP · `192.168.5.22` |
 | Networks | `192.168.1.0/24` (Drury) · `192.168.2.0/24` (IoT) · `192.168.5.0/24` (**Homelab** · VLAN 5 · **scarif live**) · `192.168.6.0/24` (Teleport) |
-| Public / lab DNS | Cloudflare — **`infrastructure/dns/`** · LAN via Pi-hole forward for `*.lab` |
+| Public / lab DNS | Cloudflare — **`infrastructure/cloudflare/`** · LAN via Pi-hole forward for `*.lab` |
 | Remote | Tailscale IaC (`infrastructure/tailscale/`): split DNS → Cloudflare; **homelab02** interim subnet router — `http://scarif.lab` verified away (Aug 2026) |
 | Ingress / TLS | **HTTP** on scarif via tailnet/LAN; target: Envoy + cert-manager → `https://*.lab` (Phase 2) |
 | Backups | None formal — decide after Unraid |

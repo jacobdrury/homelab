@@ -92,7 +92,7 @@ Order: [platform README](../../clusters/prd/platform/README.md) · [bootstrap/RE
 |---------|-------------|
 | **Homepage** | Tile under the right section in [`clusters/prd/apps/homepage/values.yaml`](../../clusters/prd/apps/homepage/values.yaml) (`href` + icon; widget only if useful) |
 | **Uptime Kuma** | HTTP(S) monitor in [`infrastructure/uptime-kuma/monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf) + status page group order; `moon run uptime-kuma:apply`. **Must hit the app**, not Authentik — see below |
-| **DNS** | `infrastructure/lab.yaml` `app_hosts` + `moon run dns:apply` when a new hostname is needed |
+| **DNS** | `infrastructure/lab.yaml` `app_hosts` + `moon run cloudflare:apply` when a new hostname is needed |
 | **Authentik** | Only when auth should be enforced — rule lives in root [`AGENTS.md`](../../AGENTS.md) (harness entrypoint). Not every app. |
 
 Exceptions (skip Homepage and/or Kuma unless asked): pure operators/controllers, CSI, secret plumbing, one-off jobs, or infra with no human URL.
