@@ -94,6 +94,16 @@ Details: [connect/README.md](../../connect/README.md).
 
 `kubectl` and `helm` are already via `proto install`.
 
+## Rust (homelab tools)
+
+Pinned in [`.prototools`](../../.prototools) (`rust = "1.98.1"`). Moon enables the toolchain in [`.moon/toolchains.yml`](../../.moon/toolchains.yml); crates live under [`tools/`](../../tools/).
+
+```bash
+proto install
+rustc --version    # 1.98.1
+cd tools && cargo new --bin my-tool   # then wire moon.yml — see tools/README.md
+```
+
 ## Verify
 
 ```bash
@@ -102,6 +112,7 @@ tofu version    # 1.9.x
 kubectl version --client
 talosctl version
 moon --version
+rustc --version # 1.98.1 (homelab tools)
 ```
 
 ## Related

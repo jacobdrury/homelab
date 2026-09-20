@@ -5,6 +5,7 @@ projects:
     - 'connect/moon.yml'
     - 'infrastructure/*/moon.yml'
     - 'infrastructure/talos/*/moon.yml'
+    - 'tools/*/moon.yml'
 
 vcs:
   defaultBranch: 'main'

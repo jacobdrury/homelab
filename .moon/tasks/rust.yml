@@ -1,0 +1,53 @@
+inheritedBy:
+  tags: rust
+
+fileGroups:
+  sources:
+    - 'src/**/*'
+    - 'tests/**/*'
+    - 'benches/**/*'
+    - 'examples/**/*'
+    - 'Cargo.toml'
+    - '/tools/Cargo.toml'
+    - '/tools/Cargo.lock'
+
+tasks:
+  check:
+    command: 'cargo'
+    args: ['check', '--all-targets']
+    toolchains: ['rust']
+    inputs:
+      - '@group(sources)'
+
+  test:
+    command: 'cargo'
+    args: ['test']
+    toolchains: ['rust']
+    inputs:
+      - '@group(sources)'
+
+  clippy:
+    command: 'cargo'
+    args: ['clippy', '--all-targets', '--', '-D', 'warnings']
+    toolchains: ['rust']
+    inputs:
+      - '@group(sources)'
+
+  fmt:
+    command: 'cargo'
+    args: ['fmt', '--all', '--', '--check']
+    toolchains: ['rust']
+    inputs:
+      - '@group(sources)'
+
+  build:
+    command: 'cargo'
+    args: ['build', '--release']
+    toolchains: ['rust']
+    inputs:
+      - '@group(sources)'
+    outputs:
+      - 'target/release'
+    options:
+      # Release artifacts are local/dev until image publish exists.
+      runInCI: false

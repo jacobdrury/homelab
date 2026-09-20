@@ -1,0 +1,6 @@
+# Language toolchains — versions pinned in /.prototools (versionFromPrototools defaults on).
+rust:
+  syncToolchainConfig: true
+  components:
+    - rustfmt
+    - clippy

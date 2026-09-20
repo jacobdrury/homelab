@@ -34,4 +34,7 @@ terraform.rc
 # CSI SSH private keys (public .pub may be committed if desired)
 clusters/prd/platform/iscsi-csi/secrets/
 
+# Rust
+**/target/
+
 .DS_Store
