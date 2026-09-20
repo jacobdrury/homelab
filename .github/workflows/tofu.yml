@@ -24,6 +24,9 @@ jobs:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      # Keep in sync with infrastructure/lab.yaml services.uptime_kuma.api_endpoint
+      UPTIMEKUMA_ENDPOINT: http://192.168.5.11:30001
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,8 +60,6 @@ jobs:
           # Uptime Kuma API via Homelab NodePort (Connector subnet route; not Authentik)
           UPTIMEKUMA_USERNAME: op://Homelab/Uptime Kuma/username
           UPTIMEKUMA_PASSWORD: op://Homelab/Uptime Kuma/password
-          # Keep in sync with infrastructure/lab.yaml services.uptime_kuma.api_endpoint
-          UPTIMEKUMA_ENDPOINT: http://192.168.5.11:30001
 
       - name: Tailscale
         uses: tailscale/github-action@v3
