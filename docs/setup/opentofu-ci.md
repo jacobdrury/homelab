@@ -1,6 +1,9 @@
 # OpenTofu CI (GitHub Actions)
 
-Thin pipeline: `moon ci` on GitHub-hosted runners. Secrets stay in **1Password**; GitHub stores only a Service Account token. LAN apps (UniFi, Uptime Kuma) use the **Tailscale GitHub Action** + Homelab Connector (`192.168.5.0/24`) — not self-hosted runners.
+Thin pipeline: `moon ci` on GitHub-hosted runners. Secrets stay in **1Password**; GitHub stores only a Service Account token.
+
+- **UniFi:** Tailscale Action + Homelab subnet route → gateway from `lab.yaml`
+- **Uptime Kuma:** Tailscale **L3 Service expose** → `uptime-kuma.<tailnet>.ts.net:3001` (no kubeconfig)
 
 Workflow: [`.github/workflows/tofu.yml`](../../.github/workflows/tofu.yml)
 
@@ -13,8 +16,16 @@ Workflow: [`.github/workflows/tofu.yml`](../../.github/workflows/tofu.yml)
 
 ### 1. 1Password Service Account
 
-1. [1Password Developer](https://developer.1password.com/docs/service-accounts/) → create a Service Account with **read** on the **Homelab** vault (items listed below).
-2. GitHub repo → **Settings → Secrets and variables → Actions** → add `OP_SERVICE_ACCOUNT_TOKEN`.
+```bash
+# Requires op signin (desktop app integration). Token is shown once.
+TOKEN=$(op service-account create "Homelab CI" --vault "Homelab:read_items" --raw)
+op item create --vault Homelab --category "API Credential" \
+  --title "Homelab CI OP Service Account" "credential=${TOKEN}" "username=Homelab CI"
+printf '%s' "$TOKEN" | gh secret set OP_SERVICE_ACCOUNT_TOKEN
+unset TOKEN
+```
+
+Or via [1Password Developer](https://developer.1password.com/docs/service-accounts/) UI → **read** on **Homelab**, then set GitHub secret `OP_SERVICE_ACCOUNT_TOKEN`.
 
 ### 2. Homelab vault items (must exist)
 
@@ -26,7 +37,6 @@ Workflow: [`.github/workflows/tofu.yml`](../../.github/workflows/tofu.yml)
 | Tailscale OAuth | `client id`, `credential` (OpenTofu provider) |
 | **Tailscale CI OAuth** (new) | `client id`, `credential` |
 | Uptime Kuma | `username`, `password` |
-| **Homelab CI kubeconfig** (new) | `password` = full kubeconfig YAML |
 
 ### 3. Tailscale CI OAuth client
 
@@ -35,24 +45,19 @@ Workflow: [`.github/workflows/tofu.yml`](../../.github/workflows/tofu.yml)
 3. Tags: **`tag:ci`** (must match ACL `tagOwners` in `infrastructure/tailscale/acl.tf`).
 4. Store client id + secret in 1Password as **Tailscale CI OAuth**.
 
-Apply the ACL (Mac or after this workflow lands) **before** expecting CI Tailscale joins to work:
+### 4. Uptime Kuma Tailscale expose
+
+GitOps annotates the Kuma Service (`tailscale.com/expose`). After Argo syncs, confirm MagicDNS:
 
 ```bash
-moon run tailscale:apply
+curl -sf -o /dev/null http://uptime-kuma.ibex-ladon.ts.net:3001/
 ```
 
-### 4. Homelab CI kubeconfig
-
-Create a limited kubeconfig for CI (port-forward to Uptime Kuma). Until a dedicated ServiceAccount exists, a copy of `connect/prd` kubeconfig in 1Password **Homelab CI kubeconfig** (field `password`) is fine for a solo lab — tighten later.
-
-```bash
-# example: paste connect/prd/kubeconfig contents into the 1Password item
-cd connect/prd && moon run connect:sync   # if needed
-```
+Endpoint is in `lab.yaml` → `services.uptime_kuma.api_endpoint` (moon + CI both use it).
 
 ### 5. UniFi URL
 
-OpenTofu talks to the Homelab gateway from `lab.yaml` (`networks.homelab.gateway_cidr`). Confirm from a client with Homelab routes: `curl -skI https://192.168.5.1`.
+OpenTofu talks to the Homelab gateway from `lab.yaml` (`networks.homelab.gateway_cidr`). Confirm: `curl -skI https://192.168.5.1`.
 
 ## Local vs CI
 
@@ -60,7 +65,8 @@ OpenTofu talks to the Homelab gateway from `lab.yaml` (`networks.homelab.gateway
 |--|-----|----------------|
 | Secrets | `op signin` + `moon.yml` `TOFU_SECRET_*` | `load-secrets-action` → env; `env.sh` skips `op` when set |
 | State | R2 (`homelab-tofu-state`) | same |
-| UniFi / Kuma | LAN or Tailscale | Tailscale Action + `--accept-routes` |
+| UniFi | LAN or Tailscale `--accept-routes` | Tailscale Action + `--accept-routes` |
+| Kuma API | Tailscale MagicDNS (must be on tailnet) | same |
 
 ## Break-glass
 

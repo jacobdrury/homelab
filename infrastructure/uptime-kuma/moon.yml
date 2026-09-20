@@ -4,40 +4,16 @@ stack: 'infrastructure'
 
 project:
   name: 'uptime-kuma'
-  description: 'Uptime Kuma monitors + Lab status page (API via port-forward)'
+  description: 'Uptime Kuma monitors + Lab status page (API via Tailscale expose)'
 
 tags:
   - opentofu
 
-# Admin login still works for the Socket.IO API when UI auth is disabled.
-# Endpoint is set by with-port-forward.sh (not the public Authentik URL).
+# API via Tailscale L3 Service expose (bypasses Authentik on uptime.lab).
+# Endpoint must match lab.yaml services.uptime_kuma.api_endpoint — requires Tailscale.
 env:
   TOFU_SECRET_UPTIMEKUMA_USERNAME: 'op://Homelab/Uptime Kuma/username'
   TOFU_SECRET_UPTIMEKUMA_PASSWORD: 'op://Homelab/Uptime Kuma/password'
   TOFU_SECRET_AWS_ACCESS_KEY_ID: 'op://Homelab/Homelab R2 tofu state/access key id'
   TOFU_SECRET_AWS_SECRET_ACCESS_KEY: 'op://Homelab/Homelab R2 tofu state/secret access key'
-
-tasks:
-  # Override inherited plan/apply so tofu reaches Kuma behind Authentik.
-  plan:
-    script: |
-      # shellcheck source=/dev/null
-      source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
-      exec ./with-port-forward.sh tofu plan -out=.tofu.plan
-    inputs:
-      - 'with-port-forward.sh'
-    options:
-      mergeInputs: append
-      runInCI: true
-
-  apply:
-    script: |
-      # shellcheck source=/dev/null
-      source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
-      test -f .tofu.plan || { echo "missing .tofu.plan — run plan first" >&2; exit 1; }
-      exec ./with-port-forward.sh tofu apply .tofu.plan
-    inputs:
-      - 'with-port-forward.sh'
-    options:
-      mergeInputs: append
-      runInCI: true
+  TOFU_ENV_UPTIMEKUMA_ENDPOINT: 'http://uptime-kuma.ibex-ladon.ts.net:3001'

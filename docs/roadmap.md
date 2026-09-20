@@ -274,7 +274,8 @@ flowchart LR
 - [x] Secrets — 1Password SA → `OP_SERVICE_ACCOUNT_TOKEN` only in GitHub (see setup doc)
 - [x] Tailscale ACL — `tag:ci` + least-privilege grants; Drury/homelab02 routes retired
 - [x] UniFi API — `https://192.168.5.1` (Homelab gateway)
-- [ ] Create **Tailscale CI OAuth** + **Homelab CI kubeconfig** 1Password items; add GitHub `OP_SERVICE_ACCOUNT_TOKEN`
+- [x] GitHub `OP_SERVICE_ACCOUNT_TOKEN` (1Password SA **Homelab CI**, item in Homelab vault)
+- [ ] Create **Tailscale CI OAuth** 1Password item (Kuma via Tailscale L3 expose — no CI kubeconfig)
 - [ ] First PR green plan; merge apply matches Mac (no drift)
 - [ ] Mac `moon run …:apply` becomes break-glass only
 

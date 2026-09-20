@@ -2,20 +2,25 @@
 
 Manages **HTTP monitors** and the public **Lab** status page (`/status/default`) via the [breml/uptimekuma](https://registry.terraform.io/providers/breml/uptimekuma) provider.
 
-Kuma itself (Helm, MariaDB, Authentik proxy) stays under GitOps: `clusters/prd/apps/uptime-kuma/`.
+Kuma itself (Helm, MariaDB, Authentik proxy, Tailscale expose) stays under GitOps: `clusters/prd/apps/uptime-kuma/`.
 
 ## Why OpenTofu
 
-There is no in-cluster reconciler for Kuma monitors. Same pattern as Pi-hole / UniFi: external API owned under `infrastructure/`.
+There is no in-cluster reconciler for Kuma monitors. Same pattern as UniFi: external API owned under `infrastructure/`.
 
 ## Auth / network
 
-`https://uptime.lab.jacobdrury.com` is Authentik-proxied. Plan/apply use **`kubectl port-forward`** to `uptime-kuma.uptime-kuma.svc:3001` (`with-port-forward.sh`).
+`https://uptime.lab.jacobdrury.com` is Authentik-proxied (browser UI). OpenTofu uses the **Tailscale L3 Service expose** instead:
+
+`http://uptime-kuma.ibex-ladon.ts.net:3001` (`lab.yaml` → `services.uptime_kuma.api_endpoint`)
+
+You must be on the tailnet (Mac app or CI `tag:ci`). No `kubectl` / port-forward.
 
 Credentials: 1Password **`Uptime Kuma`** (`username` / `password`). Native UI auth can stay disabled; API login still works.
 
 ```bash
 op signin
+# Tailscale connected
 moon run uptime-kuma:apply
 ```
 
@@ -27,6 +32,6 @@ The provider does **not** support import. If slug `default` already exists from 
 
 1. Homepage tile (`clusters/prd/apps/homepage/values.yaml`)
 2. Monitor entry in `monitors.tf` (+ `monitor_order` for the status page)
-3. `moon run uptime-kuma:apply`
+3. `moon run uptime-kuma:apply` (or CI on merge)
 
 For **Authentik-proxied** apps, do **not** probe `/` (that only checks the Authentik login redirect). Use a `skip_path_regex` URL that reaches the backend — see comments in `monitors.tf` (media *arr `/api` → 401; qBit version API → 200).

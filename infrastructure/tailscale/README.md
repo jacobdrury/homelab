@@ -61,7 +61,7 @@ curl -sI https://scarif.lab.jacobdrury.com
 - Operator Helm chart: `clusters/prd/platform/tailscale-operator/` (OAuth from 1Password **Tailscale OAuth**).
 - Connector `prd-homelab-router` advertises **`192.168.5.0/24`** (`tag:k8s`).
 - Split DNS unchanged.
-- CI: `tag:ci` → Homelab gateway `:443` + kube API `:6443` (IPs from `lab.yaml`).
+- CI: `tag:ci` → Homelab gateway `:443` (UniFi) + `tag:k8s`:`uptime_kuma.port` (Kuma Tailscale expose).
 
 ## Friend access (Phase 6)
 

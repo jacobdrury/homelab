@@ -44,7 +44,7 @@ jobs:
           TF_VAR_cloudflare_api_token: op://Homelab/Cloudflare Zone DNS API Token/credential
           AWS_ACCESS_KEY_ID: op://Homelab/Homelab R2 tofu state/access key id
           AWS_SECRET_ACCESS_KEY: op://Homelab/Homelab R2 tofu state/secret access key
-          # UniFi
+          # UniFi (Homelab gateway via Tailscale subnet route)
           TF_VAR_unifi_api_key: op://Homelab/bqbnkqxcyyg6h72orwebvozdjm/credential
           UNIFI_INSECURE: "true"
           # Tailscale OpenTofu provider (existing OAuth)
@@ -54,18 +54,11 @@ jobs:
           # Tailscale GitHub Action (separate OAuth client tagged tag:ci)
           TS_OAUTH_CLIENT_ID: op://Homelab/Tailscale CI OAuth/client id
           TS_OAUTH_SECRET: op://Homelab/Tailscale CI OAuth/credential
-          # Uptime Kuma
+          # Uptime Kuma API via Tailscale L3 Service expose (not Authentik)
           UPTIMEKUMA_USERNAME: op://Homelab/Uptime Kuma/username
           UPTIMEKUMA_PASSWORD: op://Homelab/Uptime Kuma/password
-          # kubeconfig for Kuma port-forward (file contents)
-          KUBECONFIG_BODY: op://Homelab/Homelab CI kubeconfig/password
-
-      - name: Write kubeconfig
-        run: |
-          mkdir -p "${HOME}/.kube"
-          printenv KUBECONFIG_BODY > "${HOME}/.kube/config"
-          chmod 600 "${HOME}/.kube/config"
-          echo "KUBECONFIG=${HOME}/.kube/config" >> "${GITHUB_ENV}"
+          # Keep in sync with infrastructure/lab.yaml services.uptime_kuma.api_endpoint
+          UPTIMEKUMA_ENDPOINT: http://uptime-kuma.ibex-ladon.ts.net:3001
 
       - name: Tailscale
         uses: tailscale/github-action@v3

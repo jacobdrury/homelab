@@ -58,12 +58,13 @@ Document one-off steps in phase checklists ([roadmap](../roadmap.md), [phase-1.5
 
 ## CI (Phase 2b)
 
-Thin GitHub Actions + **`moon ci`**. State on R2. LAN reachability via **Tailscale GitHub Action** (`tag:ci` + Homelab Connector) — **not** ARC. Setup: [opentofu-ci](../setup/opentofu-ci.md).
+Thin GitHub Actions + **`moon ci`**. State on R2. LAN reachability via **Tailscale GitHub Action** (`tag:ci`) — UniFi over Homelab route; Kuma via **L3 Service expose**. Setup: [opentofu-ci](../setup/opentofu-ci.md).
 
 | Project | Runner | Path to API |
 |---------|--------|-------------|
 | `cloudflare`, `tailscale` | `ubuntu-latest` | Public APIs |
-| `unifi`, `uptime-kuma` | `ubuntu-latest` + Tailscale | Homelab `192.168.5.0/24` (UniFi at `.1`, kube at `.11`) |
+| `unifi` | `ubuntu-latest` + Tailscale | Homelab gateway (`lab.yaml`) |
+| `uptime-kuma` | `ubuntu-latest` + Tailscale | MagicDNS `uptime-kuma.<tailnet>.ts.net` |
 
 **Security (public repo):**
 
