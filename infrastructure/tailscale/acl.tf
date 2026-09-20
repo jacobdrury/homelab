@@ -27,24 +27,17 @@ locals {
         dst = ["autogroup:member", "tag:k8s", "tag:k8s-operator"]
         ip  = ["*"]
       },
-      # GitHub Actions: UniFi on Homelab gateway.
+      # GitHub Actions (ephemeral tag:ci): UniFi on Homelab gateway.
       {
         src = ["tag:ci"]
         dst = [local.homelab_gateway_ip]
         ip  = ["443"]
       },
-      # GitHub Actions: Uptime Kuma L3 expose (tag:k8s proxy). Allow all ports on
-      # that tag — port-only grants still timed out TCP :3001 from GHA in practice.
+      # GitHub Actions: Uptime Kuma Socket.IO via Homelab NodePort (yavin).
       {
         src = ["tag:ci"]
-        dst = ["tag:k8s"]
-        ip  = ["*"]
-      },
-      # Same-cluster proxies (Connector ↔ Service expose) need this for local tests.
-      {
-        src = ["tag:k8s"]
-        dst = ["tag:k8s"]
-        ip  = [tostring(local.lab.services.uptime_kuma.port)]
+        dst = [local.lab.services.uptime_kuma.api_host]
+        ip  = [tostring(local.lab.services.uptime_kuma.node_port)]
       },
     ]
 

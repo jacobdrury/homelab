@@ -126,12 +126,15 @@ services:
     host: 192.168.2.8 # legacy HA OS VM (IoT); live HA is k8s → Envoy .21 — stop when soak done
   proxmox:
     host: 192.168.1.12 # homelab02 · Proxmox UI :8006 · hosts arr / legacy HA VM (Pi-hole LXC 106 retiring)
-  # Uptime Kuma Socket.IO API via Tailscale L3 Service expose (not Authentik / uptime.lab).
+  # Uptime Kuma Socket.IO API for OpenTofu (not Authentik / uptime.lab).
+  # Homelab NodePort on yavin — reachable via Tailscale Connector subnet route.
+  # (Tailscale L3 Service expose timed out TCP :3001 from GitHub Actions.)
   uptime_kuma:
-    tailscale_hostname: uptime-kuma
     port: 3001
-    # Keep in sync with clusters/prd/apps/uptime-kuma/values.yaml service.annotations.
-    api_endpoint: http://uptime-kuma.ibex-ladon.ts.net:3001
+    node_port: 30001
+    # hosts.yavin — keep in sync with clusters/prd/apps/uptime-kuma/resources.yaml
+    api_host: 192.168.5.11
+    api_endpoint: http://192.168.5.11:30001
   # gateway: 192.168.1.1  # UDM Pro — add when needed for IaC
 
 tailscale:

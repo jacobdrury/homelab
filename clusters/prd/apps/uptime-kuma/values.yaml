@@ -41,12 +41,9 @@ ingress:
 service:
   type: ClusterIP
   port: 3001
-  # Tailscale L3 expose — Socket.IO API for OpenTofu (bypasses Authentik on uptime.lab).
-  # MagicDNS: uptime-kuma.<tailnet>.ts.net:3001 (see lab.yaml services.uptime_kuma).
-  annotations:
-    tailscale.com/expose: "true"
-    tailscale.com/hostname: "uptime-kuma"
-    tailscale.com/tags: "tag:k8s"
+  # No Tailscale L3 expose — operator DNAT timed out TCP :3001 from GHA
+  # (peer path up; Socket.IO blackholed). CI/Mac use Homelab NodePort via
+  # Connector subnet route — Service/uptime-kuma-api in resources.yaml.
 
 # Still needed for screenshots / local files (DB is remote).
 volume:

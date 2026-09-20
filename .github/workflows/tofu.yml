@@ -54,11 +54,11 @@ jobs:
           # Tailscale GitHub Action (separate OAuth client tagged tag:ci)
           TS_OAUTH_CLIENT_ID: op://Homelab/Tailscale CI OAuth/client id
           TS_OAUTH_SECRET: op://Homelab/Tailscale CI OAuth/credential
-          # Uptime Kuma API via Tailscale L3 Service expose (not Authentik)
+          # Uptime Kuma API via Homelab NodePort (Connector subnet route; not Authentik)
           UPTIMEKUMA_USERNAME: op://Homelab/Uptime Kuma/username
           UPTIMEKUMA_PASSWORD: op://Homelab/Uptime Kuma/password
           # Keep in sync with infrastructure/lab.yaml services.uptime_kuma.api_endpoint
-          UPTIMEKUMA_ENDPOINT: http://uptime-kuma.ibex-ladon.ts.net:3001
+          UPTIMEKUMA_ENDPOINT: http://192.168.5.11:30001
 
       - name: Tailscale
         uses: tailscale/github-action@v3
@@ -66,31 +66,16 @@ jobs:
           oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ env.TS_OAUTH_SECRET }}
           tags: tag:ci
-          # accept-dns: MagicDNS; accept-routes: Homelab UniFi gateway
-          args: --accept-routes --accept-dns
-          # v3 name is `targets` (not `ping`) — waits for peer path before next steps.
-          targets: uptime-kuma.ibex-ladon.ts.net
+          args: --accept-routes
+          # Homelab NodePort path (same pattern as UniFi gateway).
+          targets: 192.168.5.11
 
-      # Prefer Tailscale IPv4 — dual-stack MagicDNS can dial IPv6 and hang on GHA.
-      - name: Resolve Uptime Kuma Tailscale IPv4
+      - name: Probe Uptime Kuma API
         run: |
           set -euo pipefail
-          tailscale status | tee /tmp/ts-status.txt
-          IP="$(tailscale status --json | jq -r '
-            .Peer[]?
-            | select((.DNSName // "") | startswith("uptime-kuma."))
-            | .TailscaleIPs[]
-            | select(test("^[0-9.]+$"))
-            ' | head -n1)"
-          if [ -z "${IP}" ]; then
-            echo "::error::uptime-kuma Tailscale IPv4 not in peer map"
-            exit 1
-          fi
-          echo "Resolved uptime-kuma -> ${IP}"
-          # Retry — peer map can race DNAT readiness after proxy restart.
           code="000"
           for i in 1 2 3 4 5 6; do
-            code="$(curl -sS --connect-timeout 5 --max-time 15 -o /dev/null -w '%{http_code}' "http://${IP}:3001/" || true)"
+            code="$(curl -sS --connect-timeout 5 --max-time 15 -o /dev/null -w '%{http_code}' "${UPTIMEKUMA_ENDPOINT}/" || true)"
             echo "attempt ${i}: HTTP ${code}"
             case "${code}" in 2*|3*) break ;; esac
             sleep 5
@@ -98,11 +83,10 @@ jobs:
           case "${code}" in
             2*|3*) ;;
             *)
-              echo "::error::TCP/HTTP to ${IP}:3001 failed (HTTP ${code})"
+              echo "::error::TCP/HTTP to ${UPTIMEKUMA_ENDPOINT} failed (HTTP ${code})"
               exit 1
               ;;
           esac
-          echo "UPTIMEKUMA_ENDPOINT=http://${IP}:3001" >> "${GITHUB_ENV}"
 
       - name: Validate and plan
         if: github.event_name == 'pull_request'

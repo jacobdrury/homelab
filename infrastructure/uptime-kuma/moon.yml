@@ -9,11 +9,11 @@ project:
 tags:
   - opentofu
 
-# API via Tailscale L3 Service expose (bypasses Authentik on uptime.lab).
-# Endpoint must match lab.yaml services.uptime_kuma.api_endpoint — requires Tailscale.
+# API via Homelab NodePort (bypasses Authentik on uptime.lab).
+# Endpoint must match lab.yaml services.uptime_kuma.api_endpoint — LAN or Tailscale --accept-routes.
 env:
   TOFU_SECRET_UPTIMEKUMA_USERNAME: 'op://Homelab/Uptime Kuma/username'
   TOFU_SECRET_UPTIMEKUMA_PASSWORD: 'op://Homelab/Uptime Kuma/password'
   TOFU_SECRET_AWS_ACCESS_KEY_ID: 'op://Homelab/Homelab R2 tofu state/access key id'
   TOFU_SECRET_AWS_SECRET_ACCESS_KEY: 'op://Homelab/Homelab R2 tofu state/secret access key'
-  TOFU_ENV_UPTIMEKUMA_ENDPOINT: 'http://uptime-kuma.ibex-ladon.ts.net:3001'
+  TOFU_ENV_UPTIMEKUMA_ENDPOINT: 'http://192.168.5.11:30001'
