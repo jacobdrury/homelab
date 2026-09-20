@@ -217,10 +217,11 @@ Remote access to **`*.lab.jacobdrury.com`** uses **split DNS + subnet router** (
 | Piece | Role | When |
 |-------|------|------|
 | **Agent Mac** | Tailscale client; split DNS + accept routes | **Now** |
-| **homelab02** | **Interim** subnet router (`192.168.1.0/24`, `192.168.5.0/24`) if remote `*.lab` needed before cluster | Until Phase 2; **remove routes when pc (black) leaves lab** |
-| **K8s operator** | **Steady-state** subnet router — advertise **`192.168.5.0/24`**; optional extra tailnet exposure for API/HTTPRoutes | Phase 2+ |
-| **scarif** | Optional Tailscale client (Unraid plugin) — not required if Envoy + subnet router cover admin | Phase 2+ optional |
-| **Exit node** | **Not** on lab hosts — homelab02 exit node **disabled** (Aug 2026) |
+| **homelab02** | Drury route only (Homelab advertise **off**) | Until pc (black) leaves |
+| **K8s operator** | **Steady** Homelab subnet router — advertise **`192.168.5.0/24`**; L7 Ingress / L3 expose for per-service `.ts.net` | **Live** |
+| **CI (`tag:ci`)** | Ephemeral GHA nodes — UniFi via subnet; Kuma API via L7 Ingress | **Live** — [opentofu-ci](../setup/opentofu-ci.md) |
+| **scarif** | Optional Tailscale client (Unraid plugin) — not required if Envoy + subnet router cover admin | Optional |
+| **Exit node** | **Not** on lab hosts — homelab02 exit node **disabled** (Aug 2026) | |
 
 ### Split DNS (Tailscale admin)
 
@@ -248,7 +249,16 @@ Clients must **accept subnet routes** (Tailscale app → use subnets / `tailscal
 tailscale set --advertise-routes=192.168.1.0/24,192.168.5.0/24
 ```
 
-Operator config (Phase 2) replaces homelab02 advertise/enable; document in `clusters/prd/platform/tailscale/` when added. Tailnet DNS stays in `infrastructure/tailscale/`.
+Operator Connector is live (`prd-homelab-router`). Tailnet DNS + ACL + **HTTPS** live in `infrastructure/tailscale/`.
+
+### OpenTofu CI reachability
+
+| Target | Path |
+|--------|------|
+| UniFi gateway | `--accept-routes` → `192.168.5.1:443` |
+| Uptime Kuma API | L7 Ingress `https://uptime-kuma.<tailnet>.ts.net` (Serve; bypasses Authentik) — **not** Homelab subnet |
+
+**L7 vs L3:** HTTP apps use Tailscale **Ingress** (Serve + LE). Raw TCP (Minecraft) uses Service **`tailscale.com/expose`**. Cilium must set `socketLB.hostNamespaceOnly` for L3 DNAT — [games](games.md#https-on-tsnet) · [opentofu-ci](../setup/opentofu-ci.md).
 
 Free Personal plan is enough until limits hit. Agents: [agents](agents.md).
 

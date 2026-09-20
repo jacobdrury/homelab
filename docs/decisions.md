@@ -51,6 +51,8 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Friend remote access | **Tailscale per-service expose** (`*.ts.net`); `group:friends` → `tag:shared` only (Jellyfin + Minecraft); **no** subnet routes for friends — [games](architecture/games.md#friend-access--tailscale) |
 | Friend Jellyfin HTTPS | **Tailscale L7 Ingress** (`ingressClassName: tailscale`) — LE cert on `https://jellyfin.<tailnet>.ts.net`; not L3 Service expose (self-signed) |
 | Friend Minecraft | **Tailscale L3 Service expose** — TCP `:25565`; no HTTPS on game port |
+| Tailscale L7 vs L3 | **L7 Ingress** for HTTP/Socket.IO (Kuma API, Jellyfin); **L3 expose** for raw TCP/UDP (Minecraft). Cilium `socketLB.hostNamespaceOnly` required for L3 DNAT — [opentofu-ci](setup/opentofu-ci.md) · [games](architecture/games.md) |
+| Tailnet HTTPS | **Enabled** via OpenTofu (`https_enabled` in `tailnet_settings.tf`) — needed for Serve / L7 certs |
 | MagicDNS tailnet suffix | Rename once in **admin console** (word list); **not** OpenTofu; hostname prefixes in k8s GitOps |
 | qBittorrent VPN | Peers via **Mullvad WireGuard sidecar** + qBit **bind to `wg0`**; UI at **`qbittorrent.lab.jacobdrury.com`** (not Gluetun on k8s) |
 | Media UI auth | **Authentik Proxy** for Sonarr ×2 / Prowlarr / qBit; Jellyfin = Envoy → Service (native accounts); **Home Assistant = Envoy → Service + Authentik OIDC** (`authentik Admins` → HA owner; HTTP settings in UI after 2026.8) — [home-assistant](architecture/home-assistant.md) · [media](architecture/media.md) |
@@ -59,6 +61,6 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Backups | **Decide after Unraid is up** (parity ≠ backup; UD has no parity) |
 | Tooling | **proto + moon** ([moonrepo](https://moonrepo.dev/)) |
 | Dep updates | **Renovate later**; no Dependabot version updates |
-| CI / OpenTofu | **GitHub Actions** + `moon ci` — R2 state; Tailscale-on-GHA for UniFi/Kuma (**not** ARC); 1Password SA; no fork PRs with secrets — [opentofu-ci](setup/opentofu-ci.md) |
+| CI / OpenTofu | **Done** — GHA + `moon ci`; R2 state; `tag:ci` → UniFi via subnet + Kuma via L7 (**not** ARC); 1Password SA; no fork PRs with secrets — [opentofu-ci](setup/opentofu-ci.md) |
 | Agents | **First-class**: Tailscale + kubeconfig + lab HTTPS + `op`; GitOps preferred |
 | Host naming | **Star Wars planets** for physical hosts + Talos nodes; Unraid = **`scarif`**; interim worker = **`naboo`** — [naming](architecture/naming.md) |
