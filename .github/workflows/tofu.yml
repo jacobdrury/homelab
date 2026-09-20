@@ -66,15 +66,16 @@ jobs:
           oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ env.TS_OAUTH_SECRET }}
           tags: tag:ci
-          # accept-dns: MagicDNS for *.ts.net; accept-routes: Homelab UniFi gateway
+          # accept-dns: MagicDNS; accept-routes: Homelab UniFi gateway
           args: --accept-routes --accept-dns
-          # Wait for peer map + path before OpenTofu (Kuma L3 expose).
-          ping: uptime-kuma.ibex-ladon.ts.net
+          # v3 name is `targets` (not `ping`) — waits for peer path before next steps.
+          targets: uptime-kuma.ibex-ladon.ts.net
 
       # Prefer Tailscale IPv4 — dual-stack MagicDNS can dial IPv6 and hang on GHA.
       - name: Resolve Uptime Kuma Tailscale IPv4
         run: |
           set -euo pipefail
+          tailscale status | tee /tmp/ts-status.txt
           IP="$(tailscale status --json | jq -r '
             .Peer[]?
             | select((.DNSName // "") | startswith("uptime-kuma."))
@@ -83,12 +84,17 @@ jobs:
             ' | head -n1)"
           if [ -z "${IP}" ]; then
             echo "::error::uptime-kuma Tailscale IPv4 not in peer map"
-            tailscale status
             exit 1
           fi
           echo "Resolved uptime-kuma -> ${IP}"
-          code="$(curl -sS --connect-timeout 5 --max-time 15 -o /dev/null -w '%{http_code}' "http://${IP}:3001/" || true)"
-          echo "HTTP ${code}"
+          # Retry — peer map can race DNAT readiness after proxy restart.
+          code="000"
+          for i in 1 2 3 4 5 6; do
+            code="$(curl -sS --connect-timeout 5 --max-time 15 -o /dev/null -w '%{http_code}' "http://${IP}:3001/" || true)"
+            echo "attempt ${i}: HTTP ${code}"
+            case "${code}" in 2*|3*) break ;; esac
+            sleep 5
+          done
           case "${code}" in
             2*|3*) ;;
             *)
