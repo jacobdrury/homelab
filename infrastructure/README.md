@@ -79,7 +79,10 @@ Full setup: [docs/setup/local-tools.md](../docs/setup/local-tools.md)
 
 ## Order
 
-1. `cloudflare` apply — DNS records + R2 state bucket
-2. `unifi` apply — Homelab VLAN + firewall + DHCP DNS
-3. ~~Move scarif to VLAN 5 (`192.168.5.10`); update arr NFS fstab~~ **Done (2026-08-30)**
-4. Phase 2 — Talos on yavin
+Moon `dependsOn` + each tofu task’s `^:<task>` so `moon ci` / `moon run` respect this order:
+
+1. `cloudflare` — DNS records + R2 state bucket
+2. `unifi` and `tailscale` (parallel; both depend on `cloudflare`)
+3. `uptime-kuma` (depends on `tailscale`)
+
+Bootstrap notes: ~~Move scarif to VLAN 5 (`192.168.5.10`); update arr NFS fstab~~ **Done (2026-08-30)**. Phase 2 — Talos on yavin.

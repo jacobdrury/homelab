@@ -2,6 +2,10 @@ id: 'uptime-kuma'
 layer: 'tool'
 stack: 'infrastructure'
 
+# API via Tailscale L7 Ingress / HTTPS (tailnet_settings); monitors use *.lab DNS.
+dependsOn:
+  - 'tailscale'
+
 project:
   name: 'uptime-kuma'
   description: 'Uptime Kuma monitors + Lab status page (API via Tailscale expose)'

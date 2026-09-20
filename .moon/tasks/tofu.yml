@@ -21,8 +21,13 @@ taskOptions:
   cache: false
   runInCI: false
 
+# ^:<task> expands via project dependsOn so moon ci orders cloudflare →
+# unifi|tailscale → uptime-kuma. Use the matching task (not ^:apply on plan)
+# so PR :validate/:plan never applies.
 tasks:
   init:
+    deps:
+      - '^:init'
     script: |
       # shellcheck source=/dev/null
       source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
@@ -40,6 +45,7 @@ tasks:
 
   validate:
     deps:
+      - '^:validate'
       - 'init'
     script: |
       # shellcheck source=/dev/null
@@ -54,6 +60,7 @@ tasks:
 
   plan:
     deps:
+      - '^:plan'
       - 'init'
     script: |
       # shellcheck source=/dev/null
@@ -72,6 +79,7 @@ tasks:
 
   apply:
     deps:
+      - '^:apply'
       - 'plan'
     script: |
       # shellcheck source=/dev/null

@@ -2,6 +2,10 @@ id: tailscale
 layer: tool
 stack: infrastructure
 
+# Split DNS → Cloudflare; R2 state bucket from cloudflare.
+dependsOn:
+  - cloudflare
+
 project:
   name: tailscale
   description: Tailscale tailnet DNS and subnet routes (split DNS → Cloudflare)

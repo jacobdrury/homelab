@@ -2,6 +2,10 @@ id: 'unifi'
 layer: 'tool'
 stack: 'infrastructure'
 
+# R2 state bucket + lab DNS live in cloudflare — apply that first.
+dependsOn:
+  - 'cloudflare'
+
 project:
   name: 'unifi'
   description: 'UniFi Homelab VLAN, firewall, and switch ports'
