@@ -5,9 +5,10 @@ variable "unifi_api_key" {
 }
 
 variable "unifi_api_url" {
-  description = "UniFi OS console URL (Homelab gateway — reachable via Tailscale Homelab route)"
+  description = "UniFi OS console URL override (default: https://Homelab gateway from lab.yaml)"
   type        = string
-  default     = "https://192.168.5.1"
+  default     = null
+  nullable    = true
 }
 
 variable "unifi_allow_insecure" {
