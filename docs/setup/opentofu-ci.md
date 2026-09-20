@@ -52,7 +52,7 @@ cd connect/prd && moon run connect:sync   # if needed
 
 ### 5. UniFi URL
 
-OpenTofu talks to `https://192.168.5.1` (Homelab gateway). Confirm from a client with Homelab routes: `curl -skI https://192.168.5.1`.
+OpenTofu talks to the Homelab gateway from `lab.yaml` (`networks.homelab.gateway_cidr`). Confirm from a client with Homelab routes: `curl -skI https://192.168.5.1`.
 
 ## Local vs CI
 

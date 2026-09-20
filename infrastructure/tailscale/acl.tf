@@ -4,6 +4,10 @@ locals {
   # CI OAuth client (GitHub Actions) must be tagged tag:ci (Auth Keys write).
   # https://tailscale.com/docs/kubernetes-operator/install-operator
   # https://tailscale.com/docs/integrations/github/github-action
+  # IPs from lab.yaml — do not hardcode Homelab addresses here.
+  homelab_gateway_ip = split("/", local.lab.networks.homelab.gateway_cidr)[0]
+  kubernetes_api_ip       = local.lab.networks.homelab.hosts.k8s.ip
+
   tailnet_policy = {
     tagOwners = {
       "tag:k8s-operator" = ["autogroup:admin"]
@@ -27,12 +31,12 @@ locals {
       # GitHub Actions (ephemeral tag:ci): UniFi on Homelab gateway + kube API.
       {
         src = ["tag:ci"]
-        dst = ["192.168.5.1"]
+        dst = [local.homelab_gateway_ip]
         ip  = ["443"]
       },
       {
         src = ["tag:ci"]
-        dst = ["192.168.5.11"]
+        dst = [local.kubernetes_api_ip]
         ip  = ["6443"]
       },
     ]
