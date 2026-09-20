@@ -12,3 +12,5 @@ tags:
 env:
   TOFU_SECRET_TF_VAR_unifi_api_key: 'op://Homelab/bqbnkqxcyyg6h72orwebvozdjm/credential'
   TOFU_ENV_UNIFI_INSECURE: 'true'
+  TOFU_SECRET_AWS_ACCESS_KEY_ID: 'op://Homelab/Homelab R2 tofu state/access key id'
+  TOFU_SECRET_AWS_SECRET_ACCESS_KEY: 'op://Homelab/Homelab R2 tofu state/secret access key'

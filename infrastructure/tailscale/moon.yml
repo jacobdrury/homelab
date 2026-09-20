@@ -16,3 +16,5 @@ env:
   TOFU_SECRET_TAILSCALE_OAUTH_CLIENT_ID: 'op://Homelab/Tailscale OAuth/client id'
   TOFU_SECRET_TAILSCALE_OAUTH_CLIENT_SECRET: 'op://Homelab/Tailscale OAuth/credential'
   TOFU_ENV_TAILSCALE_TAILNET: '-'
+  TOFU_SECRET_AWS_ACCESS_KEY_ID: 'op://Homelab/Homelab R2 tofu state/access key id'
+  TOFU_SECRET_AWS_SECRET_ACCESS_KEY: 'op://Homelab/Homelab R2 tofu state/secret access key'

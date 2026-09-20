@@ -70,7 +70,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 
 | Layer | Tool | Owns |
 |-------|------|------|
-| Static records | OpenTofu → `infrastructure/dns/` | Pages apex/`www`, `lab` zone, **`k8s.lab.jacobdrury.com`** |
+| Static records | OpenTofu → `infrastructure/cloudflare/` | Pages apex/`www`, `lab` zone, **`k8s.lab.jacobdrury.com`** |
 | App hostnames (optional) | external-dns | From HTTPRoutes |
 | ACME TXT | cert-manager | Ephemeral — not in Tofu |
 
@@ -104,7 +104,7 @@ Client → https://pihole.lab.jacobdrury.com → Envoy → Authentik → Pi-hole
 
 **Resolving names on LAN**
 
-Pi-hole forwards `lab.jacobdrury.com` to Cloudflare (`1.1.1.1` / `1.0.0.1`) via ConfigMap dnsmasq (`clusters/prd/apps/pihole/`). Infra and app records live in `infrastructure/dns/` (+ external-dns later). Answers are **RFC1918** (grey cloud only — never proxied).
+Pi-hole forwards `lab.jacobdrury.com` to Cloudflare (`1.1.1.1` / `1.0.0.1`) via ConfigMap dnsmasq (`clusters/prd/apps/pihole/`). Infra and app records live in `infrastructure/cloudflare/` (+ external-dns later). Answers are **RFC1918** (grey cloud only — never proxied).
 
 **Legacy `*.homelab.com`** — shrinking local host-records in `configmap-dnsmasq.yaml` (`arr.homelab.com` gone); not part of the long-term `*.lab` model.
 

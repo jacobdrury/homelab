@@ -287,7 +287,7 @@ A friend-facing URL has two parts: **`jellyfin`** `.` **`ibex-ladon.ts.net`**
 | ACLs, split DNS, MagicDNS on/off, auth keys | **OpenTofu** | `infrastructure/tailscale/` |
 | Tailnet rename, HTTPS enable | **Admin console** | One-time manual — no Terraform resource |
 | Friend service hostnames | **GitOps** (Argo) | `apps/media/jellyfin/`, `apps/games/minecraft-atm10/` |
-| Your `*.lab` URLs | **OpenTofu + Envoy** | `infrastructure/dns/`, HTTPRoutes |
+| Your `*.lab` URLs | **OpenTofu + Envoy** | `infrastructure/cloudflare/`, HTTPRoutes |
 
 Tailnet suffix is also in `tofu output magic_dns_suffix` (`infrastructure/tailscale/`).
 

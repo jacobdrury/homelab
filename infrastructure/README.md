@@ -1,6 +1,6 @@
 # Shared lab constants — see ../lab.yaml (zone, subnets, hosts, Cloudflare DNS, Pi-hole, Tailscale).
 
-Apply from your Mac on the LAN. State files stay **local** (gitignored).
+Apply from your Mac on the LAN. **State** lives in Cloudflare R2 (`homelab-tofu-state`); credentials from 1Password **Homelab R2 tofu state**.
 
 **IaC policy:** Git is source of truth for everything here; see [docs/architecture/iac.md](../docs/architecture/iac.md).
 
@@ -8,9 +8,11 @@ Apply from your Mac on the LAN. State files stay **local** (gitignored).
 
 Credentials load from each project's `moon.yml` (`TOFU_SECRET_*` / `TOFU_ENV_*`). Sign in first: `op signin`.
 
-## DNS (`infrastructure/dns/`)
+## Cloudflare (`infrastructure/cloudflare/`)
 
-Manages GitHub Pages records (imported) and `*.lab.jacobdrury.com` infra A records.
+Manages GitHub Pages records (imported), `*.lab.jacobdrury.com` infra A records, and the **R2** bucket `homelab-tofu-state` (OpenTofu remote state — Phase 2b).
+
+API token needs **Zone DNS Edit** on `jacobdrury.com` plus **Account Workers R2 Storage Write**. Expand the existing Homelab 1Password item (or replace the token) before `moon run cloudflare:apply` creates the bucket.
 
 ## UniFi (`infrastructure/unifi/`)
 
@@ -55,7 +57,7 @@ Run `moon run <project>:init` manually after clone if you skip the full chain. *
 
 ```bash
 op signin
-moon run dns:apply
+moon run cloudflare:apply
 moon run unifi:apply
 moon run tailscale:apply
 moon run uptime-kuma:apply
@@ -75,7 +77,7 @@ Full setup: [docs/setup/local-tools.md](../docs/setup/local-tools.md)
 
 ## Order
 
-1. `dns` apply — Cloudflare records (public + `*.lab`)
+1. `cloudflare` apply — DNS records + R2 state bucket
 2. `unifi` apply — Homelab VLAN + firewall + DHCP DNS
 3. ~~Move scarif to VLAN 5 (`192.168.5.10`); update arr NFS fstab~~ **Done (2026-08-30)**
 4. Phase 2 — Talos on yavin

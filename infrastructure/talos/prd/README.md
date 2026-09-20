@@ -52,7 +52,7 @@ cd connect/prd && direnv allow   # or: source connect/env.sh
 kubectl get nodes
 ```
 
-DNS `k8s.lab.jacobdrury.com` / `yavin.lab.jacobdrury.com` → `192.168.5.11` is already in `infrastructure/dns/` via `lab.yaml`.
+DNS `k8s.lab.jacobdrury.com` / `yavin.lab.jacobdrury.com` → `192.168.5.11` is already in `infrastructure/cloudflare/` via `lab.yaml`.
 
 ## Join **naboo** (Unraid VM on scarif) — **done** Sep 2026
 
