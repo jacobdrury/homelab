@@ -2,7 +2,7 @@
 # Sourced by OpenTofu moon tasks. Reads secrets from project env (infrastructure/*/moon.yml).
 #
 #   TOFU_SECRET_<NAME>=op://...   → op read → export NAME (skipped if NAME already set)
-#   TOFU_ENV_<NAME>=value         → export NAME=value (no op)
+#   TOFU_ENV_<NAME>=value         → export NAME=value (skipped if NAME already set)
 set -euo pipefail
 
 has_secret=false
@@ -31,6 +31,12 @@ done < <(env | grep '^TOFU_SECRET_' || true)
 while IFS='=' read -r key value; do
   [[ "$key" == TOFU_ENV_* ]] || continue
   var_name="${key#TOFU_ENV_}"
+  # CI may resolve MagicDNS → Tailscale IPv4 before moon runs.
+  eval "existing=\${${var_name}-}"
+  if [[ -n "${existing}" ]]; then
+    export "$var_name"
+    continue
+  fi
   export "$var_name=$value"
 done < <(env | grep '^TOFU_ENV_' || true)
 
