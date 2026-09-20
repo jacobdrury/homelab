@@ -24,9 +24,6 @@ jobs:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
-    env:
-      # Keep in sync with infrastructure/lab.yaml services.uptime_kuma.api_endpoint
-      UPTIMEKUMA_ENDPOINT: https://uptime-kuma.ibex-ladon.ts.net
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,26 +65,8 @@ jobs:
           oauth-secret: ${{ env.TS_OAUTH_SECRET }}
           tags: tag:ci
           args: --accept-routes --accept-dns
-          # Wait for peer-map propagation before probing the L7 Ingress.
+          # Wait for peer-map propagation before moon ci hits the L7 Ingress.
           targets: uptime-kuma.ibex-ladon.ts.net
-
-      - name: Probe Uptime Kuma API
-        run: |
-          set -euo pipefail
-          code="000"
-          for i in 1 2 3 4 5 6; do
-            code="$(curl -sS --connect-timeout 5 --max-time 15 -o /dev/null -w '%{http_code}' "${UPTIMEKUMA_ENDPOINT}/" || true)"
-            echo "attempt ${i}: HTTP ${code}"
-            case "${code}" in 2*|3*) break ;; esac
-            sleep 5
-          done
-          case "${code}" in
-            2*|3*) ;;
-            *)
-              echo "::error::TCP/HTTP to ${UPTIMEKUMA_ENDPOINT} failed (HTTP ${code})"
-              exit 1
-              ;;
-          esac
 
       - name: Validate and plan
         if: github.event_name == 'pull_request'
