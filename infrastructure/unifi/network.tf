@@ -37,12 +37,9 @@ resource "unifi_network" "lan" {
   ipv6_ra_enable         = true
   ipv6_ra_valid_lifetime = 86400
 
-  # mDNS: set desired value; UDM often won't persist → ignore_changes below.
+  # Reflect mDNS on trusted + IoT. Guest/Camera stay off (Isolated).
+  # Needed for HomeKit / Chromecast / ESPHome discovery across VLANs.
   multicast_dns = contains(["drury", "iot"], each.key)
-
-  lifecycle {
-    ignore_changes = [multicast_dns]
-  }
 }
 
 resource "unifi_network" "homelab" {
@@ -56,6 +53,8 @@ resource "unifi_network" "homelab" {
 
   dhcp_dns = local.pihole_dhcp_dns
 
-  # Omit multicast_dns — filipowm/unifi maps it to mdns_enabled but the UDM does not
-  # persist true on this network (perpetual plan drift). Enable mDNS in UI if needed.
+  # HA (Homelab) must hear IoT HomeKit/zeroconf ads — UniFi reflects between
+  # networks that both have Multicast DNS on. Guest/Camera stay off.
+  # Older UDM builds sometimes dropped this flag; re-apply if the UI shows off.
+  multicast_dns = true
 }
