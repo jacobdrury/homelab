@@ -14,7 +14,7 @@ Live on Talos `prd` (Phase 3). Leans: [decisions](../decisions.md) · app: [apps
 | Auth | Authentik **OIDC** ([hass-oidc-auth](https://integrations.goauthentik.io/miscellaneous/home-assistant/)). Not Authentik Proxy |
 | HTTP / proxy | UI (**Settings → System → Network**) / `.storage/http` — **no YAML `http:`** (ignored after 2026.8). Trusted proxies: `10.0.0.0/8`, `192.168.5.0/24` |
 | Radios | None — no USB passthrough; ClusterIP only |
-| IoT | UniFi **Homelab → IoT** allow + return; **IoT → Homelab Envoy `.21:80/443`** for webhooks — [networking](networking.md) |
+| IoT | UniFi **Homelab → IoT** allow + return; **IoT → Homelab Envoy `.21:80/443`** for webhooks; **mDNS** on Homelab + IoT for HomeKit Device discovery — [networking](networking.md) |
 
 ## Auth (SSO)
 

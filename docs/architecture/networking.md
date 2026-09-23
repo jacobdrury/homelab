@@ -46,6 +46,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 - **Homelab → Isolated (Guest/Camera):** deny  
 - **Isolated → Homelab:** Pi-hole DNS VIP `.22` **:53** only  
 - **Homelab → Internet:** External zone defaults (allow)  
+- **mDNS (Multicast DNS):** **on** for Drury, Homelab, and IoT; **off** for Guest/Camera — UniFi reflects `_hap._tcp` / chromecast / similar between those VLANs so HA can discover HomeKit devices on IoT (`network.tf`)  
 
 **DNS from Homelab:** LAN DNS is k8s Pi-hole VIP **`192.168.5.22`** (same VLAN). Talos patches prefer `.22` then Cloudflare — re-apply machine config when convenient. HA uses `dnsConfig.ndots: "2"`.
 - Codify static reservations for scarif, yavin, and `k8s.lab` target  
