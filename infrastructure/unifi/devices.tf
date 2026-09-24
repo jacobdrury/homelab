@@ -21,10 +21,10 @@ resource "unifi_device" "flex_2_5g_8" {
   port_override {
     number                = 3
     name                  = "kohler-gen"
-    forward               = "customize"
+    forward               = "native"
     native_networkconf_id = unifi_network.lan["iot"].id
     setting_preference    = "manual"
-    tagged_vlan_mgmt      = "auto"
+    tagged_vlan_mgmt      = "block_all"
   }
 
   # Bedroom · .107
@@ -57,22 +57,23 @@ resource "unifi_device" "pro_max_16" {
   forget_on_destroy = false
 
   # Existing overrides (preserve — provider replaces the whole array)
+  # IoT access ports: native + block tagged VLANs (same pattern as Homelab / kohler-gen).
   port_override {
     number                = 2
     name                  = "Port 2"
-    forward               = "customize"
+    forward               = "native"
     native_networkconf_id = unifi_network.lan["iot"].id
     setting_preference    = "manual"
-    tagged_vlan_mgmt      = "auto"
+    tagged_vlan_mgmt      = "block_all"
   }
 
   port_override {
     number                = 3
     name                  = "Port 3"
-    forward               = "customize"
+    forward               = "native"
     native_networkconf_id = unifi_network.lan["iot"].id
     setting_preference    = "manual"
-    tagged_vlan_mgmt      = "auto"
+    tagged_vlan_mgmt      = "block_all"
   }
 
   port_override {
