@@ -278,10 +278,13 @@ AT&T → UDM Pro (.1)
 
 #### Flex 2.5G 8 PoE
 
+Managed in `infrastructure/unifi/devices.tf` (`unifi_device.flex_2_5g_8`).
+
 | Port | Connected |
 |------|-----------|
 | 1–2 | U6 LR · U6 Pro |
-| 3–6, 9 | Empty |
+| 3 | **kohler-gen** · IoT VLAN 2 (standby generator) |
+| 4–6, 9 | Empty |
 | 7 | Bedroom · `.107` |
 | 8 | Flex Mini · `.225` |
 | 10 | Aggregation uplink |
