@@ -37,6 +37,10 @@ spec:
       labels:
         app.kubernetes.io/name: home-assistant
     spec:
+      # Share the node's Homelab netns so zeroconf/HomeKit hear UniFi-reflected mDNS
+      # (ClusterIP pods only see overlay multicast). Envoy → Service still fronts :8123.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       # Avoid ndots:5 search-path delays on public names (HACS/GitHub/Nabu Casa).
       dnsConfig:
         options:
