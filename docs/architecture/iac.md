@@ -38,7 +38,7 @@ Avoid duplicating the same records in two IaC modules:
 
 | Task | Why |
 |------|-----|
-| Switch ports not yet in `unifi/devices.tf` | Provider replaces the whole `port_overrides` array per device — only manage switches we’ve declared completely |
+| Switch ports not yet in `unifi/devices.tf` (Aggregation, Flex Mini, …) | Provider replaces the whole `port_overrides` array per device — only manage switches we’ve declared completely (Pro Max 16 + Flex 2.5G 8 today) |
 | Moving a host to a new subnet (IP, fstab, cable) | Physical / OS steps outside API |
 | One-time bootstrap (Talos first boot, Argo install, 1Password items) | Chicken-and-egg |
 | BIOS, Proxmox VM create, disk attach | Hypervisor / hardware |

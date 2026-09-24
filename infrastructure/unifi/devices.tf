@@ -5,6 +5,49 @@
 locals {
   # USW Pro Max 16 PoE · 192.168.1.197 · uplink Aggregation SFP+ 5
   pro_max_16_mac = "1c:6a:1b:67:f3:f2"
+  # USW Flex 2.5G 8 PoE · 192.168.1.109 · uplink Aggregation SFP+ 3
+  flex_2_5g_8_mac = "a8:9c:6c:0a:95:09"
+}
+
+# Ports pulled from UniFi API (2026-09-23): only 7 + 8 had overrides (Drury trunks).
+# Port 3 → IoT for Kohler standby generator (ethernet + Energy Management App).
+# Imported into state as unifi_device.flex_2_5g_8 (controller id 69556e93f786ee140fc9f00f).
+resource "unifi_device" "flex_2_5g_8" {
+  mac               = local.flex_2_5g_8_mac
+  name              = "USW Flex 2.5G 8 PoE"
+  allow_adoption    = false
+  forget_on_destroy = false
+
+  port_override {
+    number                = 3
+    name                  = "kohler-gen"
+    forward               = "customize"
+    native_networkconf_id = unifi_network.lan["iot"].id
+    setting_preference    = "manual"
+    tagged_vlan_mgmt      = "auto"
+  }
+
+  # Bedroom · .107
+  port_override {
+    number                = 7
+    name                  = "Port 7"
+    forward               = "all"
+    native_networkconf_id = unifi_network.lan["drury"].id
+    setting_preference    = "auto"
+    tagged_vlan_mgmt      = "auto"
+    poe_mode              = "auto"
+  }
+
+  # Flex Mini · .225
+  port_override {
+    number                = 8
+    name                  = "Port 8"
+    forward               = "all"
+    native_networkconf_id = unifi_network.lan["drury"].id
+    setting_preference    = "auto"
+    tagged_vlan_mgmt      = "auto"
+    poe_mode              = "auto"
+  }
 }
 
 resource "unifi_device" "pro_max_16" {
