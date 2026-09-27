@@ -26,6 +26,12 @@ data:
 
     main = data.setdefault("main", {})
     main["applicationUrl"] = os.environ["APPLICATION_URL"]
+    # Seerr 3.4.x: checkOverseerrMerge() runs before TypeORM creates the
+    # migrations table and crashes fresh Postgres installs when mediaServerType
+    # is NOT_CONFIGURED (0). Jellyfin = 2 — skips that path.
+    # https://github.com/seerr-team/seerr/issues/2859
+    if main.get("mediaServerType", 0) in (0, None):
+        main["mediaServerType"] = 2
 
     network = data.setdefault("network", {})
     network["trustProxy"] = True
