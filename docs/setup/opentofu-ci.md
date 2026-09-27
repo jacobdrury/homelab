@@ -12,10 +12,10 @@ Workflow: [`.github/workflows/tofu.yml`](../../.github/workflows/tofu.yml)
 
 | Event | Command |
 |-------|---------|
-| Pull request (same-repo) | `moon ci :validate :plan` |
+| Pull request (same-repo) | `moon ci :validate :plan --downstream=none` |
 | Push to `main` | `moon ci :apply` |
 
-`moon ci` runs only **affected** projects (`runInCI: true`). Shared `lab.yaml` is an implicit input — changing it affects all OpenTofu projects.
+`moon ci` defaults to `--downstream=direct`. Without `--downstream=none` on PRs, `:plan` would also run `:apply` (because apply depends on plan). Shared `lab.yaml` is an implicit input — changing it affects all OpenTofu projects.
 
 ## One-time setup (completed)
 
