@@ -22,8 +22,9 @@ taskOptions:
   runInCI: false
 
 # ^:<task> expands via project dependsOn so moon ci orders cloudflare →
-# unifi|tailscale → uptime-kuma. Use the matching task (not ^:apply on plan)
-# so PR :validate/:plan never applies.
+# unifi|tailscale → uptime-kuma. Use the matching task (not ^:apply on plan).
+# moon ci defaults to --downstream=direct, so PR workflows must pass
+# --downstream=none or :plan would also run :apply (see .github/workflows/tofu.yml).
 tasks:
   init:
     deps:

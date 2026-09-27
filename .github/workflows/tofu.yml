@@ -70,7 +70,9 @@ jobs:
 
       - name: Validate and plan
         if: github.event_name == 'pull_request'
-        run: moon ci :validate :plan
+        # moon ci defaults to --downstream=direct, which would also run :apply
+        # (apply deps on plan). PRs must stay plan-only.
+        run: moon ci :validate :plan --downstream=none
 
       - name: Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
