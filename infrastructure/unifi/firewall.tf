@@ -3,6 +3,7 @@
 #
 # Policy intent:
 #   Drury → Homelab: allow all (mgmt + NFS + Pi-hole DNS VIP)
+#   Drury → IoT: allow all (printers, smart-home admin from trusted LAN)
 #   Homelab → Drury: transitional Envoy → Proxmox only
 #   Homelab → IoT: allow all (Home Assistant on k8s must reach devices)
 #   Homelab → Guest/Camera (Isolated): deny
@@ -68,6 +69,25 @@ resource "unifi_firewall_zone_policy" "drury_to_homelab" {
 
   destination = {
     zone_id = unifi_firewall_zone.homelab.id
+  }
+}
+
+# Trusted LAN can reach IoT (printers, device admin UIs, etc.). IoT still cannot initiate to Drury.
+resource "unifi_firewall_zone_policy" "drury_to_iot" {
+  name                      = "Allow Drury to IoT"
+  action                    = "ALLOW"
+  protocol                  = "all"
+  enabled                   = true
+  auto_allow_return_traffic = true
+  ip_version                = "IPV4"
+  description               = "Trusted LAN → IoT VLAN (printers, smart-home admin)"
+
+  source = {
+    zone_id = unifi_firewall_zone.drury.id
+  }
+
+  destination = {
+    zone_id = unifi_firewall_zone.iot.id
   }
 }
 
@@ -207,6 +227,15 @@ resource "unifi_firewall_zone_policy_order" "drury_to_homelab" {
 
   before_predefined_ids = [
     unifi_firewall_zone_policy.drury_to_homelab.id,
+  ]
+}
+
+resource "unifi_firewall_zone_policy_order" "drury_to_iot" {
+  source_zone_id      = unifi_firewall_zone.drury.id
+  destination_zone_id = unifi_firewall_zone.iot.id
+
+  before_predefined_ids = [
+    unifi_firewall_zone_policy.drury_to_iot.id,
   ]
 }
 
