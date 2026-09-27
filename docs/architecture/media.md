@@ -1,4 +1,4 @@
-# Media stack (*arr + qBittorrent + Jellyfin)
+# Media stack (*arr + qBittorrent + Jellyfin + Seerr)
 
 **Live on Talos `prd`** under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) — configs copied from the Proxmox arr VM (not fresh installs). **arr VM 101 is stopped** (`onboot=0`); `arr.lab` / `arr.homelab.com` DNS retired.
 
@@ -6,18 +6,19 @@
 |-----|------|------|
 | qBittorrent, Sonarr ×2, Prowlarr | **Authentik Proxy** ([Sonarr guide](https://integrations.goauthentik.io/media/sonarr/)) | Shared CNPG **`media-pg`**; NFS libraries/downloads |
 | Jellyfin (`10.11.11`) | Envoy → Service (native Jellyfin accounts) | SQLite on iSCSI config PVC; NFS `/anime` + `/tv` (read-only). GPU notes: [gpu](gpu.md) |
+| Seerr (`v3.4.1`) | Envoy → Service (Jellyfin login) | CNPG DB `seerr` on **`media-pg`**; config PVC on iSCSI |
 
 ## Runtime shape
 
 | Piece | Where |
 |-------|--------|
-| Pods | namespace `media` — qBit + Mullvad WG sidecar, Sonarr anime/TV, Prowlarr, Jellyfin, `media-pg` |
+| Pods | namespace `media` — qBit + Mullvad WG sidecar, Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, `media-pg` |
 | Libraries / downloads | Scarif NFS static PVs (`media/{anime,tv,downloads}`); *arr `PUID=99` / `PGID=100`; Jellyfin mounts libraries read-only as UID 1000 |
-| Config | iSCSI PVCs (copied from arr); Jellyfin also uses `emptyDir` for `/cache` |
+| Config | iSCSI PVCs (copied from arr); Jellyfin also uses `emptyDir` for `/cache`; Seerr config PVC |
 | Browser URLs (*arr / qBit) | Envoy → **Authentik embedded outpost** → Services ([`resources-media-routes.yaml`](../../clusters/prd/apps/authentik/resources-media-routes.yaml)) |
-| Browser URL (Jellyfin) | Envoy → `jellyfin.media` Service `:8096` |
-| API / Homepage | Authentik `skip_path_regex` on `/api` (and `/feed` for Sonarr) — widgets use API keys; Jellyfin widget hits Jellyfin API directly |
-| Native UI auth | `AuthenticationMethod=External` (*arr); qBit `AuthSubnetWhitelist` for cluster CIDRs; Jellyfin native accounts |
+| Browser URL (Jellyfin / Seerr) | Envoy → `jellyfin.media` `:8096` / `seerr.media` `:5055` |
+| API / Homepage | Authentik `skip_path_regex` on `/api` (and `/feed` for Sonarr) — widgets use API keys; Jellyfin/Seerr widgets hit app APIs directly |
+| Native UI auth | `AuthenticationMethod=External` (*arr); qBit `AuthSubnetWhitelist` for cluster CIDRs; Jellyfin + Seerr (via Jellyfin) native accounts |
 
 ## NFS UID (scarif + writers)
 
@@ -41,7 +42,7 @@ Configs live on iSCSI PVCs (originally copied from the arr VM). Live wiring:
 5. *arr mounts keep Compose paths: `/home/data/{anime,tv,downloads}`
 6. Jellyfin mounts: `/anime`, `/tv`, `/config` (Compose paths preserved)
 
-### Postgres (*arr)
+### Postgres (*arr + Seerr)
 
 Shared CNPG Cluster **`media-pg`** in namespace `media` (iSCSI). 1Password **`prd Media Postgres`**.
 
@@ -50,8 +51,13 @@ Shared CNPG Cluster **`media-pg`** in namespace `media` (iSCSI). 1Password **`pr
 | Sonarr anime | `sonarr_anime_main` | `sonarr_anime_log` |
 | Sonarr TV | `sonarr_tv_main` | `sonarr_tv_log` |
 | Prowlarr | `prowlarr_main` | `prowlarr_log` |
+| Seerr | `seerr` | — |
 
-Init containers upsert `Postgres*` + `AuthenticationMethod=External`. qBittorrent stays on disk (no Postgres).
+Init containers upsert `Postgres*` + `AuthenticationMethod=External` for *arr. Seerr uses `DB_*` env vars. qBittorrent stays on disk (no Postgres).
+
+### Seerr integrations
+
+Wire in the Seerr UI after deploy (see [`clusters/prd/apps/media/README.md`](../../clusters/prd/apps/media/README.md)). Use **in-cluster** Service DNS for Jellyfin + both Sonarrs so traffic skips Authentik Proxy. Prowlarr is not a Seerr integration (Sonarr owns indexers). No Radarr in this lab yet.
 
 ## qBittorrent + VPN
 
@@ -78,4 +84,4 @@ flowchart TB
 
 ## Monitoring
 
-Uptime Kuma probes Authentik **skip paths** that reach the app (`/api` → 401 for *arr; qBit `/api/v2/app/version` → 200), not the unauthenticated `/` redirect to Authentik. Jellyfin monitor hits `/` (native auth, no Authentik). See [`infrastructure/uptime-kuma/monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf).
+Uptime Kuma probes Authentik **skip paths** that reach the app (`/api` → 401 for *arr; qBit `/api/v2/app/version` → 200), not the unauthenticated `/` redirect to Authentik. Jellyfin monitor hits `/` (native auth, no Authentik). Seerr monitor hits `/api/v1/status` (public). See [`infrastructure/uptime-kuma/monitors.tf`](../../infrastructure/uptime-kuma/monitors.tf).

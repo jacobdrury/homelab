@@ -1,4 +1,4 @@
-# Shared CNPG Postgres for *arr apps (Sonarr ×2, Prowlarr). One Cluster, many DBs.
+# Shared CNPG Postgres for *arr apps (Sonarr ×2, Prowlarr) + Seerr. One Cluster, many DBs.
 # 1Password Homelab item: "prd Media Postgres" (username/password).
 # Service: media-pg-rw.media.svc.cluster.local:5432
 ---
@@ -137,6 +137,19 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   name: prowlarr_log
+  owner: media
+  cluster:
+    name: media-pg
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: seerr
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  name: seerr
   owner: media
   cluster:
     name: media-pg
