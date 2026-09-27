@@ -56,6 +56,11 @@ env:
       secretKeyRef:
         name: homepage-media
         key: prowlarr
+  - name: HOMEPAGE_VAR_SEERR_KEY
+    valueFrom:
+      secretKeyRef:
+        name: homepage-media
+        key: seerr
   - name: HOMEPAGE_VAR_QBITTORRENT_USERNAME
     valueFrom:
       secretKeyRef:
@@ -172,6 +177,18 @@ config:
               fields:
                 - series
                 - episodes
+        - Seerr:
+            href: https://seerr.lab.jacobdrury.com
+            description: Requests
+            icon: overseerr.png
+            widget:
+              type: seerr
+              url: https://seerr.lab.jacobdrury.com
+              key: "{{HOMEPAGE_VAR_SEERR_KEY}}"
+              fields:
+                - pending
+                - approved
+                - available
         - qBittorrent:
             href: https://qbittorrent.lab.jacobdrury.com
             description: Downloads

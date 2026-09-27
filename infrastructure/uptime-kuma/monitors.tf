@@ -62,6 +62,13 @@ locals {
       group                 = "Media"
       accepted_status_codes = ["401"]
     }
+    seerr = {
+      name                  = "Seerr"
+      # Public status endpoint (Envoy → Seerr; Jellyfin auth for UI).
+      url                   = "https://seerr.${local.zone}/api/v1/status"
+      group                 = "Media"
+      accepted_status_codes = ["200"]
+    }
     homeassistant = {
       name  = "Home Assistant"
       url   = "https://homeassistant.${local.zone}/"
@@ -86,7 +93,7 @@ locals {
 
   monitor_order = {
     Platform       = ["homepage", "argocd", "authentik", "it_tools"]
-    Media          = ["jellyfin", "qbittorrent", "sonarr", "sonarr_tv", "prowlarr"]
+    Media          = ["jellyfin", "seerr", "qbittorrent", "sonarr", "sonarr_tv", "prowlarr"]
     Home           = ["homeassistant"]
     Infrastructure = ["pihole", "scarif"]
   }
