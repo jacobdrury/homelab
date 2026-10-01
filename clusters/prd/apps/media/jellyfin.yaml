@@ -84,9 +84,10 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 512Mi
+              memory: 1Gi
             limits:
-              memory: 2Gi
+              # 2Gi OOMkilled after ~13h; library metadata pushes past that.
+              memory: 4Gi
       volumes:
         - name: config
           persistentVolumeClaim:
