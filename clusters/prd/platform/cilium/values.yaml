@@ -1,6 +1,10 @@
 ipam:
   mode: kubernetes
 
+# Required when upgrading across minor versions (1.19 → 1.20).
+# https://docs.cilium.io/en/v1.20/operations/upgrade/
+upgradeCompatibility: "1.19"
+
 kubeProxyReplacement: true
 k8sServiceHost: localhost
 k8sServicePort: 7445
