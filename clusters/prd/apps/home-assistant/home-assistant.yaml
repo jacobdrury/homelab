@@ -50,7 +50,7 @@ spec:
         fsGroup: 0
       initContainers:
         - name: merge-secrets
-          image: docker.io/library/python:3.12.7-alpine@sha256:5049c050bdc68575a10bcb1885baa0689b6c15152d8a56a7e399fb49f783bf98
+          image: docker.io/library/python:3.14.8-alpine@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72
           imagePullPolicy: IfNotPresent
           env:
             - name: PGUSER
