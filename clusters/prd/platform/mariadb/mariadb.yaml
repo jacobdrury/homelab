@@ -1,0 +1,129 @@
+# Shared MariaDB — official docker.io/library/mariadb (not Bitnami).
+# Reuses PVC data-mariadb-0 (Bitnami layout: datadir at subPath data/).
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: mariadb
+  labels:
+    app.kubernetes.io/name: mariadb
+spec:
+  type: ClusterIP
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: mysql
+  selector:
+    app.kubernetes.io/name: mariadb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-headless
+  namespace: mariadb
+  labels:
+    app.kubernetes.io/name: mariadb
+spec:
+  clusterIP: None
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: mysql
+  selector:
+    app.kubernetes.io/name: mariadb
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: mariadb
+  labels:
+    app.kubernetes.io/name: mariadb
+spec:
+  serviceName: mariadb-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mariadb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mariadb
+    spec:
+      securityContext:
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+        # Bitnami wrote the datadir as uid 1001; official image runs as mysql (999).
+        - name: fix-datadir-perms
+          image: docker.io/library/alpine:3.24.2@sha256:d56c381f961d307a21b3ca004cf1e3910f106644aefb1f43e654c8a56c4fd395
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+            - chown -R 999:999 /var/lib/mysql
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+              subPath: data
+      containers:
+        - name: mariadb
+          image: docker.io/library/mariadb:13.0.2@sha256:f1bba652ba57bea3099ca2fe1af692af537c27d96e0bcde39dce29e2ba1ec4f3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: mysql
+              containerPort: 3306
+          env:
+            # Only used on first init; existing Bitnami datadir keeps its root password.
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-credentials
+                  key: mariadb-root-password
+            - name: MARIADB_AUTO_UPGRADE
+              value: "1"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+              subPath: data
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            exec:
+              command:
+                - healthcheck.sh
+                - --connect
+                - --innodb_initialized
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - healthcheck.sh
+                - --connect
+                - --innodb_initialized
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data-mariadb-0
