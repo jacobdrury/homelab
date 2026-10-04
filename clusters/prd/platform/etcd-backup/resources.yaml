@@ -60,7 +60,7 @@ spec:
               effect: NoSchedule
           initContainers:
             - name: snapshot
-              image: ghcr.io/siderolabs/talosctl:v1.12.7
+              image: ghcr.io/siderolabs/talosctl:v1.12.7@sha256:7c7892c5f27b8724649eb1886945d28a484fd02474bfe612e8e221da32552cb7
               imagePullPolicy: IfNotPresent
               command:
                 - /talosctl
