@@ -114,7 +114,7 @@ spec:
             limits:
               memory: 128Mi
         - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent:5.2.3@sha256:d157cbfb81272a252f2d3a80fcc7a3c347949919bf25443c421b465d31e38f42
+          image: lscr.io/linuxserver/qbittorrent:5.2.3@sha256:0ec64d5c7b7ba07c9c28458c78306231ac7677efb9ce8198f3dcb2e27cb2d444
           imagePullPolicy: IfNotPresent
           env:
             - name: PUID
