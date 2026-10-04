@@ -326,7 +326,7 @@ Target: **yavin + hoth + endor**, all Talos **control planes**, all schedule pod
 - [ ] Agent workstation Tailscale + kubecontext docs / Cursor rules  
 - [ ] Agent API tokens in 1Password  
 - [ ] Optional MCP  
-- [ ] Renovate when ready  
+- [x] Renovate — Mend GitHub App (Renovate Only) + [`renovate.json`](../renovate.json); [setup](setup/renovate.md) 
 - [ ] Restore / node-replace docs  
 - [ ] Public HTTPS only if needed  
 

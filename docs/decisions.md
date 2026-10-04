@@ -60,7 +60,7 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Laptops | Precision optional NVENC/burst; Inspiron **out of lab plan** |
 | Backups | **Decide after Unraid is up** (parity ≠ backup; UD has no parity) |
 | Tooling | **proto + moon** ([moonrepo](https://moonrepo.dev/)) |
-| Dep updates | **Renovate later**; no Dependabot version updates |
+| Dep updates | **Mend Renovate GitHub App** (Renovate Only / free); config in [`renovate.json`](../renovate.json); no Dependabot version updates (security updates OK) — [renovate](setup/renovate.md) |
 | CI / OpenTofu | **Done** — GHA + `moon ci`; R2 state; `tag:ci` → UniFi via subnet + Kuma via L7 (**not** ARC); 1Password SA; no fork PRs with secrets — [opentofu-ci](setup/opentofu-ci.md) |
 | Agents | **First-class**: Tailscale + kubeconfig + lab HTTPS + `op`; GitOps preferred |
 | Host naming | **Star Wars planets** for physical hosts + Talos nodes; Unraid = **`scarif`**; interim worker = **`naboo`** — [naming](architecture/naming.md) |
