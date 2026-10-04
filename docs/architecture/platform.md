@@ -15,7 +15,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | Ingress | **Envoy Gateway** | Live — VIP **`192.168.5.21`** (secondary IP on yavin + hostNetwork; HA in Phase 4) — [networking](networking.md#https) |
 | Identity | **Authentik** | Live path — `auth.lab.jacobdrury.com`; OIDC for Argo/Grafana/etc.; CNPG Postgres |
 | Postgres | **CloudNativePG** | Operator in `platform/cloudnative-pg/`; **todo:** one shared `Cluster` (many DBs) |
-| MariaDB | **Shared Bitnami MariaDB** | `platform/mariadb/` — many DBs; Kuma first |
+| MariaDB | **Shared official MariaDB** | `platform/mariadb/` — `docker.io/library/mariadb`; many DBs; Kuma first |
 | Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
 | Monitoring | **metrics-server** (Metrics API); Prometheus, Grafana (Phase 5); **Uptime Kuma** after Argo | Bootstrap debug: `connect/` + k9s + talosctl — full scrape stack deferred (yavin RAM) |

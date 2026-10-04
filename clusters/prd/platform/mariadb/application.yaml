@@ -1,5 +1,5 @@
 # Shared MariaDB — one instance, many app databases (Kuma first).
-# Chart: oci://registry-1.docker.io/bitnamicharts/mariadb
+# Official docker.io/library/mariadb (Bitnami chart retired).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -9,38 +9,15 @@ metadata:
     argocd.argoproj.io/sync-wave: "5"
 spec:
   project: default
-  sources:
-    - repoURL: registry-1.docker.io/bitnamicharts
-      chart: mariadb
-      targetRevision: 28.1.1
-      helm:
-        releaseName: mariadb
-        valueFiles:
-          - $values/clusters/prd/platform/mariadb/values.yaml
-    - repoURL: https://github.com/jacobdrury/homelab.git
-      targetRevision: main
-      ref: values
-    - repoURL: https://github.com/jacobdrury/homelab.git
-      targetRevision: main
-      path: clusters/prd/platform/mariadb
-      directory:
-        include: resources.yaml
+  source:
+    repoURL: https://github.com/jacobdrury/homelab.git
+    targetRevision: main
+    path: clusters/prd/platform/mariadb
+    directory:
+      include: '{mariadb,resources}.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: mariadb
-  # Bitnami STS: API defaults / empty arrays drift forever under SSA + selfHeal.
-  ignoreDifferences:
-    - group: apps
-      kind: StatefulSet
-      name: mariadb
-      jsonPointers:
-        - /spec/volumeClaimTemplates
-        - /spec/persistentVolumeClaimRetentionPolicy
-      jqPathExpressions:
-        - .spec.template.spec.securityContext.supplementalGroups
-        - .spec.template.spec.securityContext.sysctls
-        - .spec.template.spec.affinity.nodeAffinity
-        - .spec.template.spec.affinity.podAffinity
   syncPolicy:
     automated:
       prune: true
@@ -48,4 +25,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-      - RespectIgnoreDifferences=true
