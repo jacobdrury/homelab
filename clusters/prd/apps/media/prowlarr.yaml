@@ -79,7 +79,7 @@ spec:
               readOnly: true
       containers:
         - name: prowlarr
-          image: lscr.io/linuxserver/prowlarr:2.4.0@sha256:a8d9366f65212153924de8a1b92a24f3be678b650c7e0cbb0606d4651d2b34ec
+          image: lscr.io/linuxserver/prowlarr:2.6.5@sha256:aea78c83f859fcfeff7c8863fffdbda817df7ee05467c94d26800a2e099b01b9
           imagePullPolicy: IfNotPresent
           env:
             - name: PUID
