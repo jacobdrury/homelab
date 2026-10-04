@@ -74,7 +74,7 @@ OpenTofu talks to the Homelab gateway from `lab.yaml` (`networks.homelab.gateway
 | Secrets | `op signin` + `moon.yml` `TOFU_SECRET_*` | `load-secrets-action` → env; `env.sh` skips `op` when set |
 | State | R2 (`homelab-tofu-state`) | same |
 | UniFi | LAN or Tailscale `--accept-routes` | Tailscale Action + `--accept-routes` |
-| Kuma API | Tailscale L7 Ingress (on tailnet) | Action `targets:` wait + moon |
+| Kuma API | Tailscale L7 Ingress (on tailnet) | Action `ping:` wait + moon |
 
 ## Break-glass
 
