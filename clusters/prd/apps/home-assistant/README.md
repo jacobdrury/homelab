@@ -29,7 +29,7 @@ Envoy → Service (native HA + OIDC). **Not** Authentik Proxy. Blueprint: `../au
 
 ## Notes
 
-- Image pinned **`2026.8.3`** (skip `2026.9.1` listen-addr regression).
+- Image pinned **`2026.9.4`** (`2026.9.1` localhost bind regression was skipped; 2026.9.4 verified on `0.0.0.0:8123`).
 - **`hostNetwork`:** LAN mDNS/HomeKit discovery; binds node `:8123`. Ingress path unchanged (Envoy → ClusterIP Service → host endpoint).
 - IoT: UniFi Homelab→IoT + IoT→Envoy `.21:80/443` + mDNS Homelab/IoT.
 - Homepage + Uptime Kuma: `homeassistant.lab.jacobdrury.com`.

@@ -6,7 +6,7 @@ Live on Talos `prd` (Phase 3). Leans: [decisions](../decisions.md) · app: [apps
 
 | Piece | Choice |
 |-------|--------|
-| Runtime | Official **Container** image (`ghcr.io/home-assistant/home-assistant:**2026.8.3**`) — not HA OS / Supervisor. Skip `2026.9.1` until listen-addr regression is fixed |
+| Runtime | Official **Container** image (`ghcr.io/home-assistant/home-assistant:**2026.9.4**`) — not HA OS / Supervisor (`2026.9.1` had a localhost bind regression; fixed by 2026.9.4) |
 | Namespace | `home-assistant` |
 | Config | RWO PVC on **`scarif-iscsi`** (`/config`) |
 | Recorder DB | CNPG Cluster **`home-assistant-pg`** (dedicated; not `media-pg`) |
