@@ -64,9 +64,10 @@ jobs:
           oauth-client-id: ${{ env.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ env.TS_OAUTH_SECRET }}
           tags: tag:ci
-          args: --accept-routes --accept-dns
+          # v4 always passes --accept-routes; only add extra up flags here.
+          args: --accept-dns
           # Wait for peer-map propagation before moon ci hits the L7 Ingress.
-          targets: uptime-kuma.ibex-ladon.ts.net
+          ping: uptime-kuma.ibex-ladon.ts.net
 
       - name: Validate and plan
         if: github.event_name == 'pull_request'
