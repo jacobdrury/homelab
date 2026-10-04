@@ -46,6 +46,12 @@ spec:
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:17.6
   enableSuperuserAccess: false
+  # Seerr (TypeORM pool=10) once left every connection idle-in-transaction for days
+  # after a hung Jellyfin sync, so HTTPRoute / and DB routes 504'd while /api/v1/status
+  # still passed. Kill abandoned txns so the pool can recover without a pod restart.
+  postgresql:
+    parameters:
+      idle_in_transaction_session_timeout: "5min"
   bootstrap:
     initdb:
       database: media

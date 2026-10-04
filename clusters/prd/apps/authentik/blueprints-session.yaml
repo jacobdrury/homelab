@@ -1,0 +1,25 @@
+# Authentik session length — keep lab SSO logged in for weeks (not browser-close).
+# Pair with long proxy access_token_validity: the outpost does not refresh tokens.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-session
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  session.yaml: |
+    version: 1
+    metadata:
+      name: long-lived-sessions
+    entries:
+      - model: authentik_stages_user_login.userloginstage
+        id: stage-auth-login
+        state: present
+        identifiers:
+          name: default-authentication-login
+        attrs:
+          name: default-authentication-login
+          session_duration: weeks=4
+          # Offer "Remember me" for another 4 weeks on top when checked.
+          remember_me_offset: weeks=4

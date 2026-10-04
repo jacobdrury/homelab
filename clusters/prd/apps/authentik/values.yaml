@@ -18,6 +18,7 @@ postgresql:
 
 blueprints:
   configMaps:
+    - authentik-blueprint-session
     - authentik-blueprint-argocd
     - authentik-blueprint-uptime
     - authentik-blueprint-media
