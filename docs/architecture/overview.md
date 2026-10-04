@@ -59,7 +59,7 @@ Host naming: [naming](naming.md).
 - Dedicated worker-only nodes as the **steady** design (all three CPs schedule pods). **Interim OK:** **naboo** worker VM on scarif until hoth/endor  
 - Full Talos **control plane** on Unraid (worker VM only)  
 - Running `stg` until you explicitly want a second cluster  
-- Dependabot version updates (Renovate later)  
+- Dependabot version updates (Renovate handles versions; Dependabot security-only OK)  
 - Buying a second large drive before Unraid is useful (UD path instead)  
 
 ## Related
