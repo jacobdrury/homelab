@@ -71,6 +71,8 @@ tasks:
       - '@group(tf-config)'
       - '@group(tf-lock)'
       - '@group(tf-state)'
+      # Secret/env wiring for moon tasks (TOFU_SECRET_* paths).
+      - 'moon.yml'
     outputs:
       - '.tofu.plan'
     options:
@@ -87,7 +89,14 @@ tasks:
       source "${MOON_WORKSPACE_ROOT}/.moon/scripts/tofu/env.sh"
       test -f .tofu.plan || { echo "missing .tofu.plan — run plan first" >&2; exit 1; }
       exec tofu apply .tofu.plan
+    # moon ci :apply only marks a task affected when *its own* inputs match the
+    # diff. .tofu.plan is gitignored, so tf-only changes previously selected
+    # zero :apply targets (plan ran on PRs; main apply was a no-op). Keep the
+    # same config inputs as :plan so CI applies when OpenTofu code changes.
     inputs:
+      - '@group(tf-config)'
+      - '@group(tf-lock)'
+      - 'moon.yml'
       - '.tofu.plan'
     options:
       cache: false

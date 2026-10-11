@@ -17,6 +17,8 @@ Workflow: [`.github/workflows/tofu.yml`](../../.github/workflows/tofu.yml)
 
 `moon ci` defaults to `--downstream=direct`. Without `--downstream=none` on PRs, `:plan` would also run `:apply` (because apply depends on plan). Shared `lab.yaml` is an implicit input — changing it affects all OpenTofu projects.
 
+**Affected detection:** `moon ci :apply` only selects tasks whose **own** `inputs` match the diff (it does not treat “`:plan` would run” as enough). `:apply` therefore lists the same `*.tf` / lock / `moon.yml` inputs as `:plan` (plus gitignored `.tofu.plan`). If apply only listed `.tofu.plan`, main CI reported success with **zero** apply targets on OpenTofu-only PRs.
+
 ## One-time setup (completed)
 
 ### 1. 1Password Service Account
@@ -42,6 +44,7 @@ Or via [1Password Developer](https://developer.1password.com/docs/service-accoun
 | Tailscale OAuth | `client id`, `credential` (OpenTofu provider) |
 | **Tailscale CI OAuth** | `client id`, `credential` |
 | Uptime Kuma | `username`, `password` |
+| prd Discord Lab Alerts | `password` (Discord webhook for Kuma) |
 
 ### 3. Tailscale CI OAuth client
 

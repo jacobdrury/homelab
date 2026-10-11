@@ -78,6 +78,8 @@ jobs:
 
       - name: Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        # :apply inputs include *.tf / moon.yml (see .moon/tasks/tofu.yml). A
+        # .tofu.plan-only input list made main applies a no-op on tf-only diffs.
         run: moon ci :apply
 
       - uses: moonrepo/run-report-action@v1
