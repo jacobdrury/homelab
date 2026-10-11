@@ -8,6 +8,8 @@
 #   skip_path that reaches the app (see blueprints-uptime / blueprints-media):
 #   - *arr `/api` → 401 without API key (app up)
 #   - qBit `/api/v2/app/version` → 200 (app up)
+# - qBit UI up ≠ Mullvad up (peers bind wg0). Probe the sidecar health port
+#   in-cluster; Discord notifies only that monitor.
 
 locals {
   zone = local.lab.dns.zone
@@ -43,6 +45,17 @@ locals {
       url                   = "https://qbittorrent.${local.zone}/api/v2/app/version"
       group                 = "Media"
       accepted_status_codes = ["200"]
+    }
+    mullvad = {
+      name                  = "Mullvad (qBit)"
+      # Sidecar :8081 checks wg handshake + am.i.mullvad.net via wg0.
+      url                   = "http://qbittorrent.media.svc.cluster.local:8081/"
+      group                 = "Media"
+      accepted_status_codes = ["200"]
+      notify_discord        = true
+      # Health check itself curls Mullvad; give the probe a bit more room.
+      timeout               = 20
+      max_retries           = 2
     }
     sonarr = {
       name                  = "Sonarr Anime"
@@ -93,7 +106,7 @@ locals {
 
   monitor_order = {
     Platform       = ["homepage", "argocd", "authentik", "it_tools"]
-    Media          = ["jellyfin", "seerr", "qbittorrent", "sonarr", "sonarr_tv", "prowlarr"]
+    Media          = ["jellyfin", "seerr", "qbittorrent", "mullvad", "sonarr", "sonarr_tv", "prowlarr"]
     Home           = ["homeassistant"]
     Infrastructure = ["pihole", "scarif"]
   }
@@ -105,11 +118,16 @@ resource "uptimekuma_monitor_http" "lab" {
   name                  = each.value.name
   url                   = each.value.url
   interval              = 60
-  timeout               = 15
-  max_retries           = 1
+  timeout               = lookup(each.value, "timeout", 15)
+  max_retries           = lookup(each.value, "max_retries", 1)
   retry_interval        = 30
   active                = true
   method                = "GET"
   max_redirects         = 0
   accepted_status_codes = lookup(each.value, "accepted_status_codes", ["200-399"])
+  notification_ids = (
+    lookup(each.value, "notify_discord", false)
+    ? [uptimekuma_notification.discord.id]
+    : []
+  )
 }

@@ -35,3 +35,5 @@ The provider does **not** support import. If slug `default` already exists from 
 3. `moon run uptime-kuma:apply` (or CI on merge)
 
 For **Authentik-proxied** apps, do **not** probe `/` (that only checks the Authentik login redirect). Use a `skip_path_regex` URL that reaches the backend — see comments in `monitors.tf` (media *arr `/api` → 401; qBit version API → 200).
+
+**Mullvad:** qBit UI up does not mean the VPN works (peers bind `wg0`). Monitor `Mullvad (qBit)` hits `http://qbittorrent.media.svc.cluster.local:8081/` (sidecar health). Discord notifications use 1Password **`prd Discord Lab Alerts`** (same webhook channel as Sonarr) via `notifications.tf`.

@@ -57,6 +57,7 @@ jobs:
           # Uptime Kuma API via Tailscale L7 Ingress (not Authentik)
           UPTIMEKUMA_USERNAME: op://Homelab/Uptime Kuma/username
           UPTIMEKUMA_PASSWORD: op://Homelab/Uptime Kuma/password
+          TF_VAR_discord_webhook_url: op://Homelab/prd Discord Lab Alerts/password
 
       - name: Tailscale
         uses: tailscale/github-action@v4

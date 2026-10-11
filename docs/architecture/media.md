@@ -66,7 +66,7 @@ Wire in the Seerr UI after deploy (see [`clusters/prd/apps/media/README.md`](../
 | BitTorrent peers (up/down) | Out **Mullvad WireGuard** (sidecar `wg0`; qBit binds to it) |
 | Web UI | **`https://qbittorrent.lab.jacobdrury.com`** — Authentik Proxy → qBit Service |
 
-Mullvad conf in 1Password **`prd Mullvad WireGuard`**. Sidecar runs `wg-quick` with **`Table = off`** so UI/DNS stay on eth0. **Gluetun is not used on k8s.**
+Mullvad conf in 1Password **`prd Mullvad WireGuard`**. Sidecar runs `wg-quick` with **`Table = off`** so UI/DNS stay on eth0. **Gluetun is not used on k8s.** Sidecar also serves **`:8081`** (handshake + `am.i.mullvad.net` via `wg0`) for Uptime Kuma → Discord (`prd Discord Lab Alerts`).
 
 ```mermaid
 flowchart TB

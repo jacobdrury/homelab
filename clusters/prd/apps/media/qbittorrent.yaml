@@ -84,6 +84,59 @@ spec:
               if ! grep -qE '^[[:space:]]*Table[[:space:]]*=' "$conf"; then
                 sed -i '/^\[Interface\]/a Table = off' "$conf"
               fi
+              # Mullvad exports set DNS=; resolvconf then fails in this image and
+              # wg-quick rolls wg0 back. Pod DNS stays on eth0 intentionally.
+              sed -i -E '/^[[:space:]]*DNS[[:space:]]*=/d' "$conf"
+              # NAT/k8s SNAT needs keepalive or the handshake dies quietly.
+              if ! grep -qE '^[[:space:]]*PersistentKeepalive[[:space:]]*=' "$conf"; then
+                printf '\nPersistentKeepalive = 25\n' >> "$conf"
+              fi
+
+              check_mullvad() {
+                local hs now age body
+                hs=$(wg show wg0 latest-handshakes 2>/dev/null | awk 'NR==1 {print $2}')
+                if [ -z "${hs:-}" ] || [ "$hs" = "0" ]; then
+                  return 1
+                fi
+                now=$(date +%s)
+                age=$((now - hs))
+                # Keepalive is 25s; treat >3m without handshake as down.
+                if [ "$age" -gt 180 ]; then
+                  return 1
+                fi
+                body=$(curl -sS --max-time 8 --interface wg0 https://am.i.mullvad.net/connected 2>/dev/null || true)
+                if ! echo "$body" | grep -qi 'You are connected to Mullvad'; then
+                  return 1
+                fi
+                return 0
+              }
+
+              # Refresh status in the background so :8081 stays accepting connections
+              # while the Mullvad HTTP check (up to ~8s) runs.
+              printf '503 Service Unavailable\nstarting\n' > /tmp/mullvad.health
+              (
+                while true; do
+                  if check_mullvad; then
+                    printf '200 OK\nok\n' > /tmp/mullvad.health
+                  else
+                    printf '503 Service Unavailable\nmullvad down\n' > /tmp/mullvad.health
+                  fi
+                  sleep 15
+                done
+              ) &
+
+              # ClusterIP probe for Uptime Kuma (UI stays on :8080 / eth0).
+              (
+                while true; do
+                  status=$(head -1 /tmp/mullvad.health)
+                  body=$(sed -n '2p' /tmp/mullvad.health)
+                  len=${#body}
+                  printf 'HTTP/1.1 %s\r\nContent-Type: text/plain\r\nContent-Length: %s\r\nConnection: close\r\n\r\n%s' \
+                    "$status" "$len" "$body" \
+                    | nc -l -p 8081 -q 1 >/dev/null || true
+                done
+              ) &
+
               # Keep the sidecar alive even if conf is still a 1Password stub,
               # so qBit can come Ready for config copy / UI smoke.
               while true; do
@@ -96,6 +149,9 @@ spec:
                 echo "wg-quick failed; retrying in 30s (check 1Password Mullvad conf)"
                 sleep 30
               done
+          ports:
+            - name: mullvad-health
+              containerPort: 8081
           securityContext:
             capabilities:
               add:
@@ -176,4 +232,8 @@ spec:
     - name: http
       port: 8080
       targetPort: http
+    # In-cluster only — Mullvad/wg0 health for Uptime Kuma (not on Authentik / public DNS).
+    - name: mullvad-health
+      port: 8081
+      targetPort: mullvad-health
 # HTTPRoute added at cutover — see httproutes.yaml (kept out of Argo include until config copy).

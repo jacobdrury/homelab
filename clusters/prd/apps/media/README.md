@@ -7,7 +7,7 @@ qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Je
 
 ## Prerequisites
 
-1. **1Password** Homelab item **`prd Mullvad WireGuard`** — full Mullvad WireGuard config in the **password** field (`Table = off` under `[Interface]` preferred; sidecar injects if missing).
+1. **1Password** Homelab item **`prd Mullvad WireGuard`** — full Mullvad WireGuard config in the **password** field (`Table = off` under `[Interface]` preferred; sidecar injects if missing, strips `DNS=`, adds `PersistentKeepalive`). Health for Kuma: Service port **8081**.
 2. **1Password** **`prd Media Postgres`** — CNPG owner (`username` / `password`).
 3. Scarif media tree owned for NFS squash: `nobody:users` (`99:100`) — see [media.md](../../../docs/architecture/media.md).
 
