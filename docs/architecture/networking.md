@@ -51,7 +51,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 
 **LAN DNS path:** DHCP advertises each VLAN **gateway**; UniFi forwards to Pi-hole VIP **`192.168.5.22`** (WAN DNS on Internet 1). That keeps UniFi domain-based VPN traffic routes working while Pi-hole still filters. Talos patches prefer `.22` then Cloudflare — re-apply machine config when convenient. HA uses `dnsConfig.ndots: "2"`.
 
-**IPv6:** WAN IPv6 is off; LAN **router advertisements are off** (`ipv6_ra_enable = false`). Advertising ULA/RA with no IPv6 uplink makes macOS show Wi‑Fi “!” and can bypass IPv4-only VPN domain routes.
+**IPv6:** WAN Internet 1 uses **DHCPv6 + PD** (AT&T). The ISP currently hands out a single **/64**, so only **Drury** runs PD + RA/SLAAC; other VLANs stay IPv4-only until a larger prefix is available. Domain-based VPN traffic routes remain IPv4-only — IPv6 to those destinations may still use the native WAN unless you add matching policy later.
 - Codify static reservations for scarif, yavin, and `k8s.lab` target  
 - Don’t IaC every Wi‑Fi tweak on day one  
 

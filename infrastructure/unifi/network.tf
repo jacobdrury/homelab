@@ -16,6 +16,9 @@ locals {
     for key, net in local.lan_networks :
     key => [split("/", net.gateway_cidr)[0]]
   }
+
+  # AT&T currently delegates a single /64 — only one LAN can take PD.
+  # Drury (trusted clients) gets it; other VLANs stay IPv4-only until a larger prefix arrives.
 }
 
 import {
@@ -38,9 +41,13 @@ resource "unifi_network" "lan" {
   # Native LAN (Drury) has no VLAN tag — omit vlan_id when unset.
   vlan_id = try(each.value.vlan_id, null)
 
-  # No IPv6 WAN — leave RA off. Advertising ULA/RA with no working IPv6 path
-  # makes macOS show Wi‑Fi "!" and can bypass IPv4-only VPN domain routes.
-  ipv6_ra_enable = false
+  # IPv6: only Drury uses WAN PD (single /64 from AT&T). Other VLANs stay off
+  # so RA does not advertise empty/ULA prefixes.
+  ipv6_interface_type = each.key == "drury" ? "pd" : "none"
+  ipv6_pd_interface   = each.key == "drury" ? "wan" : null
+  ipv6_pd_prefixid    = each.key == "drury" ? "0" : null
+  ipv6_ra_enable      = each.key == "drury"
+  ipv6_ra_priority    = each.key == "drury" ? "high" : null
 
   # Reflect mDNS on trusted + IoT. Guest/Camera stay off (Isolated).
   # Needed for HomeKit / Chromecast / ESPHome discovery across VLANs.
@@ -57,6 +64,10 @@ resource "unifi_network" "homelab" {
   dhcp_stop    = local.lab.networks.homelab.dhcp.stop
 
   dhcp_dns = [split("/", local.lab.networks.homelab.gateway_cidr)[0]]
+
+  # No spare /64 under current AT&T delegation — keep Homelab IPv4-only for now.
+  ipv6_interface_type = "none"
+  ipv6_ra_enable      = false
 
   # HA (Homelab) must hear IoT HomeKit/zeroconf ads — UniFi reflects between
   # networks that both have Multicast DNS on. Guest/Camera stay off.
@@ -78,10 +89,10 @@ resource "unifi_network" "wan_primary" {
   purpose          = "wan"
   wan_networkgroup = "WAN"
   wan_type         = "dhcp"
-  wan_type_v6      = "disabled"
+  wan_type_v6      = "dhcpv6"
   wan_dns          = [local.lab.services.pihole.host]
 
-  # Import brings ISP/controller defaults; only wan_dns is intentional.
+  # Import brings ISP/controller defaults; only wan_dns + IPv6 WAN type are intentional.
   lifecycle {
     ignore_changes = [
       dhcp_lease,
