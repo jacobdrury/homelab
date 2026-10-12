@@ -9,7 +9,7 @@ Stateless DNS / ad blocking. Parallel to LXC until DHCP cutover — [docs/archit
 | `pihole-policy` | Block/allow lists + domains (JSON) |
 | `pihole-dnsmasq` | `*.lab` forward + local hosts |
 | `pihole-sync` | Sidecar reconciles policy via v6 API |
-| `Service/pihole-dns` | LoadBalancer **`192.168.5.22`** :53 TCP/UDP |
+| `Service/pihole-dns` | LoadBalancer **`192.168.5.22`** :53 TCP/UDP (UniFi WAN DNS; LAN DHCP uses VLAN gateways for VPN domain routes) |
 | `Service/pihole` | ClusterIP :80 → Authentik / HTTPRoute |
 
 Edit `configmap-policy.yaml` / `configmap-dnsmasq.yaml` in Git. Settings ConfigMap changes need a Deployment rollout.

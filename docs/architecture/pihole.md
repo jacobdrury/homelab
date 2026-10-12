@@ -12,7 +12,7 @@ LAN DNS / ad blocking on Talos `prd`. Leans: [decisions](../decisions.md) · app
 | Config SoT | **ConfigMaps** in Git + sync sidecar |
 | DNS | Cilium L2 LoadBalancer VIP **`192.168.5.22`** — UDP/TCP **53** |
 | Admin | ClusterIP `:80` → Envoy + **Authentik Proxy** |
-| DHCP / ZBF | UniFi (all VLANs) → **`.22`** — OpenTofu `infrastructure/unifi/` |
+| DHCP / ZBF | UniFi DHCP → VLAN **gateway**; WAN DNS → **`.22`**; ZBF still allows IoT/Isolated → **`.22`** — OpenTofu `infrastructure/unifi/` |
 | Config | ConfigMaps + sync sidecar (`clusters/prd/apps/pihole/`) |
 
 ## Stats (ephemeral)
@@ -27,12 +27,12 @@ Authentik Proxy; Pi-hole web password **disabled**. Config-sync uses localhost (
 
 | Path | Backend |
 |------|---------|
-| LAN DNS / DHCP | **`192.168.5.22`** (k8s) |
+| LAN DNS | DHCP → gateway → **`192.168.5.22`** (k8s); supports UniFi VPN domain routes |
 | `pihole.lab` UI | Authentik → in-cluster |
 | Policy / local DNS | GitOps ConfigMaps (LXC OpenTofu **retired**) |
 | LXC `.11` (VMID **106**) | Stop when soak is trusted |
 
-**Still open:** DHCP clients renew automatically (lease **24h**, typically ~**12h** at T1); force renew to pick up `.22` sooner. Then stop LXC **106**.
+**Still open:** DHCP clients renew automatically (lease **24h**, typically ~**12h** at T1); force renew after DNS path changes. Then stop LXC **106**.
 
 ## Related
 

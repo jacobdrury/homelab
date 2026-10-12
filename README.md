@@ -10,7 +10,7 @@ GitOps-managed home lab: **Talos** · **Unraid** · **Tailscale** · **Argo CD**
 | Access | Tailscale + **`https://*.lab`** via Envoy `.21` · Homelab via k8s Connector | Same URLs · Drury still via homelab02 until black retires |
 | Storage | **scarif** — 24TB UD · **NFS** + **iSCSI** (`scarif-nfs` / `scarif-iscsi`) · naboo on NVMe | Same + optional array/parity |
 | pc (black) | Stop Pi-hole LXC after DNS soak (arr / HA / discord-bots already stopped) | **Personal gaming** (Phase 4) |
-| Network | Homelab **VLAN 5** + UniFi **ZBF** · DHCP DNS → Pi-hole VIP `.22` | Full lab on VLAN + Tailscale |
+| Network | Homelab **VLAN 5** + UniFi **ZBF** · DHCP → gateway → Pi-hole `.22` | Full lab on VLAN + Tailscale |
 | Apps | **Media + HA + Pi-hole on k8s** · Homepage / Authentik / Kuma | Same + Phase 5/6 |
 | Delivery | **Argo CD** · `https://argocd.lab.jacobdrury.com` | Same |
 | Secrets | **1Password** → Connect → ESO (`ClusterSecretStore/onepassword`) | Same |
