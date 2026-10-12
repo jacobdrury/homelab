@@ -33,7 +33,12 @@ dns:
 
 
 networks:
-  # Primary trusted LAN (UniFi native / VLAN 1). Proxmox, clients; DNS → Homelab Pi-hole VIP.
+  # Primary WAN (UniFi "Internet 1") — WAN DNS → Pi-hole; LAN DHCP uses each VLAN gateway.
+  wan_primary:
+    unifi_name: Internet 1
+    unifi_id: 62e83ed5dfd87906d68f64e1
+
+  # Primary trusted LAN (UniFi native / VLAN 1). Proxmox, clients; DHCP DNS → gateway → Pi-hole.
   drury:
     unifi_name: Drury
     # Native LAN — no vlan_id in UniFi resource (provider shows 0).
@@ -121,7 +126,8 @@ networks:
 
 services:
   pihole:
-    # LAN DNS — Cilium L2 LoadBalancer VIP on Homelab (DHCP + UniFi ZBF).
+    # LAN DNS — Cilium L2 LoadBalancer VIP on Homelab.
+    # UniFi WAN DNS + ZBF allow IoT/Isolated → .22 (direct clients / fallback).
     host: 192.168.5.22
   homeassistant:
     host: 192.168.2.8 # legacy HA OS VM (IoT); live HA is k8s → Envoy .21 — stop when soak done

@@ -37,7 +37,8 @@ Locked leans for the lab. Update here when something changes; [roadmap](roadmap.
 | Domain | `lab.jacobdrury.com`; registrar Squarespace → **Cloudflare DNS** (OpenTofu), full Cloudflare transfer later |
 | TLS | cert-manager + **Let’s Encrypt DNS-01** via Cloudflare; wildcard **`*.lab.jacobdrury.com`** on Envoy; **scarif** HTTPS via Envoy proxy to Unraid HTTP |
 | Remote `*.lab` URLs | **Same names** home and away: Cloudflare RFC1918 A records; LAN via Pi-hole forward; Tailscale **split DNS → Cloudflare** + **subnet router** — [networking](architecture/networking.md#same-urls-at-home-and-away) |
-| Homelab firewall | **Zone-Based Firewall** (UniFi OS 9+): Drury → Homelab allow all; **Homelab → IoT allow**; **IoT → Homelab Envoy `.21:80/443`**; Homelab → Guest/Camera deny; **IoT/Isolated → Pi-hole DNS `.22`**; Homelab → Drury = transitional Proxmox only — [networking](architecture/networking.md) |
+| Homelab firewall | **Zone-Based Firewall** (UniFi OS 9+): Drury → Homelab allow all; **Homelab → IoT allow**; **IoT → Homelab Envoy `.21:80/443`**; Homelab → Guest/Camera deny; **IoT/Isolated → Pi-hole DNS `.22`** (fallback; steady DNS is gateway → Pi-hole); Homelab → Drury = transitional Proxmox only — [networking](architecture/networking.md) |
+| LAN DNS path | DHCP → **UniFi gateway** → Pi-hole **`.22`** (WAN DNS). Gateway DNS is required for UniFi domain-based VPN traffic routes — [networking](architecture/networking.md) |
 | Unraid IP | **Static on Unraid** outside DHCP pool (e.g. `.10`) |
 | UniFi IaC | OpenTofu under `infrastructure/unifi/` — **required before Talos** (with homelab VLAN) |
 | DNS app | **Pi-hole** in k8s — **Deployment ×3**, ConfigMaps SoT, Cilium L2 VIP `.22`; Authentik Proxy for UI — [pihole](architecture/pihole.md) |

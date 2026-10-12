@@ -8,6 +8,8 @@
 #   Homelab → IoT: allow all (Home Assistant on k8s must reach devices)
 #   Homelab → Guest/Camera (Isolated): deny
 #   IoT / Isolated → Homelab Pi-hole DNS VIP (.22): DNS only
+#     (steady path is client → VLAN gateway → Pi-hole via WAN DNS; keep
+#     direct .22 allow for static DNS / fallback)
 #   Homelab → Internet: rely on External zone defaults (allow)
 
 resource "unifi_firewall_group" "dns" {

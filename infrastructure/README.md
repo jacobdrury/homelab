@@ -24,7 +24,7 @@ Creates **Homelab** VLAN 5 (`192.168.5.0/24`). scarif migrated to `192.168.5.10`
 
 **Switch ports** (`devices.tf`): Pro Max 16 **Ports 13 + 5** → Homelab (**yavin** USB 2.5G + onboard 1G). Existing IoT/Drury overrides on that switch are declared too (provider replaces the full override array).
 
-**Networks:** Drury / Homelab / IoT / Guest / Camera are managed resources; DHCP DNS → Pi-hole VIP `.22`.
+**Networks:** Drury / Homelab / IoT / Guest / Camera + WAN Internet 1; DHCP DNS → VLAN gateway; WAN DNS → Pi-hole VIP `.22` (UniFi VPN domain routes).
 
 CI reaches the gateway via Tailscale `--accept-routes`.
 

@@ -49,7 +49,9 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 - **Homelab → Internet:** External zone defaults (allow)  
 - **mDNS (Multicast DNS):** **on** for Drury, Homelab, and IoT; **off** for Guest/Camera — UniFi reflects `_hap._tcp` / chromecast / similar between those VLANs so HA can discover HomeKit devices on IoT (`network.tf`)  
 
-**DNS from Homelab:** LAN DNS is k8s Pi-hole VIP **`192.168.5.22`** (same VLAN). Talos patches prefer `.22` then Cloudflare — re-apply machine config when convenient. HA uses `dnsConfig.ndots: "2"`.
+**LAN DNS path:** DHCP advertises each VLAN **gateway**; UniFi forwards to Pi-hole VIP **`192.168.5.22`** (WAN DNS on Internet 1). That keeps UniFi domain-based VPN traffic routes working while Pi-hole still filters. Talos patches prefer `.22` then Cloudflare — re-apply machine config when convenient. HA uses `dnsConfig.ndots: "2"`.
+
+**IPv6:** WAN IPv6 is off; LAN **router advertisements are off** (`ipv6_ra_enable = false`). Advertising ULA/RA with no IPv6 uplink makes macOS show Wi‑Fi “!” and can bypass IPv4-only VPN domain routes.
 - Codify static reservations for scarif, yavin, and `k8s.lab` target  
 - Don’t IaC every Wi‑Fi tweak on day one  
 
@@ -110,7 +112,7 @@ Pi-hole forwards `lab.jacobdrury.com` to Cloudflare (`1.1.1.1` / `1.0.0.1`) via 
 
 **Legacy `*.homelab.com`** — shrinking local host-records in `configmap-dnsmasq.yaml` (`arr.homelab.com` gone); not part of the long-term `*.lab` model.
 
-LAN DHCP on all VLANs points at k8s Pi-hole VIP **`192.168.5.22`** (UniFi OpenTofu). **`*.lab` stays in Cloudflare** — no Tailscale split DNS change.
+LAN DHCP on all VLANs advertises the **VLAN gateway**; UniFi WAN DNS forwards to Pi-hole VIP **`192.168.5.22`** (OpenTofu). Required for UniFi domain-based VPN traffic routes. **`*.lab` stays in Cloudflare** — no Tailscale split DNS change.
 
 ### Same URLs at home and away
 
@@ -119,7 +121,8 @@ Cloudflare is the **single source of truth** for what IP a `*.lab` name resolves
 | Piece | Role |
 |-------|------|
 | **Cloudflare** | Authoritative `*.lab` records (OpenTofu + external-dns) |
-| **Pi-hole (LAN only)** | DHCP DNS + ad blocking; forwards `*.lab` → Cloudflare |
+| **UniFi gateway** | DHCP DNS on every VLAN; domain match for VPN traffic routes |
+| **Pi-hole (LAN only)** | Upstream from gateway (WAN DNS); ad blocking; forwards `*.lab` → Cloudflare |
 | **Tailscale split DNS** | Off-LAN: send `lab.jacobdrury.com` → **Cloudflare** (`1.1.1.1` / `1.0.0.1`) — not via Pi-hole |
 | **Subnet router** | Advertise `192.168.5.0/24` so tailnet clients can reach Homelab RFC1918 addresses |
 
@@ -128,7 +131,8 @@ Cloudflare is the **single source of truth** for what IP a `*.lab` name resolves
 ```mermaid
 flowchart TB
   subgraph home [At home]
-    B1[Browser] --> PH1[Pi-hole via DHCP]
+    B1[Browser] --> GW[UniFi gateway DNS]
+    GW --> PH1[Pi-hole]
     PH1 --> CF[Cloudflare]
     CF --> IP[192.168.5.11]
     B1 --> IP
@@ -186,7 +190,7 @@ Do **not** change Cloudflare `app_hosts` when **hoth** / **endor** join. Only ch
 
 Same hostname and certificate — e.g. **`https://argocd.lab.jacobdrury.com`** (verified Sep 2026):
 
-1. DNS → Pi-hole (LAN) or Cloudflare (Tailscale split DNS) → **`192.168.5.21`**
+1. DNS → gateway → Pi-hole (LAN) or Cloudflare (Tailscale split DNS) → **`192.168.5.21`**
 2. **LAN:** route to Envoy VIP `:443`
 3. **Away:** split DNS → Cloudflare + subnet router → Envoy `:443` (real host IP — works through Tailscale Connector)
 4. Envoy → HTTPRoute → pod **or** legacy VM/Unraid HTTP (transitional)
@@ -206,7 +210,7 @@ flowchart LR
   Envoy --> App
 ```
 
-- **LAN:** cluster Pi-hole VIP **`192.168.5.22`** (DHCP DNS on all VLANs via OpenTofu)
+- **LAN:** DHCP → VLAN gateway → Pi-hole VIP **`192.168.5.22`** (OpenTofu; supports UniFi VPN domain routes)
 - **Remote:** Tailscale split DNS → **Cloudflare** + subnet router — **same URLs**, not `*.ts.net`
 - **Not** public by default; add Cloudflare Tunnel / Funnel only if needed later
 

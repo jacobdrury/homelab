@@ -18,7 +18,7 @@ Phased path from [inventory](inventory.md) → target. Principles and checklists
 
 **IaC live today:** `infrastructure/cloudflare/`, `unifi/`, `tailscale/`, `uptime-kuma/` — **apply via GitHub Actions** (`moon ci` on `main`); Mac `moon run …:apply` is break-glass. Pi-hole policy = GitOps ConfigMaps. Policy: [iac](architecture/iac.md).
 
-**DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/cloudflare/`). LAN: k8s Pi-hole VIP **`.22`** (DHCP on all VLANs) forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare. **`arr.lab` / `arr.homelab.com` retired** (Sep 2026).
+**DNS:** `*.lab.jacobdrury.com` in Cloudflare (`infrastructure/cloudflare/`). LAN: DHCP → UniFi gateway → Pi-hole VIP **`.22`** (UniFi VPN domain routes need gateway DNS); Pi-hole forwards `*.lab` → Cloudflare. Away: Tailscale split DNS → Cloudflare. **`arr.lab` / `arr.homelab.com` retired** (Sep 2026).
 
 **Remote access (verified):** split DNS · Homelab VLAN via **k8s Connector**; Drury (`192.168.1.0/24`) still via homelab02 · policy/keys in `infrastructure/tailscale/`.
 
