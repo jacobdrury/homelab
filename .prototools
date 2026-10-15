@@ -4,7 +4,7 @@ tofu = "1.13.1"
 # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=docker
 kubectl = "1.37.1"
 # renovate: datasource=github-releases depName=helm/helm
-helm = "4.3.0"
+helm = "4.3.1"
 # renovate: datasource=github-releases depName=siderolabs/talos
 talosctl = "1.12.7"
 # renovate: datasource=github-releases depName=derailed/k9s
