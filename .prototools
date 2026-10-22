@@ -1,6 +1,6 @@
 moon = "2.6.1"
 # renovate: datasource=github-releases depName=opentofu/opentofu
-tofu = "1.13.1"
+tofu = "1.13.2"
 # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=docker
 kubectl = "1.37.1"
 # renovate: datasource=github-releases depName=helm/helm
