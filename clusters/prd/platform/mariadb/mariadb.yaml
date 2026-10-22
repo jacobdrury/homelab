@@ -56,7 +56,7 @@ spec:
       initContainers:
         # Bitnami wrote the datadir as uid 1001; official image runs as mysql (999).
         - name: fix-datadir-perms
-          image: docker.io/library/alpine:3.24.2@sha256:d56c381f961d307a21b3ca004cf1e3910f106644aefb1f43e654c8a56c4fd395
+          image: docker.io/library/alpine:3.24.3@sha256:c26612752c78b18faacd63c7d50f4592c2e7b0f25e0e20e82bd74e465c57ab0d
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
