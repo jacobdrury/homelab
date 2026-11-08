@@ -109,6 +109,8 @@ config:
         Media:
           style: row
           columns: 2
+          # Stretch paired cards so Jellyfin/Prowlarr height doesn't leave a hole beside Seerr/qBit.
+          useEqualHeights: true
         Lab:
           header: false
           style: column
@@ -180,7 +182,7 @@ config:
                   type: jellyfin
                   url: https://jellyfin.lab.jacobdrury.com
                   key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
-                  enableBlocks: true
+                  # Blocks add empty rows when idle and throw off the Media 2-up pairs.
                   enableNowPlaying: true
                   fields:
                     - series
