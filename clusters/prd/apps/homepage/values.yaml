@@ -197,18 +197,6 @@ config:
                     - pending
                     - approved
                     - available
-            - qBittorrent:
-                href: https://qbittorrent.lab.jacobdrury.com
-                description: Downloads
-                icon: qbittorrent.png
-                widget:
-                  type: qbittorrent
-                  url: https://qbittorrent.lab.jacobdrury.com
-                  username: "{{HOMEPAGE_VAR_QBITTORRENT_USERNAME}}"
-                  password: "{{HOMEPAGE_VAR_QBITTORRENT_PASSWORD}}"
-                  fields:
-                    - leech
-                    - download
             - Sonarr Anime:
                 href: https://sonarr.lab.jacobdrury.com
                 description: Anime
@@ -233,6 +221,18 @@ config:
                     - wanted
                     - queued
                     - series
+            - qBittorrent:
+                href: https://qbittorrent.lab.jacobdrury.com
+                description: Downloads
+                icon: qbittorrent.png
+                widget:
+                  type: qbittorrent
+                  url: https://qbittorrent.lab.jacobdrury.com
+                  username: "{{HOMEPAGE_VAR_QBITTORRENT_USERNAME}}"
+                  password: "{{HOMEPAGE_VAR_QBITTORRENT_PASSWORD}}"
+                  fields:
+                    - leech
+                    - download
             - Prowlarr:
                 href: https://prowlarr.lab.jacobdrury.com
                 description: Indexers
