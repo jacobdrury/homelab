@@ -23,7 +23,7 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 | `sonarr-*.yaml` / `prowlarr.yaml` | *arr Deployments |
 | `jellyfin.yaml` | Jellyfin Deployment + Service + HTTPRoute + iSCSI config |
 | `seerr.yaml` | Seerr Deployment + Service + HTTPRoute |
-| `cleanuparr.yaml` | Cleanuparr Deployment + Service + iSCSI config |
+| `cleanuparr.yaml` | Cleanuparr Deployment + Service + iSCSI config PVC (DB on `media-pg`) |
 | `httproutes.yaml` | Stub — *arr/qBit/Cleanuparr URLs owned by Authentik (`resources-media-routes.yaml`) |
 
 ## Auth
