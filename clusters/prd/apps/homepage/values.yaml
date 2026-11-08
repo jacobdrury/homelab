@@ -97,229 +97,232 @@ config:
     target: _blank
     hideVersion: true
     statusStyle: dot
+    # Top-level style:row is full-width; nest three column groups under it.
+    # Media alone uses style:row so its cards sit two-across inside the middle column.
     layout:
-      Platform:
-        style: column
-      Media:
-        # Eight tall widgets — two cards across keeps the column shorter.
-        style: row
-        columns: 2
-      Lab:
-        # Stack Infrastructure above Home in one page column.
+      Homelab:
         header: false
-        style: column
-        Infrastructure:
+        style: row
+        columns: 3
+        Platform:
           style: column
-        Home:
+        Media:
+          style: row
+          columns: 2
+        Lab:
+          header: false
           style: column
+          Infrastructure:
+            style: column
+          Home:
+            style: column
 
   services:
-    - Platform:
-        - Argo CD:
-            href: https://argocd.lab.jacobdrury.com
-            description: GitOps
-            # walkxcode dashboard-icons uses argo-cd.png (argocd.png 404s)
-            icon: argo-cd.png
-            siteMonitor: https://argocd.lab.jacobdrury.com
-            widget:
-              type: argocd
-              url: http://argocd-server.argocd.svc
-              key: "{{HOMEPAGE_VAR_ARGOCD_API_KEY}}"
-              fields:
-                - synced
-                - outOfSync
-                - healthy
-                - degraded
-        - Uptime Kuma:
-            href: https://uptime.lab.jacobdrury.com/status/default
-            description: Status monitors (Authentik proxy)
-            icon: uptime-kuma.png
-            siteMonitor: https://uptime.lab.jacobdrury.com/status/default
-            widget:
-              type: uptimekuma
-              # Base URL only — Homepage appends /api/status-page/<slug>.
-              # Status-page API is on Authentik skip_path (public).
-              url: https://uptime.lab.jacobdrury.com
-              slug: default
-              fields:
-                - up
-                - down
-                - uptime
-        - Authentik:
-            href: https://auth.lab.jacobdrury.com
-            description: SSO / IdP
-            icon: authentik.png
-            siteMonitor: https://auth.lab.jacobdrury.com
-            widget:
-              type: authentik
-              # In-cluster API; token needs view User + Event (admin jacob).
-              url: http://authentik-server.authentik.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_AUTHENTIK_KEY}}"
-              version: 2
-              fields:
-                - users
-                - loginsLast24H
-                - failedLoginsLast24H
-                - authorizationsLast24H
-        - IT-Tools:
-            href: https://it-tools.lab.jacobdrury.com
-            description: Developer utilities
-            icon: it-tools.png
-            siteMonitor: https://it-tools.lab.jacobdrury.com
-
-    - Media:
-        - Jellyfin:
-            href: https://jellyfin.lab.jacobdrury.com
-            description: Media
-            icon: jellyfin.png
-            widget:
-              type: jellyfin
-              url: https://jellyfin.lab.jacobdrury.com
-              key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
-              enableBlocks: true
-              enableNowPlaying: true
-              fields:
-                - series
-                - episodes
-        - Seerr:
-            href: https://seerr.lab.jacobdrury.com
-            description: Requests
-            icon: overseerr.png
-            widget:
-              type: seerr
-              url: https://seerr.lab.jacobdrury.com
-              key: "{{HOMEPAGE_VAR_SEERR_KEY}}"
-              fields:
-                - pending
-                - approved
-                - available
-        - qBittorrent:
-            href: https://qbittorrent.lab.jacobdrury.com
-            description: Downloads
-            icon: qbittorrent.png
-            widget:
-              type: qbittorrent
-              url: https://qbittorrent.lab.jacobdrury.com
-              username: "{{HOMEPAGE_VAR_QBITTORRENT_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_QBITTORRENT_PASSWORD}}"
-              fields:
-                - leech
-                - download
-        - Sonarr Anime:
-            href: https://sonarr.lab.jacobdrury.com
-            description: Anime
-            icon: sonarr.png
-            widget:
-              type: sonarr
-              url: https://sonarr.lab.jacobdrury.com
-              key: "{{HOMEPAGE_VAR_SONARR_ANIME_KEY}}"
-              fields:
-                - wanted
-                - queued
-                - series
-        - Sonarr TV:
-            href: https://sonarr-tv.lab.jacobdrury.com
-            description: TV
-            icon: sonarr.png
-            widget:
-              type: sonarr
-              url: https://sonarr-tv.lab.jacobdrury.com
-              key: "{{HOMEPAGE_VAR_SONARR_TV_KEY}}"
-              fields:
-                - wanted
-                - queued
-                - series
-        - Prowlarr:
-            href: https://prowlarr.lab.jacobdrury.com
-            description: Indexers
-            icon: prowlarr.png
-            widget:
-              type: prowlarr
-              url: https://prowlarr.lab.jacobdrury.com
-              key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
-              fields:
-                - numberOfGrabs
-                - numberOfQueries
-                - numberOfFailGrabs
-                - numberOfFailQueries
-        - Cleanuparr:
-            href: https://cleanuparr.lab.jacobdrury.com
-            description: Download queue cleanup
-            icon: cleanuparr.png
-            siteMonitor: https://cleanuparr.lab.jacobdrury.com/health
-            # In-cluster stats; local-auth bypass (see cleanuparr-configure).
-            # https://github.com/gethomepage/homepage/discussions/6635
-            widget:
-              type: customapi
-              url: http://cleanuparr.media.svc.cluster.local:11011/api/v2/stats
-              refreshInterval: 30000
-              mappings:
-                - field: jobs.byType.MalwareBlocker.total
-                  label: MALWARE BLOCKER
-                  format: number
-                - field: jobs.byType.QueueCleaner.total
-                  label: QUEUE CLEANER
-                  format: number
-                - field: jobs.byType.Seeker.total
-                  label: SEEKER
-                  format: number
-        - Unmanic:
-            href: https://unmanic.lab.jacobdrury.com
-            description: Strip extra audio/subs
-            icon: mdi-scissors-cutting
-            siteMonitor: https://unmanic.lab.jacobdrury.com/unmanic/api/v2/version/read
-            widget:
-              type: unmanic
-              url: http://unmanic.media.svc.cluster.local:8888
-              fields:
-                - active_workers
-                - total_workers
-                - records_total
-
-    - Lab:
-        - Infrastructure:
-            - UniFi:
-                href: https://192.168.5.1
-                description: UDM Pro (Homelab gateway)
-                icon: unifi.png
-                siteMonitor: https://192.168.5.1
+    - Homelab:
+        - Platform:
+            - Argo CD:
+                href: https://argocd.lab.jacobdrury.com
+                description: GitOps
+                # walkxcode dashboard-icons uses argo-cd.png (argocd.png 404s)
+                icon: argo-cd.png
+                siteMonitor: https://argocd.lab.jacobdrury.com
                 widget:
-                  type: unifi
-                  url: https://192.168.5.1
-                  # Same Network Integrations API key as OpenTofu (Homelab item).
-                  key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
+                  type: argocd
+                  url: http://argocd-server.argocd.svc
+                  key: "{{HOMEPAGE_VAR_ARGOCD_API_KEY}}"
                   fields:
+                    - synced
+                    - outOfSync
+                    - healthy
+                    - degraded
+            - Uptime Kuma:
+                href: https://uptime.lab.jacobdrury.com/status/default
+                description: Status monitors (Authentik proxy)
+                icon: uptime-kuma.png
+                siteMonitor: https://uptime.lab.jacobdrury.com/status/default
+                widget:
+                  type: uptimekuma
+                  # Base URL only — Homepage appends /api/status-page/<slug>.
+                  # Status-page API is on Authentik skip_path (public).
+                  url: https://uptime.lab.jacobdrury.com
+                  slug: default
+                  fields:
+                    - up
+                    - down
                     - uptime
-                    - wan
-                    - lan_users
-                    - wlan_users
-            - Pi-hole:
-                href: https://pihole.lab.jacobdrury.com/admin/
-                description: DNS / adblock
-                icon: pi-hole.png
-                siteMonitor: https://pihole.lab.jacobdrury.com/admin/
-            - scarif:
-                href: https://scarif.lab.jacobdrury.com
-                description: Unraid NAS
-                icon: unraid.png
-                siteMonitor: https://scarif.lab.jacobdrury.com/login
+            - Authentik:
+                href: https://auth.lab.jacobdrury.com
+                description: SSO / IdP
+                icon: authentik.png
+                siteMonitor: https://auth.lab.jacobdrury.com
                 widget:
-                  type: unraid
-                  url: https://scarif.lab.jacobdrury.com
-                  key: "{{HOMEPAGE_VAR_UNRAID_API_KEY}}"
-                  # ZFS appdata pool on scarif (array may be empty).
-                  pool1: scarif-ssd
+                  type: authentik
+                  # In-cluster API; token needs view User + Event (admin jacob).
+                  url: http://authentik-server.authentik.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_AUTHENTIK_KEY}}"
+                  version: 2
                   fields:
-                    - status
-                    - cpu
-                    - memoryPercent
-                    - pool1UsedPercent
-        - Home:
-            - Home Assistant:
-                href: https://homeassistant.lab.jacobdrury.com
-                description: Home automation
-                icon: home-assistant.png
-                siteMonitor: https://homeassistant.lab.jacobdrury.com
+                    - users
+                    - loginsLast24H
+                    - failedLoginsLast24H
+                    - authorizationsLast24H
+            - IT-Tools:
+                href: https://it-tools.lab.jacobdrury.com
+                description: Developer utilities
+                icon: it-tools.png
+                siteMonitor: https://it-tools.lab.jacobdrury.com
+        - Media:
+            - Jellyfin:
+                href: https://jellyfin.lab.jacobdrury.com
+                description: Media
+                icon: jellyfin.png
+                widget:
+                  type: jellyfin
+                  url: https://jellyfin.lab.jacobdrury.com
+                  key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
+                  enableBlocks: true
+                  enableNowPlaying: true
+                  fields:
+                    - series
+                    - episodes
+            - Seerr:
+                href: https://seerr.lab.jacobdrury.com
+                description: Requests
+                icon: overseerr.png
+                widget:
+                  type: seerr
+                  url: https://seerr.lab.jacobdrury.com
+                  key: "{{HOMEPAGE_VAR_SEERR_KEY}}"
+                  fields:
+                    - pending
+                    - approved
+                    - available
+            - qBittorrent:
+                href: https://qbittorrent.lab.jacobdrury.com
+                description: Downloads
+                icon: qbittorrent.png
+                widget:
+                  type: qbittorrent
+                  url: https://qbittorrent.lab.jacobdrury.com
+                  username: "{{HOMEPAGE_VAR_QBITTORRENT_USERNAME}}"
+                  password: "{{HOMEPAGE_VAR_QBITTORRENT_PASSWORD}}"
+                  fields:
+                    - leech
+                    - download
+            - Sonarr Anime:
+                href: https://sonarr.lab.jacobdrury.com
+                description: Anime
+                icon: sonarr.png
+                widget:
+                  type: sonarr
+                  url: https://sonarr.lab.jacobdrury.com
+                  key: "{{HOMEPAGE_VAR_SONARR_ANIME_KEY}}"
+                  fields:
+                    - wanted
+                    - queued
+                    - series
+            - Sonarr TV:
+                href: https://sonarr-tv.lab.jacobdrury.com
+                description: TV
+                icon: sonarr.png
+                widget:
+                  type: sonarr
+                  url: https://sonarr-tv.lab.jacobdrury.com
+                  key: "{{HOMEPAGE_VAR_SONARR_TV_KEY}}"
+                  fields:
+                    - wanted
+                    - queued
+                    - series
+            - Prowlarr:
+                href: https://prowlarr.lab.jacobdrury.com
+                description: Indexers
+                icon: prowlarr.png
+                widget:
+                  type: prowlarr
+                  url: https://prowlarr.lab.jacobdrury.com
+                  key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
+                  fields:
+                    - numberOfGrabs
+                    - numberOfQueries
+                    - numberOfFailGrabs
+                    - numberOfFailQueries
+            - Cleanuparr:
+                href: https://cleanuparr.lab.jacobdrury.com
+                description: Download queue cleanup
+                icon: cleanuparr.png
+                siteMonitor: https://cleanuparr.lab.jacobdrury.com/health
+                # In-cluster stats; local-auth bypass (see cleanuparr-configure).
+                # https://github.com/gethomepage/homepage/discussions/6635
+                widget:
+                  type: customapi
+                  url: http://cleanuparr.media.svc.cluster.local:11011/api/v2/stats
+                  refreshInterval: 30000
+                  mappings:
+                    - field: jobs.byType.MalwareBlocker.total
+                      label: MALWARE BLOCKER
+                      format: number
+                    - field: jobs.byType.QueueCleaner.total
+                      label: QUEUE CLEANER
+                      format: number
+                    - field: jobs.byType.Seeker.total
+                      label: SEEKER
+                      format: number
+            - Unmanic:
+                href: https://unmanic.lab.jacobdrury.com
+                description: Strip extra audio/subs
+                icon: mdi-scissors-cutting
+                siteMonitor: https://unmanic.lab.jacobdrury.com/unmanic/api/v2/version/read
+                widget:
+                  type: unmanic
+                  url: http://unmanic.media.svc.cluster.local:8888
+                  fields:
+                    - active_workers
+                    - total_workers
+                    - records_total
+        - Lab:
+            - Infrastructure:
+                - UniFi:
+                    href: https://192.168.5.1
+                    description: UDM Pro (Homelab gateway)
+                    icon: unifi.png
+                    siteMonitor: https://192.168.5.1
+                    widget:
+                      type: unifi
+                      url: https://192.168.5.1
+                      # Same Network Integrations API key as OpenTofu (Homelab item).
+                      key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
+                      fields:
+                        - uptime
+                        - wan
+                        - lan_users
+                        - wlan_users
+                - Pi-hole:
+                    href: https://pihole.lab.jacobdrury.com/admin/
+                    description: DNS / adblock
+                    icon: pi-hole.png
+                    siteMonitor: https://pihole.lab.jacobdrury.com/admin/
+                - scarif:
+                    href: https://scarif.lab.jacobdrury.com
+                    description: Unraid NAS
+                    icon: unraid.png
+                    siteMonitor: https://scarif.lab.jacobdrury.com/login
+                    widget:
+                      type: unraid
+                      url: https://scarif.lab.jacobdrury.com
+                      key: "{{HOMEPAGE_VAR_UNRAID_API_KEY}}"
+                      # ZFS appdata pool on scarif (array may be empty).
+                      pool1: scarif-ssd
+                      fields:
+                        - status
+                        - cpu
+                        - memoryPercent
+                        - pool1UsedPercent
+            - Home:
+                - Home Assistant:
+                    href: https://homeassistant.lab.jacobdrury.com
+                    description: Home automation
+                    icon: home-assistant.png
+                    siteMonitor: https://homeassistant.lab.jacobdrury.com
 
   # Kubernetes widget (relocated to footer via custom.css). Needs metrics-server.
   widgets:
