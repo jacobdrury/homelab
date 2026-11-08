@@ -101,13 +101,17 @@ config:
       Platform:
         style: column
       Media:
+        # Eight tall widgets — two cards across keeps the column shorter.
+        style: row
+        columns: 2
+      Lab:
+        # Stack Infrastructure above Home in one page column.
+        header: false
         style: column
-      Home:
-        style: column
-      Network:
-        style: column
-      Infrastructure:
-        style: column
+        Infrastructure:
+          style: column
+        Home:
+          style: column
 
   services:
     - Platform:
@@ -241,58 +245,81 @@ config:
         - Cleanuparr:
             href: https://cleanuparr.lab.jacobdrury.com
             description: Download queue cleanup
-            icon: mdi-broom
+            icon: cleanuparr.png
             siteMonitor: https://cleanuparr.lab.jacobdrury.com/health
+            # In-cluster stats; local-auth bypass (see cleanuparr-configure).
+            # https://github.com/gethomepage/homepage/discussions/6635
+            widget:
+              type: customapi
+              url: http://cleanuparr.media.svc.cluster.local:11011/api/v2/stats
+              refreshInterval: 30000
+              mappings:
+                - field: jobs.byType.MalwareBlocker.total
+                  label: MALWARE BLOCKER
+                  format: number
+                - field: jobs.byType.QueueCleaner.total
+                  label: QUEUE CLEANER
+                  format: number
+                - field: jobs.byType.Seeker.total
+                  label: SEEKER
+                  format: number
         - Unmanic:
             href: https://unmanic.lab.jacobdrury.com
             description: Strip extra audio/subs
             icon: mdi-scissors-cutting
             siteMonitor: https://unmanic.lab.jacobdrury.com/unmanic/api/v2/version/read
-
-    - Home:
-        - Home Assistant:
-            href: https://homeassistant.lab.jacobdrury.com
-            description: Home automation
-            icon: home-assistant.png
-            siteMonitor: https://homeassistant.lab.jacobdrury.com
-
-    - Infrastructure:
-        - UniFi:
-            href: https://192.168.5.1
-            description: UDM Pro (Homelab gateway)
-            icon: unifi.png
-            siteMonitor: https://192.168.5.1
             widget:
-              type: unifi
-              url: https://192.168.5.1
-              # Same Network Integrations API key as OpenTofu (Homelab item).
-              key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
+              type: unmanic
+              url: http://unmanic.media.svc.cluster.local:8888
               fields:
-                - uptime
-                - wan
-                - lan_users
-                - wlan_users
-        - Pi-hole:
-            href: https://pihole.lab.jacobdrury.com/admin/
-            description: DNS / adblock
-            icon: pi-hole.png
-            siteMonitor: https://pihole.lab.jacobdrury.com/admin/
-        - scarif:
-            href: https://scarif.lab.jacobdrury.com
-            description: Unraid NAS
-            icon: unraid.png
-            siteMonitor: https://scarif.lab.jacobdrury.com/login
-            widget:
-              type: unraid
-              url: https://scarif.lab.jacobdrury.com
-              key: "{{HOMEPAGE_VAR_UNRAID_API_KEY}}"
-              # ZFS appdata pool on scarif (array may be empty).
-              pool1: scarif-ssd
-              fields:
-                - status
-                - cpu
-                - memoryPercent
-                - pool1UsedPercent
+                - active_workers
+                - total_workers
+                - records_total
+
+    - Lab:
+        - Infrastructure:
+            - UniFi:
+                href: https://192.168.5.1
+                description: UDM Pro (Homelab gateway)
+                icon: unifi.png
+                siteMonitor: https://192.168.5.1
+                widget:
+                  type: unifi
+                  url: https://192.168.5.1
+                  # Same Network Integrations API key as OpenTofu (Homelab item).
+                  key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
+                  fields:
+                    - uptime
+                    - wan
+                    - lan_users
+                    - wlan_users
+            - Pi-hole:
+                href: https://pihole.lab.jacobdrury.com/admin/
+                description: DNS / adblock
+                icon: pi-hole.png
+                siteMonitor: https://pihole.lab.jacobdrury.com/admin/
+            - scarif:
+                href: https://scarif.lab.jacobdrury.com
+                description: Unraid NAS
+                icon: unraid.png
+                siteMonitor: https://scarif.lab.jacobdrury.com/login
+                widget:
+                  type: unraid
+                  url: https://scarif.lab.jacobdrury.com
+                  key: "{{HOMEPAGE_VAR_UNRAID_API_KEY}}"
+                  # ZFS appdata pool on scarif (array may be empty).
+                  pool1: scarif-ssd
+                  fields:
+                    - status
+                    - cpu
+                    - memoryPercent
+                    - pool1UsedPercent
+        - Home:
+            - Home Assistant:
+                href: https://homeassistant.lab.jacobdrury.com
+                description: Home automation
+                icon: home-assistant.png
+                siteMonitor: https://homeassistant.lab.jacobdrury.com
 
   # Kubernetes widget (relocated to footer via custom.css). Needs metrics-server.
   widgets:

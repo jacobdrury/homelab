@@ -76,6 +76,11 @@ data:
     gen = req("GET", "/api/configuration/general")
     gen["connectivityCheckEnabled"] = True
     gen["connectivityCheckUrls"] = ["https://github.com", "https://1.1.1.1"]
+    # In-cluster callers (configure Job, Homepage customapi) use private IPs.
+    # UI stays gated by Authentik; leave Trust Forwarded Headers off.
+    auth = gen.setdefault("auth", {})
+    auth["disableAuthForLocalAddresses"] = True
+    auth["trustForwardedHeaders"] = False
     req("PUT", "/api/configuration/general", gen)
 
     clients = req("GET", "/api/configuration/download_client").get("clients") or []

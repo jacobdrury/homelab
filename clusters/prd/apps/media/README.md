@@ -63,7 +63,7 @@ UI: `https://cleanuparr.lab.jacobdrury.com` (Authentik Proxy). App DB on `media-
 | Area | Setting |
 |------|---------|
 | Connections | qBit + Sonarr Anime + Sonarr TV (in-cluster DNS) |
-| General | Internet connectivity check on (`github.com`, `1.1.1.1`) |
+| General | Internet connectivity check on (`github.com`, `1.1.1.1`); Disable Auth for Local Addresses on (Homepage + configure Job) |
 | Queue Cleaner | Failed-import Include patterns for non-upgrades (3 strikes); stalled/slow rules; metadata strikes |
 | Malware Blocker | Official Sonarr blacklist; ignore private |
 | Download Cleaner | Enabled; orphaned scan `/home/data/downloads` → `/home/data/downloads/orphaned` (24h min age; no auto-purge) |
