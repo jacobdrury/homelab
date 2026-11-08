@@ -100,14 +100,13 @@ data:
 
     def plugin_installed():
         try:
-            info = req(
-                "POST",
-                "/plugins/info",
-                {"plugin_id": PLUGIN_ID, "prefer_local": True},
-            )
-            return info.get("plugin_id") == PLUGIN_ID
+            data = req("POST", "/plugins/installed", {})
         except urllib.error.HTTPError:
             return False
+        for row in data.get("results") or []:
+            if row.get("plugin_id") == PLUGIN_ID:
+                return True
+        return False
 
 
     def ensure_plugin():
@@ -115,30 +114,64 @@ data:
             print(f"plugin {PLUGIN_ID} already installed")
             return
         req("POST", "/plugins/install", {"plugin_id": PLUGIN_ID})
-        if not plugin_installed():
-            raise SystemExit(f"failed to install {PLUGIN_ID}")
+        for _ in range(30):
+            if plugin_installed():
+                return
+            time.sleep(1)
+        raise SystemExit(f"failed to install {PLUGIN_ID}")
 
 
-    def write_plugin_settings_global():
-        # Global fallback matches Anime (library 1). Per-library settings override.
-        info = req(
-            "POST",
-            "/plugins/info",
-            {"plugin_id": PLUGIN_ID, "prefer_local": True},
-        )
-        settings = info.get("settings") or []
-        if not settings:
-            print("plugin info returned no settings; skipping global settings write")
-            return
+    def plugin_settings_schema(library_id=0):
+        # Schema can be empty briefly after install; retry until keys appear.
+        for _ in range(30):
+            info = req(
+                "POST",
+                "/plugins/info",
+                {
+                    "plugin_id": PLUGIN_ID,
+                    "prefer_local": True,
+                    "library_id": library_id,
+                },
+            )
+            settings = info.get("settings") or []
+            if settings:
+                return settings
+            time.sleep(1)
+        raise SystemExit(f"plugin {PLUGIN_ID} settings schema never became available")
+
+
+    def settings_match(library_id, desired):
+        current = {
+            item.get("key"): item.get("value")
+            for item in plugin_settings_schema(library_id)
+        }
+        for key, value in desired.items():
+            if current.get(key) != value:
+                return False
+        return True
+
+
+    def write_plugin_settings(library_id, desired):
+        # library/write ignores embedded settings dicts; persist via settings/update.
+        # Skip when already correct so PostSync does not pause workers every sync.
+        if settings_match(library_id, desired):
+            print(f"plugin settings already match for library_id={library_id}")
+            return False
+        settings = plugin_settings_schema(library_id)
         for item in settings:
             key = item.get("key")
-            if key in ANIME_PLUGIN_SETTINGS:
-                item["value"] = ANIME_PLUGIN_SETTINGS[key]
+            if key in desired:
+                item["value"] = desired[key]
         req(
             "POST",
             "/plugins/settings/update",
-            {"plugin_id": PLUGIN_ID, "settings": settings, "library_id": 0},
+            {
+                "plugin_id": PLUGIN_ID,
+                "settings": settings,
+                "library_id": library_id,
+            },
         )
+        return True
 
 
     def ensure_settings():
@@ -160,7 +193,23 @@ data:
         return data.get("libraries") or []
 
 
-    def write_library(library_id, name, path, plugin_settings):
+    def library_matches(lib, name, path):
+        if not lib:
+            return False
+        if lib.get("name") != name or lib.get("path") != path:
+            return False
+        if not lib.get("enable_scanner") or not lib.get("enable_inotify"):
+            return False
+        return True
+
+
+    def library_has_plugin(library_id):
+        data = req("POST", "/settings/library/read", {"id": library_id})
+        plugins = (data.get("plugins") or {}).get("enabled_plugins") or []
+        return any(p.get("plugin_id") == PLUGIN_ID for p in plugins)
+
+
+    def write_library(library_id, name, path):
         body = {
             "library_config": {
                 "id": library_id,
@@ -177,7 +226,6 @@ data:
                 "enabled_plugins": [
                     {
                         "plugin_id": PLUGIN_ID,
-                        "settings": plugin_settings,
                     }
                 ]
             },
@@ -185,10 +233,25 @@ data:
         req("POST", "/settings/library/write", body)
 
 
+    def ensure_library(library_id, name, path, plugin_settings):
+        libraries = list_libraries()
+        lib = next((row for row in libraries if row.get("id") == library_id), None)
+        changed = False
+        if not library_matches(lib, name, path) or not library_has_plugin(library_id):
+            write_library(library_id, name, path)
+            changed = True
+        else:
+            print(f"library {name} already configured")
+        if write_plugin_settings(library_id, plugin_settings):
+            changed = True
+        return changed
+
+
     def ensure_libraries():
         libraries = list_libraries()
         by_path = {lib.get("path"): lib for lib in libraries}
         by_name = {lib.get("name"): lib for lib in libraries}
+        changed = False
 
         # Library 1 tracks settings.library_path (/library/anime).
         lib1 = next((lib for lib in libraries if lib.get("id") == 1), None)
@@ -197,15 +260,30 @@ data:
         if lib1 is None:
             raise SystemExit("no libraries present after Unmanic boot")
 
-        write_library(lib1["id"], "Anime", "/library/anime", ANIME_PLUGIN_SETTINGS)
+        if ensure_library(lib1["id"], "Anime", "/library/anime", ANIME_PLUGIN_SETTINGS):
+            changed = True
 
         tv = by_path.get("/library/tv") or by_name.get("TV")
         if tv and tv.get("id") != lib1["id"]:
-            write_library(tv["id"], "TV", "/library/tv", TV_PLUGIN_SETTINGS)
-            return
+            if ensure_library(tv["id"], "TV", "/library/tv", TV_PLUGIN_SETTINGS):
+                changed = True
+            return changed
 
         # Create second library (free tier allows 2).
-        write_library(0, "TV", "/library/tv", TV_PLUGIN_SETTINGS)
+        write_library(0, "TV", "/library/tv")
+        libraries = list_libraries()
+        tv = next(
+            (
+                lib
+                for lib in libraries
+                if lib.get("path") == "/library/tv" and lib.get("id") != lib1["id"]
+            ),
+            None,
+        )
+        if tv is None:
+            raise SystemExit("TV library missing after create")
+        write_plugin_settings(tv["id"], TV_PLUGIN_SETTINGS)
+        return True
 
 
     def ensure_workers():
@@ -215,6 +293,9 @@ data:
             print("no worker groups returned; number_of_workers set via settings/write")
             return
         for group in worker_groups:
+            if group.get("number_of_workers") == WORKERS:
+                print(f"worker group {group.get('name')} already has {WORKERS} workers")
+                continue
             payload = {
                 "id": group.get("id"),
                 "locked": group.get("locked", False),
@@ -226,13 +307,23 @@ data:
             req("POST", "/settings/worker_group/write", payload)
 
 
+    def resume_workers():
+        # Plugin settings changes pause workers until resume; clear that after configure.
+        time.sleep(3)
+        req("POST", "/workers/worker/resume/all", {})
+
+
     wait_ready()
     ensure_settings()
     ensure_repos()
     ensure_plugin()
-    write_plugin_settings_global()
-    ensure_libraries()
+    # Global fallback matches Anime; per-library files override.
+    changed = write_plugin_settings(0, ANIME_PLUGIN_SETTINGS)
+    if ensure_libraries():
+        changed = True
     ensure_workers()
+    if changed:
+        resume_workers()
     print("DONE")
 ---
 apiVersion: batch/v1
