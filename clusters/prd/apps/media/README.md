@@ -48,7 +48,7 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 
 ## Cleanuparr setup (post-deploy)
 
-Config lives in the Cleanuparr UI (SQLite on the config PVC). Open `https://cleanuparr.lab.jacobdrury.com` after Argo sync + DNS (`moon run cloudflare:apply`).
+Config lives in the Cleanuparr UI (SQLite on the config PVC). Open `https://cleanuparr.lab.jacobdrury.com` after Argo sync and CI OpenTofu apply (DNS + Kuma).
 
 ### Connections
 
@@ -93,7 +93,6 @@ Orphaned scanning runs inside the Download Cleaner job. Enable Download Cleaner,
 
 Create `/home/data/downloads/orphaned` once (same NFS share; `nobody:users`). Skip aggressive seeding-ratio rules until qBit’s own limits are understood; orphans do not require them.
 
-### Apply outside Git
+### DNS and Kuma
 
-1. `moon run cloudflare:apply` — `cleanuparr.lab` A record from `infrastructure/lab.yaml`.
-2. `moon run uptime-kuma:apply` — Cleanuparr `/health` monitor.
+On merge to `main`, GitHub Actions `moon ci :apply` updates Cloudflare (`cleanuparr.lab` from `lab.yaml`) and the Uptime Kuma `/health` monitor. Mac `moon run cloudflare:apply` / `uptime-kuma:apply` is break-glass only — [opentofu-ci](../../../docs/setup/opentofu-ci.md).
