@@ -238,6 +238,11 @@ config:
                 - numberOfQueries
                 - numberOfFailGrabs
                 - numberOfFailQueries
+        - Cleanuparr:
+            href: https://cleanuparr.lab.jacobdrury.com
+            description: Download queue cleanup
+            icon: mdi-broom
+            siteMonitor: https://cleanuparr.lab.jacobdrury.com/health
 
     - Home:
         - Home Assistant:
