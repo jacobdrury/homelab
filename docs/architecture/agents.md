@@ -80,11 +80,24 @@ Talos + connect/
 
 Order: [platform README](../../clusters/prd/platform/README.md) · [bootstrap/README](../../bootstrap/README.md). Secrets: [secrets](secrets.md).
 
+## App databases
+
+**Prefer a remote DB the lab already runs** over SQLite or any embedded/on-PVC “local” database when the app can use Postgres or MySQL/MariaDB.
+
+| Prefer | Use when |
+|--------|----------|
+| Shared **MariaDB** (`platform/mariadb/`) | App wants MySQL/MariaDB (e.g. Uptime Kuma) |
+| Existing domain **CNPG** Cluster + new `Database` | Same stack domain (e.g. media apps → `media-pg`) |
+| New dedicated **CNPG** Cluster | App needs isolation or a separate lifecycle (e.g. `authentik-pg`, `home-assistant-pg`) — do **not** collapse everything into one lab-wide Postgres ([decisions](../decisions.md)) |
+
+SQLite (or chart-bundled Postgres) only when the app cannot talk to a remote DB, or for throwaway demos. Config / iSCSI PVCs still hold non-DB state (keys, logs, media metadata files).
+
 **Agent checklist when adding a component**
 
 1. Would Argo already be running when this lands? → **Git only**. No `install.sh`.  
 2. Needs a 1Password item? → create it + `ExternalSecret`; still no install script.  
-3. Brand-new cluster with no Argo yet? → use the existing **platform** pre-Argo scripts only, then stop.
+3. Does the app support Postgres or MySQL/MariaDB? → wire **MariaDB** or **CNPG** as above; do not default to SQLite.  
+4. Brand-new cluster with no Argo yet? → use the existing **platform** pre-Argo scripts only, then stop.
 
 **Implementation is not complete** until the new user-facing service is on **Homepage** and **Uptime Kuma**, unless the user (or task) explicitly says otherwise.
 
