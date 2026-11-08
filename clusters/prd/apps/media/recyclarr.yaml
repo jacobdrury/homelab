@@ -1,0 +1,257 @@
+# Recyclarr — sync TRaSH Guides CFs + quality profile into sonarr-anime.
+# No UI (skip Homepage / Kuma / Authentik / DNS / HTTPRoute).
+# Recyclarr v8 replaced the old include trio
+# (sonarr-quality-definition-anime, sonarr-v4-quality-profile-anime,
+# sonarr-v4-custom-formats-anime) with guide-backed trash_id profiles;
+# trash_id below is that same anime Remux-1080p base.
+# https://recyclarr.dev/
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: recyclarr
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: recyclarr
+    creationPolicy: Owner
+  data:
+    # Same Homelab item as Homepage / Cleanuparr bootstrap (prd Homepage media API keys).
+    - secretKey: sonarr-anime-api-key
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: sonarr-anime
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recyclarr-config
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  recyclarr.yml: |
+    # yaml-language-server: $schema=https://schemas.recyclarr.dev/v8/config-schema.json
+    sonarr:
+      sonarr-anime:
+        base_url: http://sonarr-anime.media.svc.cluster.local:8989
+        api_key: !env_var SONARR_ANIME_API_KEY
+
+        quality_definition:
+          type: anime
+
+        quality_profiles:
+          # Guide: [Anime] Remux-1080p. Keep existing Sonarr name.
+          - trash_id: 20e0fc959f1f1704bed501f23bdae76f
+            name: Remux-1080p - Anime
+            reset_unmatched_scores:
+              enabled: true
+            # Lab fork: upgrade until 1080p remux (Bluray 1080p group), not 2160p.
+            # 2160p WEB/Remux stay allowed above the cutoff so Sonarr can accept
+            # clearly-better UHD without endlessly hunting UHD as the upgrade goal.
+            # Guide disables 2160p and sets the same Bluray 1080p cutoff.
+            upgrade:
+              allowed: true
+              until_quality: Bluray 1080p
+              until_score: 10000
+            min_format_score: 100
+            quality_sort: top
+            qualities:
+              - name: Bluray-2160p Remux
+              - name: Bluray-2160p
+              - name: WEB 2160p
+                qualities:
+                  - WEBDL-2160p
+                  - WEBRip-2160p
+              - name: HDTV-2160p
+                enabled: false
+              - name: Bluray 1080p
+                qualities:
+                  - Bluray-1080p Remux
+                  - Bluray-1080p
+              - name: WEB 1080p
+                qualities:
+                  - HDTV-1080p
+                  - WEBRip-1080p
+                  - WEBDL-1080p
+              - name: Bluray-720p
+              - name: WEB 720p
+                qualities:
+                  - HDTV-720p
+                  - WEBRip-720p
+                  - WEBDL-720p
+              - name: Bluray-480p
+              - name: WEB 480p
+                qualities:
+                  - WEBRip-480p
+                  - WEBDL-480p
+              - name: DVD
+              - name: SDTV
+              - name: Raw-HD
+                enabled: false
+              - name: Bluray-576p
+                enabled: false
+              - name: Unknown
+                enabled: false
+
+        custom_formats:
+          # Lab: Uncensored preferred a tier above (not guide/template default 0).
+          - trash_ids:
+              - 026d5aadd1a6b4e550b134cb6c72b3ca # Uncensored
+            assign_scores_to:
+              - name: Remux-1080p - Anime
+                score: 101
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: recyclarr-config
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: scarif-iscsi
+  resources:
+    requests:
+      # State + downloaded guide resources only (YAML comes from ConfigMap).
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: recyclarr
+  namespace: media
+  labels:
+    app.kubernetes.io/name: recyclarr
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  # Daily 05:15 America/Chicago (container TZ).
+  schedule: "15 5 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: recyclarr
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+          securityContext:
+            fsGroup: 1000
+          containers:
+            - name: recyclarr
+              image: ghcr.io/recyclarr/recyclarr:8.8.1@sha256:3e9c41b9ec29bbf65fe846864058730d321a21f7695d8c0d9437b73e34d50ad9
+              imagePullPolicy: IfNotPresent
+              args:
+                - sync
+              env:
+                - name: TZ
+                  value: America/Chicago
+                - name: SONARR_ANIME_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: recyclarr
+                      key: sonarr-anime-api-key
+              volumeMounts:
+                - name: data
+                  mountPath: /config
+                - name: config
+                  mountPath: /config/recyclarr.yml
+                  subPath: recyclarr.yml
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: recyclarr-config
+            - name: config
+              configMap:
+                name: recyclarr-config
+---
+# One-shot sync on media app sync so Sonarr picks up CFs without waiting for cron.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: recyclarr-sync
+  namespace: media
+  labels:
+    app.kubernetes.io/name: recyclarr
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: recyclarr
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: recyclarr
+          image: ghcr.io/recyclarr/recyclarr:8.8.1@sha256:3e9c41b9ec29bbf65fe846864058730d321a21f7695d8c0d9437b73e34d50ad9
+          imagePullPolicy: IfNotPresent
+          args:
+            - sync
+          env:
+            - name: TZ
+              value: America/Chicago
+            - name: SONARR_ANIME_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: recyclarr
+                  key: sonarr-anime-api-key
+          volumeMounts:
+            - name: data
+              mountPath: /config
+            - name: config
+              mountPath: /config/recyclarr.yml
+              subPath: recyclarr.yml
+              readOnly: true
+          resources:
+            requests:
+              cpu: 25m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: recyclarr-config
+        - name: config
+          configMap:
+            name: recyclarr-config
