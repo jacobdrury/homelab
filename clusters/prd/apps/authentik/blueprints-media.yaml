@@ -1,7 +1,8 @@
-# Authentik blueprints — media stack Proxy Providers (Sonarr ×2, Prowlarr, qBittorrent).
+# Authentik blueprints — media stack Proxy Providers (Sonarr ×2, Prowlarr, qBittorrent, Cleanuparr).
 # Traffic: Envoy *.lab → authentik-server (embedded outpost) → media Services.
 # HTTPRoutes live in resources-media-routes.yaml (authentik namespace).
 # /api paths skipped so Homepage widgets keep working with API keys.
+# Cleanuparr /health skipped for Uptime Kuma (app liveness, not Authentik).
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -137,3 +138,33 @@ data:
           provider: !KeyOf provider-qbittorrent
           policy_engine_mode: any
           meta_launch_url: https://qbittorrent.lab.jacobdrury.com
+
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-cleanuparr
+        state: present
+        identifiers:
+          name: Cleanuparr
+        attrs:
+          name: Cleanuparr
+          mode: proxy
+          external_host: https://cleanuparr.lab.jacobdrury.com
+          internal_host: http://cleanuparr.media.svc.cluster.local:11011
+          internal_host_ssl_validation: false
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          access_token_validity: days=30
+          refresh_token_validity: days=90
+          skip_path_regex: |
+            ^/health(/.*)?$
+
+      - model: authentik_core.application
+        id: app-cleanuparr
+        state: present
+        identifiers:
+          slug: cleanuparr
+        attrs:
+          name: Cleanuparr
+          slug: cleanuparr
+          provider: !KeyOf provider-cleanuparr
+          policy_engine_mode: any
+          meta_launch_url: https://cleanuparr.lab.jacobdrury.com

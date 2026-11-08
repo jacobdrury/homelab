@@ -56,4 +56,5 @@ data:
             - !Find [authentik_providers_proxy.proxyprovider, [name, Sonarr TV]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, Prowlarr]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, qBittorrent]]
+            - !Find [authentik_providers_proxy.proxyprovider, [name, Cleanuparr]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, Pi-hole]]

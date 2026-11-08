@@ -1,0 +1,115 @@
+# Cleanuparr — queue/malware cleanup + orphaned downloads for Sonarr ×2 + qBit.
+# UI: https://cleanuparr.lab.jacobdrury.com (Authentik Proxy). Config is in-app (SQLite on PVC).
+# https://cleanuparr.github.io/Cleanuparr/
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cleanuparr-config
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: scarif-iscsi
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cleanuparr
+  namespace: media
+  labels:
+    app.kubernetes.io/name: cleanuparr
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cleanuparr
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cleanuparr
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      securityContext:
+        # Match NFS writers (scarif squash → nobody:users).
+        fsGroup: 100
+      containers:
+        - name: cleanuparr
+          image: ghcr.io/cleanuparr/cleanuparr:2.11.0@sha256:01fca19e608006d230479476df5d44287ccec27553587f541d7fa897760f7dd4
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "11011"
+            - name: PUID
+              value: "99"
+            - name: PGID
+              value: "100"
+            - name: UMASK
+              value: "022"
+            - name: TZ
+              value: America/Chicago
+          ports:
+            - name: http
+              containerPort: 11011
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            # Same path as qBit / Sonarr so orphaned-file scans need no remapping.
+            - name: downloads
+              mountPath: /home/data/downloads
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 25m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: cleanuparr-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: media-downloads
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cleanuparr
+  namespace: media
+  labels:
+    app.kubernetes.io/name: cleanuparr
+spec:
+  selector:
+    app.kubernetes.io/name: cleanuparr
+  ports:
+    - name: http
+      port: 11011
+      targetPort: http

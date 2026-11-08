@@ -82,6 +82,13 @@ locals {
       group                 = "Media"
       accepted_status_codes = ["200"]
     }
+    cleanuparr = {
+      name                  = "Cleanuparr"
+      # Authentik skip_path_regex ^/health — app liveness, not the outpost.
+      url                   = "https://cleanuparr.${local.zone}/health"
+      group                 = "Media"
+      accepted_status_codes = ["200"]
+    }
     homeassistant = {
       name  = "Home Assistant"
       url   = "https://homeassistant.${local.zone}/"
@@ -106,7 +113,7 @@ locals {
 
   monitor_order = {
     Platform       = ["homepage", "argocd", "authentik", "it_tools"]
-    Media          = ["jellyfin", "seerr", "qbittorrent", "mullvad", "sonarr", "sonarr_tv", "prowlarr"]
+    Media          = ["jellyfin", "seerr", "qbittorrent", "mullvad", "sonarr", "sonarr_tv", "prowlarr", "cleanuparr"]
     Home           = ["homeassistant"]
     Infrastructure = ["pihole", "scarif"]
   }

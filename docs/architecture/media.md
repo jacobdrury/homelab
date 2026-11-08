@@ -4,7 +4,7 @@
 
 | App | Auth | Data |
 |-----|------|------|
-| qBittorrent, Sonarr ×2, Prowlarr | **Authentik Proxy** ([Sonarr guide](https://integrations.goauthentik.io/media/sonarr/)) | Shared CNPG **`media-pg`**; NFS libraries/downloads |
+| qBittorrent, Sonarr ×2, Prowlarr, Cleanuparr | **Authentik Proxy** ([Sonarr guide](https://integrations.goauthentik.io/media/sonarr/)) | Shared CNPG **`media-pg`** (*arr); Cleanuparr SQLite on iSCSI; NFS libraries/downloads |
 | Jellyfin (`10.11.11`) | Envoy → Service (native Jellyfin accounts) | SQLite on iSCSI config PVC; NFS `/anime` + `/tv` (read-only). GPU notes: [gpu](gpu.md) |
 | Seerr (`v3.4.1`) | Envoy → Service (Jellyfin login) | CNPG DB `seerr` on **`media-pg`**; config PVC on iSCSI |
 
@@ -12,13 +12,13 @@
 
 | Piece | Where |
 |-------|--------|
-| Pods | namespace `media` — qBit + Mullvad WG sidecar, Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, `media-pg` |
-| Libraries / downloads | Scarif NFS static PVs (`media/{anime,tv,downloads}`); *arr `PUID=99` / `PGID=100`; Jellyfin mounts libraries read-only as UID 1000 |
-| Config | iSCSI PVCs (copied from arr); Jellyfin also uses `emptyDir` for `/cache`; Seerr config PVC |
-| Browser URLs (*arr / qBit) | Envoy → **Authentik embedded outpost** → Services ([`resources-media-routes.yaml`](../../clusters/prd/apps/authentik/resources-media-routes.yaml)) |
+| Pods | namespace `media` — qBit + Mullvad WG sidecar, Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, Cleanuparr, `media-pg` |
+| Libraries / downloads | Scarif NFS static PVs (`media/{anime,tv,downloads}`); *arr / Cleanuparr `PUID=99` / `PGID=100`; Jellyfin mounts libraries read-only as UID 1000 |
+| Config | iSCSI PVCs (copied from arr); Jellyfin also uses `emptyDir` for `/cache`; Seerr + Cleanuparr config PVCs |
+| Browser URLs (*arr / qBit / Cleanuparr) | Envoy → **Authentik embedded outpost** → Services ([`resources-media-routes.yaml`](../../clusters/prd/apps/authentik/resources-media-routes.yaml)) |
 | Browser URL (Jellyfin / Seerr) | Envoy → `jellyfin.media` `:8096` / `seerr.media` `:5055` |
-| API / Homepage | Authentik `skip_path_regex` on `/api` (and `/feed` for Sonarr) — widgets use API keys; Jellyfin/Seerr widgets hit app APIs directly |
-| Native UI auth | `AuthenticationMethod=External` (*arr); qBit `AuthSubnetWhitelist` for cluster CIDRs; Jellyfin + Seerr (via Jellyfin) native accounts |
+| API / Homepage | Authentik `skip_path_regex` on `/api` (and `/feed` for Sonarr); Cleanuparr `/health` for Kuma; Jellyfin/Seerr widgets hit app APIs directly |
+| Native UI auth | `AuthenticationMethod=External` (*arr); qBit `AuthSubnetWhitelist` for cluster CIDRs; Cleanuparr “disable auth for local addresses”; Jellyfin + Seerr (via Jellyfin) native accounts |
 
 ## NFS UID (scarif + writers)
 
@@ -39,8 +39,9 @@ Configs live on iSCSI PVCs (originally copied from the arr VM). Live wiring:
 2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080`
 3. Prowlarr apps → `sonarr-anime` / `sonarr-tv` in-cluster Services
 4. Sonarr **indexers** → `http://prowlarr.media.svc.cluster.local:9696/…`
-5. *arr mounts keep Compose paths: `/home/data/{anime,tv,downloads}`
-6. Jellyfin mounts: `/anime`, `/tv`, `/config` (Compose paths preserved)
+5. Cleanuparr → both Sonarrs + qBit over in-cluster DNS; mounts `/home/data/downloads` for orphan scans (see [`clusters/prd/apps/media/README.md`](../../clusters/prd/apps/media/README.md) § Cleanuparr)
+6. *arr mounts keep Compose paths: `/home/data/{anime,tv,downloads}`
+7. Jellyfin mounts: `/anime`, `/tv`, `/config` (Compose paths preserved)
 
 ### Postgres (*arr + Seerr)
 

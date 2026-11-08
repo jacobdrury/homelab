@@ -1,6 +1,6 @@
 # Media stack
 
-qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Jellyfin, Seerr on Talos `prd`.
+qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, Cleanuparr on Talos `prd`.
 *arr + Seerr DBs on shared CNPG **`media-pg`**. Download UIs via **Authentik Proxy**; Jellyfin + Seerr via Envoy → Service (native auth).
 
 **arr VM:** Compose jellyfin / *arr / qBit should stay **stopped** after cutover (configs archived on disk).
@@ -11,7 +11,7 @@ qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Je
 2. **1Password** **`prd Media Postgres`** — CNPG owner (`username` / `password`).
 3. Scarif media tree owned for NFS squash: `nobody:users` (`99:100`) — see [media.md](../../../docs/architecture/media.md).
 
-Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; indexers → `prowlarr.media.svc.cluster.local:9696`; *arr mounts `/home/data/{anime,tv,downloads}`; Jellyfin mounts `/anime` + `/tv`.
+Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; indexers → `prowlarr.media.svc.cluster.local:9696`; *arr mounts `/home/data/{anime,tv,downloads}`; Jellyfin mounts `/anime` + `/tv`; Cleanuparr mounts the same downloads path for orphan scans.
 
 ## Layout
 
@@ -23,11 +23,12 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 | `sonarr-*.yaml` / `prowlarr.yaml` | *arr Deployments |
 | `jellyfin.yaml` | Jellyfin Deployment + Service + HTTPRoute + iSCSI config |
 | `seerr.yaml` | Seerr Deployment + Service + HTTPRoute |
-| `httproutes.yaml` | Stub — *arr/qBit URLs owned by Authentik (`resources-media-routes.yaml`) |
+| `cleanuparr.yaml` | Cleanuparr Deployment + Service + iSCSI config |
+| `httproutes.yaml` | Stub — *arr/qBit/Cleanuparr URLs owned by Authentik (`resources-media-routes.yaml`) |
 
 ## Auth
 
-- **Download stack:** Envoy → Authentik embedded outpost → media Services. `/api` (+ Sonarr `/feed`) skipped for Homepage API keys. *arr use `AuthenticationMethod=External`; qBit bypasses auth for private CIDRs (Authentik → backend).
+- **Download stack:** Envoy → Authentik embedded outpost → media Services. `/api` (+ Sonarr `/feed`) skipped for Homepage API keys; Cleanuparr `/health` skipped for Kuma. *arr use `AuthenticationMethod=External`; qBit bypasses auth for private CIDRs (Authentik → backend).
 - **Jellyfin / Seerr:** Envoy → Service; Jellyfin user accounts (Seerr signs in via Jellyfin).
 
 ## Seerr setup (post-deploy)
@@ -44,3 +45,55 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
    API keys: Sonarr **Settings → General**; Jellyfin API key from dashboard. Mark one Sonarr as default for TV; use the other for anime (tags/root folders as you prefer). There is **no Radarr** in this lab yet. Seerr does **not** talk to Prowlarr — indexers stay on Sonarr via Prowlarr.
 
 3. Paste Seerr’s API key (**Settings → General**) into Homelab **`prd Homepage media API keys`** field `seerr` (placeholder until then).
+
+## Cleanuparr setup (post-deploy)
+
+Config lives in the Cleanuparr UI (SQLite on the config PVC). Open `https://cleanuparr.lab.jacobdrury.com` after Argo sync + DNS (`moon run cloudflare:apply`).
+
+### Connections
+
+| Integration | Host | Notes |
+|-------------|------|-------|
+| qBittorrent | `http://qbittorrent.media.svc.cluster.local:8080` | Same WebUI user/pass as Homelab **`qBittorrent`** |
+| Sonarr Anime | `http://sonarr-anime.media.svc.cluster.local:8989` | API key from Sonarr General |
+| Sonarr TV | `http://sonarr-tv.media.svc.cluster.local:8990` | API key from Sonarr General |
+
+In **General**, enable **Disable Auth for Local Addresses** so Authentik Proxy → Cleanuparr is not double-gated (private CIDRs include the outpost). Keep Internet Connectivity Check on so queue strikes pause during an outage.
+
+### Queue Cleaner
+
+1. Enable Queue Cleaner (basic interval, e.g. every 5 minutes).
+2. **Failed imports:** Max Strikes `3`, Pattern Mode **Include**, patterns:
+   - `Not an upgrade for existing episode file`
+   - `Not a Custom Format upgrade`
+3. Stalled / slow / metadata: Max Strikes `3` (or higher), reset strikes on real progress. Prefer **Ignore Private** / careful **Delete Private** if you care about H&R.
+4. Leave messages like `manual import required`, TBA title, and title mismatch out of the Include list so those stay for hand review.
+
+### Malware Blocker
+
+Enable with the official list `https://cleanuparr.pages.dev/static/blacklist`. Ignore private torrents if you want to avoid touching private-tracker packs.
+
+### Seeker
+
+- Replacement search stays on for both Sonarrs (fires when Queue Cleaner removes something).
+- **Proactive search:** enable only on **Sonarr Anime**. Leave Sonarr TV proactive off.
+- Prefer a moderate interval (10–15+ minutes), round-robin if you later add more instances, and an active download limit so it does not pile onto a busy qBit.
+
+### Download Cleaner + orphaned files
+
+Orphaned scanning runs inside the Download Cleaner job. Enable Download Cleaner, then under qBittorrent → Orphaned Files:
+
+| Setting | Value |
+|---------|-------|
+| Scan directories | `/home/data/downloads` |
+| Orphaned directory | `/home/data/downloads/orphaned` |
+| Min file age | `24` hours (start conservative) |
+| Exclude patterns | incomplete dir / `.!qB` / `*.parts` as needed for your qBit layout |
+| Purge orphaned after | leave empty until you trust the moves |
+
+Create `/home/data/downloads/orphaned` once (same NFS share; `nobody:users`). Skip aggressive seeding-ratio rules until qBit’s own limits are understood; orphans do not require them.
+
+### Apply outside Git
+
+1. `moon run cloudflare:apply` — `cleanuparr.lab` A record from `infrastructure/lab.yaml`.
+2. `moon run uptime-kuma:apply` — Cleanuparr `/health` monitor.
