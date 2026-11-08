@@ -110,6 +110,8 @@ data:
     host["applicationUrl"] = "https://prowlarr.lab.jacobdrury.com"
     host["authenticationMethod"] = "external"
     host["authenticationRequired"] = "disabledForLocalAddresses"
+    # Prowlarr requires AllowedHosts when auth is not fully Enabled.
+    host["allowedHosts"] = "prowlarr.lab.jacobdrury.com,prowlarr.media.svc.cluster.local"
     req("PUT", "/api/v1/config/host", host)
 
     profiles = req("GET", "/api/v1/appprofile")
@@ -137,9 +139,9 @@ data:
         app["enable"] = True
         app["syncLevel"] = "fullSync"
         if app.get("id"):
-            req("PUT", f"/api/v1/applications/{app['id']}", app)
+            req("PUT", f"/api/v1/applications/{app['id']}?forceSave=true", app)
         else:
-            req("POST", "/api/v1/applications", app)
+            req("POST", "/api/v1/applications?forceSave=true", app)
 
     indexers = req("GET", "/api/v1/indexer")
     indexer_schemas = None
@@ -169,16 +171,17 @@ data:
         if desired["name"] == "SubsPlease":
             set_field(fields, "baseUrl", "https://subsplease.org/")
         if idx.get("id"):
-            req("PUT", f"/api/v1/indexer/{idx['id']}", idx)
+            # forceSave skips live site checks (e.g. EZTV CloudFlare blocks).
+            req("PUT", f"/api/v1/indexer/{idx['id']}?forceSave=true", idx)
         else:
-            req("POST", "/api/v1/indexer", idx)
+            req("POST", "/api/v1/indexer?forceSave=true", idx)
 
     # Re-PUT apps so fullSync pushes indexers into Sonarr after indexer upserts.
     apps = req("GET", "/api/v1/applications")
     for app in apps:
         if app.get("name") not in {a["name"] for a in APPS}:
             continue
-        req("PUT", f"/api/v1/applications/{app['id']}", app)
+        req("PUT", f"/api/v1/applications/{app['id']}?forceSave=true", app)
 
     print("DONE")
 ---
@@ -231,7 +234,8 @@ spec:
               cpu: 25m
               memory: 128Mi
             limits:
-              memory: 256Mi
+              # Indexer schema payload is multi-MB JSON.
+              memory: 512Mi
       volumes:
         - name: scripts
           configMap:
