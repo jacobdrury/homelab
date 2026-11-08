@@ -1,0 +1,278 @@
+# Idempotent Unmanic API configure (PostSync). Desired remux state lives here — no UI setup.
+# Re-runs on media app sync; safe to apply repeatedly.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unmanic-configure-script
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  configure.py: |
+    import json
+    import os
+    import time
+    import urllib.error
+    import urllib.request
+
+    BASE = os.environ.get("UNMANIC_URL", "http://unmanic.media.svc.cluster.local:8888").rstrip("/")
+    API = BASE + "/unmanic/api/v2"
+
+    OFFICIAL_REPO = "https://raw.githubusercontent.com/Unmanic/unmanic-plugins/repo/repo.json"
+    YAJ_REPO = "https://raw.githubusercontent.com/yajrendrag/unmanic-plugins/repo/repo.json"
+    PLUGIN_ID = "keep_stream_by_language"
+
+    # First audio language is reordered to stream 0 with default disposition.
+    # Anime: JP audio + EN subs. TV: EN audio first, still keep JP if present.
+    BASE_PLUGIN_SETTINGS = {
+        "subtitle_languages": "eng",
+        "keep_undefined": True,
+        "keep_commentary": False,
+        "fail_safe": True,
+        "reorder_kept": True,
+        "prefer_2_or_mc": "2",
+        "keep_original_audio": False,
+        "tmdb_api_key": "",
+        "tmdb_api_read_access_token": "",
+        "tmdb_language_overrides": "cn=zh",
+    }
+    ANIME_PLUGIN_SETTINGS = {
+        **BASE_PLUGIN_SETTINGS,
+        "audio_languages": "jpn,eng",
+    }
+    TV_PLUGIN_SETTINGS = {
+        **BASE_PLUGIN_SETTINGS,
+        "audio_languages": "eng,jpn",
+    }
+
+    WORKERS = int(os.environ.get("UNMANIC_WORKERS", "2"))
+
+
+    def req(method, path, data=None):
+        body = None if data is None else json.dumps(data).encode()
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        request = urllib.request.Request(
+            API + path,
+            method=method,
+            data=body,
+            headers=headers,
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=120) as resp:
+                raw = resp.read().decode() or "{}"
+                print(f"{method} {path} -> {resp.status} {raw[:240]}")
+                if not raw.strip():
+                    return {}
+                return json.loads(raw)
+        except urllib.error.HTTPError as e:
+            err = e.read().decode()
+            print(f"{method} {path} -> {e.code} {err[:800]}")
+            raise
+
+
+    def wait_ready():
+        for _ in range(90):
+            try:
+                with urllib.request.urlopen(API + "/version/read", timeout=5) as resp:
+                    if resp.status == 200:
+                        return
+            except Exception:
+                time.sleep(2)
+        raise SystemExit("unmanic not ready")
+
+
+    def ensure_repos():
+        desired = [OFFICIAL_REPO, YAJ_REPO]
+        current = req("GET", "/plugins/repos/list")
+        paths = []
+        for repo in current.get("repos") or []:
+            path = repo.get("path") or ""
+            if path and path != "default":
+                paths.append(path)
+        if set(paths) >= set(desired):
+            print("repos already include official + yaj")
+        else:
+            # Replaces the whole list (keep official + yaj only).
+            req("POST", "/plugins/repos/update", {"repos_list": desired})
+        req("POST", "/plugins/repos/reload")
+
+
+    def plugin_installed():
+        try:
+            info = req(
+                "POST",
+                "/plugins/info",
+                {"plugin_id": PLUGIN_ID, "prefer_local": True},
+            )
+            return info.get("plugin_id") == PLUGIN_ID
+        except urllib.error.HTTPError:
+            return False
+
+
+    def ensure_plugin():
+        if plugin_installed():
+            print(f"plugin {PLUGIN_ID} already installed")
+            return
+        req("POST", "/plugins/install", {"plugin_id": PLUGIN_ID})
+        if not plugin_installed():
+            raise SystemExit(f"failed to install {PLUGIN_ID}")
+
+
+    def write_plugin_settings_global():
+        # Global fallback matches Anime (library 1). Per-library settings override.
+        info = req(
+            "POST",
+            "/plugins/info",
+            {"plugin_id": PLUGIN_ID, "prefer_local": True},
+        )
+        settings = info.get("settings") or []
+        if not settings:
+            print("plugin info returned no settings; skipping global settings write")
+            return
+        for item in settings:
+            key = item.get("key")
+            if key in ANIME_PLUGIN_SETTINGS:
+                item["value"] = ANIME_PLUGIN_SETTINGS[key]
+        req(
+            "POST",
+            "/plugins/settings/update",
+            {"plugin_id": PLUGIN_ID, "settings": settings, "library_id": 0},
+        )
+
+
+    def ensure_settings():
+        # Library ID 1 is always forced to Config.library_path — point that at anime.
+        req(
+            "POST",
+            "/settings/write",
+            {
+                "settings": {
+                    "library_path": "/library/anime",
+                    "number_of_workers": WORKERS,
+                }
+            },
+        )
+
+
+    def list_libraries():
+        data = req("GET", "/settings/libraries")
+        return data.get("libraries") or []
+
+
+    def write_library(library_id, name, path, plugin_settings):
+        body = {
+            "library_config": {
+                "id": library_id,
+                "name": name,
+                "path": path,
+                "locked": False,
+                "enable_remote_only": False,
+                "enable_scanner": True,
+                "enable_inotify": True,
+                "priority_score": 0,
+                "tags": [],
+            },
+            "plugins": {
+                "enabled_plugins": [
+                    {
+                        "plugin_id": PLUGIN_ID,
+                        "settings": plugin_settings,
+                    }
+                ]
+            },
+        }
+        req("POST", "/settings/library/write", body)
+
+
+    def ensure_libraries():
+        libraries = list_libraries()
+        by_path = {lib.get("path"): lib for lib in libraries}
+        by_name = {lib.get("name"): lib for lib in libraries}
+
+        # Library 1 tracks settings.library_path (/library/anime).
+        lib1 = next((lib for lib in libraries if lib.get("id") == 1), None)
+        if lib1 is None and libraries:
+            lib1 = libraries[0]
+        if lib1 is None:
+            raise SystemExit("no libraries present after Unmanic boot")
+
+        write_library(lib1["id"], "Anime", "/library/anime", ANIME_PLUGIN_SETTINGS)
+
+        tv = by_path.get("/library/tv") or by_name.get("TV")
+        if tv and tv.get("id") != lib1["id"]:
+            write_library(tv["id"], "TV", "/library/tv", TV_PLUGIN_SETTINGS)
+            return
+
+        # Create second library (free tier allows 2).
+        write_library(0, "TV", "/library/tv", TV_PLUGIN_SETTINGS)
+
+
+    def ensure_workers():
+        groups = req("GET", "/settings/worker_groups")
+        worker_groups = groups.get("worker_groups") or []
+        if not worker_groups:
+            print("no worker groups returned; number_of_workers set via settings/write")
+            return
+        for group in worker_groups:
+            payload = {
+                "id": group.get("id"),
+                "locked": group.get("locked", False),
+                "name": group.get("name") or "Default Group",
+                "number_of_workers": WORKERS,
+                "worker_event_schedules": group.get("worker_event_schedules") or [],
+                "tags": group.get("tags") or [],
+            }
+            req("POST", "/settings/worker_group/write", payload)
+
+
+    wait_ready()
+    ensure_settings()
+    ensure_repos()
+    ensure_plugin()
+    write_plugin_settings_global()
+    ensure_libraries()
+    ensure_workers()
+    print("DONE")
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: unmanic-configure
+  namespace: media
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unmanic-configure
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: docker.io/library/python:3.15.2-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/scripts/configure.py"]
+          env:
+            - name: UNMANIC_URL
+              value: http://unmanic.media.svc.cluster.local:8888
+            - name: UNMANIC_WORKERS
+              value: "2"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: scripts
+          configMap:
+            name: unmanic-configure-script

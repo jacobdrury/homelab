@@ -91,7 +91,7 @@ OpenTofu under `infrastructure/unifi/` (API key in 1Password). **Zone-Based Fire
 | `endor.lab.jacobdrury.com` | `192.168.5.13` | Talos CP #3 (Phase 4) |
 | `naboo.lab.jacobdrury.com` | `192.168.5.14` | Talos worker on scarif (**live**) |
 
-**Apps:** `*.lab.jacobdrury.com` A records → **Envoy VIP `192.168.5.21`** (secondary IP on yavin; hostNetwork Envoy). Download stack (`sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent` / `cleanuparr`) and Uptime Kuma go Envoy → **Authentik Proxy** → in-cluster Services. Jellyfin and Home Assistant go Envoy → in-cluster Service (HA uses Authentik **OIDC** custom component). Pi-hole admin → Authentik Proxy → in-cluster Service. DNS via OpenTofu and/or external-dns from HTTPRoutes.
+**Apps:** `*.lab.jacobdrury.com` A records → **Envoy VIP `192.168.5.21`** (secondary IP on yavin; hostNetwork Envoy). Download stack (`sonarr` / `sonarr-tv` / `prowlarr` / `qbittorrent` / `cleanuparr` / `unmanic`) and Uptime Kuma go Envoy → **Authentik Proxy** → in-cluster Services. Jellyfin and Home Assistant go Envoy → in-cluster Service (HA uses Authentik **OIDC** custom component). Pi-hole admin → Authentik Proxy → in-cluster Service. DNS via OpenTofu and/or external-dns from HTTPRoutes.
 
 ### Transitional reverse-proxy (strangler)
 
