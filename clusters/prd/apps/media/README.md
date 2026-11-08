@@ -22,9 +22,14 @@ One parent PV keeps anime, tv, and downloads on a single filesystem so Sonarr ca
 | `media-pg.yaml` | CNPG Cluster + per-app Databases + postgres/auth config helper |
 | `storage.yaml` | Static NFS PV/PVC for parent share `/mnt/disks/ZXA0VZBA/media` |
 | `qbittorrent.yaml` | qBit + WG sidecar, iSCSI config |
-| `sonarr-*.yaml` / `prowlarr.yaml` | *arr Deployments |
+| `qbittorrent-configure.yaml` | PostSync Job: `wg0` bind, download path, auth subnet whitelist, categories |
+| `sonarr-anime.yaml` / `sonarr-tv.yaml` / `prowlarr.yaml` | *arr Deployments |
+| `sonarr-anime-configure.yaml` | PostSync Job: root folder, qBit client, hardlinks, naming |
+| `sonarr-tv-configure.yaml` | PostSync Job: root folder, qBit client, hardlinks, naming |
+| `prowlarr-configure.yaml` | PostSync Job: Sonarr apps (fullSync) + public indexers |
 | `jellyfin.yaml` | Jellyfin Deployment + Service + HTTPRoute + iSCSI config |
 | `seerr.yaml` | Seerr Deployment + Service + HTTPRoute |
+| `seerr-configure.yaml` | PostSync Job: Jellyfin + Sonarr servers over in-cluster DNS |
 | `cleanuparr.yaml` | Cleanuparr Deployment + Service + iSCSI config PVC (DB on `media-pg`) |
 | `cleanuparr-configure.yaml` | PostSync Job: API bootstrap (connections + cleaners + Seeker) |
 | `unmanic.yaml` | Unmanic Deployment + Service + iSCSI config/cache PVCs (SQLite; NFS libraries) |
@@ -37,20 +42,20 @@ One parent PV keeps anime, tv, and downloads on a single filesystem so Sonarr ca
 - **Download stack:** Envoy → Authentik embedded outpost → media Services. `/api` (+ Sonarr `/feed`) skipped for Homepage API keys; Cleanuparr `/health` and Unmanic `/unmanic/api/v2/version/read` skipped for Kuma. *arr use `AuthenticationMethod=External`; qBit bypasses auth for private CIDRs (Authentik → backend).
 - **Jellyfin / Seerr:** Envoy → Service; Jellyfin user accounts (Seerr signs in via Jellyfin).
 
-## Seerr setup (post-deploy)
+## GitOps configure Jobs
 
-1. Open `https://seerr.lab.jacobdrury.com` and complete the wizard with **Jellyfin** as the media server.
-2. **Settings → Services** — use **in-cluster** hosts (public *arr URLs hit Authentik Proxy):
+Argo PostSync Jobs apply desired API config after each media sync (same pattern as Cleanuparr / Unmanic). Secrets come from Homelab **`prd Homepage media API keys`** and **`qBittorrent`**.
 
-| Service | Hostname | Port | External URL |
-|---------|----------|------|--------------|
-| Jellyfin | `jellyfin.media.svc.cluster.local` | `8096` | `https://jellyfin.lab.jacobdrury.com` |
-| Sonarr Anime | `sonarr-anime.media.svc.cluster.local` | `8989` | `https://sonarr.lab.jacobdrury.com` |
-| Sonarr TV | `sonarr-tv.media.svc.cluster.local` | `8990` | `https://sonarr-tv.lab.jacobdrury.com` |
+| Job (sync-wave) | Owns |
+|-----------------|------|
+| `qbittorrent-configure` (4) | `wg0` interface, `/home/data/downloads`, auth subnet whitelist, categories `sonarr-anime` / `sonarr-tv` / `cleanuparr-unlinked` |
+| `sonarr-anime-configure` (5) | root `/home/data/anime`, qBit client + category `sonarr-anime`, hardlinks, anime naming, `applicationUrl` |
+| `sonarr-tv-configure` (5) | root `/home/data/tv`, qBit client + category `sonarr-tv`, hardlinks, TV naming, `applicationUrl` |
+| `prowlarr-configure` (6) | Sonarr Anime/TV apps (`fullSync`), public indexers (Nyaa, SubsPlease, EZTV, TheRARBG, Shana Project), sync into Sonarr |
+| `seerr-configure` (7) | Jellyfin + both Sonarrs over in-cluster DNS; Anime/Shows libraries; profiles looked up by name |
+| `cleanuparr-configure` (8) | connections + cleaners + Seeker (see below) |
 
-   API keys: Sonarr **Settings → General**; Jellyfin API key from dashboard. Mark one Sonarr as default for TV; use the other for anime (tags/root folders as you prefer). There is **no Radarr** in this lab yet. Seerr does **not** talk to Prowlarr — indexers stay on Sonarr via Prowlarr.
-
-3. Paste Seerr’s API key (**Settings → General**) into Homelab **`prd Homepage media API keys`** field `seerr` (placeholder until then).
+Quality profiles / custom formats stay on **Recyclarr**. Series libraries stay in each Sonarr DB. First-time Seerr still needs the Jellyfin login wizard once, and Homelab field `seerr` must hold Seerr’s API key before the configure Job can run.
 
 ## Cleanuparr setup
 

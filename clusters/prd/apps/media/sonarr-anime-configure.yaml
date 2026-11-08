@@ -1,0 +1,214 @@
+# Idempotent Sonarr anime API configure (PostSync).
+# Root folder, qBit download client, hardlinks, naming, and public URL.
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sonarr-anime-bootstrap
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: sonarr-anime-bootstrap
+    creationPolicy: Owner
+  data:
+    - secretKey: api-key
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: sonarr-anime
+    - secretKey: qbittorrent-username
+      remoteRef:
+        key: kc62r7k7yesqbd27qx3vgcomwe
+        property: username
+    - secretKey: qbittorrent-password
+      remoteRef:
+        key: kc62r7k7yesqbd27qx3vgcomwe
+        property: password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sonarr-anime-configure-script
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  configure.py: |
+    import json
+    import os
+    import time
+    import urllib.error
+    import urllib.request
+
+    B = os.environ.get("SONARR_URL", "http://sonarr-anime.media.svc.cluster.local:8989")
+    API_KEY = os.environ["SONARR_API_KEY"]
+    ROOT = "/home/data/anime"
+    APP_URL = "https://sonarr.lab.jacobdrury.com"
+    TV_CATEGORY = "sonarr-anime"
+
+    def req(method, path, data=None):
+        body = None if data is None else json.dumps(data).encode()
+        headers = {"X-Api-Key": API_KEY}
+        if data is not None:
+            headers["Content-Type"] = "application/json"
+        r = urllib.request.Request(B + path, method=method, data=body, headers=headers)
+        try:
+            with urllib.request.urlopen(r, timeout=60) as resp:
+                raw = resp.read().decode() or "{}"
+                print(f"{method} {path} -> {resp.status} {raw[:240]}")
+                return json.loads(raw) if raw.strip() else {}
+        except urllib.error.HTTPError as e:
+            err = e.read().decode()
+            print(f"{method} {path} -> {e.code} {err[:800]}")
+            raise
+
+    def set_field(fields, name, value):
+        for f in fields:
+            if f.get("name") == name:
+                f["value"] = value
+                return
+        fields.append({"name": name, "value": value})
+
+    for _ in range(60):
+        try:
+            req("GET", "/api/v3/system/status")
+            break
+        except Exception:
+            time.sleep(2)
+    else:
+        raise SystemExit("sonarr-anime not ready")
+
+    roots = req("GET", "/api/v3/rootfolder")
+    if not any(r.get("path") == ROOT for r in roots):
+        req("POST", "/api/v3/rootfolder", {"path": ROOT})
+    else:
+        print(f"rootfolder {ROOT} exists")
+
+    clients = req("GET", "/api/v3/downloadclient")
+    qbit = next((c for c in clients if c.get("name") == "qBittorrent"), None)
+    if qbit is None:
+        schema = next(
+            s
+            for s in req("GET", "/api/v3/downloadclient/schema")
+            if s.get("implementation") == "QBittorrent"
+        )
+        qbit = dict(schema)
+        qbit["name"] = "qBittorrent"
+        qbit["enable"] = True
+        qbit["priority"] = 1
+        qbit["removeCompletedDownloads"] = True
+        qbit["removeFailedDownloads"] = True
+        qbit["tags"] = []
+
+    fields = qbit.setdefault("fields", [])
+    set_field(fields, "host", "qbittorrent.media.svc.cluster.local")
+    set_field(fields, "port", 8080)
+    set_field(fields, "useSsl", False)
+    set_field(fields, "urlBase", "")
+    set_field(fields, "username", os.environ["QBITTORRENT_USERNAME"])
+    set_field(fields, "password", os.environ["QBITTORRENT_PASSWORD"])
+    set_field(fields, "tvCategory", TV_CATEGORY)
+    set_field(fields, "recentTvPriority", 0)
+    set_field(fields, "olderTvPriority", 0)
+    qbit["enable"] = True
+    qbit["priority"] = 1
+    qbit["removeCompletedDownloads"] = True
+    qbit["removeFailedDownloads"] = True
+
+    if qbit.get("id"):
+        req("PUT", f"/api/v3/downloadclient/{qbit['id']}", qbit)
+    else:
+        req("POST", "/api/v3/downloadclient", qbit)
+
+    host = req("GET", "/api/v3/config/host")
+    host["applicationUrl"] = APP_URL
+    host["authenticationMethod"] = "external"
+    host["authenticationRequired"] = "disabledForLocalAddresses"
+    req("PUT", "/api/v3/config/host", host)
+
+    mm = req("GET", "/api/v3/config/mediamanagement")
+    mm["copyUsingHardlinks"] = True
+    mm["enableMediaInfo"] = True
+    mm["downloadPropersAndRepacks"] = "preferAndUpgrade"
+    mm["importExtraFiles"] = False
+    req("PUT", "/api/v3/config/mediamanagement", mm)
+
+    naming = req("GET", "/api/v3/config/naming")
+    naming.update(
+        {
+            "renameEpisodes": True,
+            "replaceIllegalCharacters": True,
+            "colonReplacementFormat": 4,
+            "customColonReplacementFormat": "",
+            "multiEpisodeStyle": 5,
+            "standardEpisodeFormat": "{Series Title} - S{season:00}E{episode:00} - {Episode Title} {Quality Full}",
+            "dailyEpisodeFormat": "{Series Title} - {Air-Date} - {Episode Title} {Quality Full}",
+            "animeEpisodeFormat": "{Series TitleYear} - S{season:00}E{episode:00} - {absolute:000} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}[{MediaInfo VideoBitDepth}bit]{[MediaInfo VideoCodec]}[{Mediainfo AudioCodec} { Mediainfo AudioChannels}]{MediaInfo AudioLanguages}{-Release Group}",
+            "seriesFolderFormat": "{Series Title}",
+            "seasonFolderFormat": "Season {season:00}",
+            "specialsFolderFormat": "Specials",
+        }
+    )
+    req("PUT", "/api/v3/config/naming", naming)
+
+    print("DONE")
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sonarr-anime-configure
+  namespace: media
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sonarr-anime-configure
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: docker.io/library/python:3.15.2-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/scripts/configure.py"]
+          env:
+            - name: SONARR_URL
+              value: http://sonarr-anime.media.svc.cluster.local:8989
+            - name: SONARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sonarr-anime-bootstrap
+                  key: api-key
+            - name: QBITTORRENT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: sonarr-anime-bootstrap
+                  key: qbittorrent-username
+            - name: QBITTORRENT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sonarr-anime-bootstrap
+                  key: qbittorrent-password
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: scripts
+          configMap:
+            name: sonarr-anime-configure-script

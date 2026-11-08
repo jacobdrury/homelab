@@ -1,0 +1,188 @@
+# Idempotent qBittorrent API configure (PostSync).
+# Desired VPN bind, download path, auth bypass, and Sonarr categories live here.
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: qbittorrent-bootstrap
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: qbittorrent-bootstrap
+    creationPolicy: Owner
+  data:
+    - secretKey: username
+      remoteRef:
+        key: kc62r7k7yesqbd27qx3vgcomwe
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: kc62r7k7yesqbd27qx3vgcomwe
+        property: password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbittorrent-configure-script
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  configure.py: |
+    import http.cookiejar
+    import json
+    import os
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    B = os.environ.get("QBITTORRENT_URL", "http://qbittorrent.media.svc.cluster.local:8080")
+    jar = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+
+    def req(method, path, data=None, form=False):
+        body = None
+        headers = {}
+        if data is not None:
+            if form:
+                body = urllib.parse.urlencode(data).encode()
+                headers["Content-Type"] = "application/x-www-form-urlencoded"
+            else:
+                body = json.dumps(data).encode()
+                headers["Content-Type"] = "application/json"
+        r = urllib.request.Request(B + path, method=method, data=body, headers=headers)
+        try:
+            with opener.open(r, timeout=60) as resp:
+                raw = resp.read().decode()
+                print(f"{method} {path} -> {resp.status} {raw[:200]}")
+                return raw
+        except urllib.error.HTTPError as e:
+            err = e.read().decode()
+            print(f"{method} {path} -> {e.code} {err[:800]}")
+            raise
+
+    def wait_ready():
+        for _ in range(60):
+            try:
+                raw = req("GET", "/api/v2/app/version")
+                if raw.strip():
+                    return
+            except Exception:
+                time.sleep(2)
+        raise SystemExit("qbittorrent not ready")
+
+    def ensure_auth():
+        # Cluster CIDRs usually bypass auth; fall back to WebUI login.
+        try:
+            req("GET", "/api/v2/app/preferences")
+            return
+        except urllib.error.HTTPError as e:
+            if e.code not in (401, 403):
+                raise
+        user = os.environ["QBITTORRENT_USERNAME"]
+        password = os.environ["QBITTORRENT_PASSWORD"]
+        login = req(
+            "POST",
+            "/api/v2/auth/login",
+            {"username": user, "password": password},
+            form=True,
+        )
+        if login.strip().lower() != "ok":
+            raise SystemExit(f"qbittorrent login failed: {login[:200]}")
+
+    wait_ready()
+    ensure_auth()
+
+    prefs = json.loads(req("GET", "/api/v2/app/preferences"))
+    desired = {
+        "save_path": "/home/data/downloads",
+        "temp_path_enabled": False,
+        "current_network_interface": "wg0",
+        "web_ui_port": 8080,
+        "bypass_auth_subnet_whitelist_enabled": True,
+        "bypass_auth_subnet_whitelist": "10.0.0.0/8\n172.16.0.0/12\n192.168.0.0/16",
+        "bypass_local_auth": False,
+        "max_ratio_enabled": True,
+        "max_ratio": 0,
+        "queueing_enabled": True,
+        "max_active_downloads": 20,
+        "max_active_torrents": 30,
+    }
+    patch = {k: v for k, v in desired.items() if prefs.get(k) != v}
+    if patch:
+        req("POST", "/api/v2/app/setPreferences", {"json": json.dumps(patch)}, form=True)
+        print("preferences updated", sorted(patch))
+    else:
+        print("preferences already correct")
+
+    categories = json.loads(req("GET", "/api/v2/torrents/categories") or "{}")
+    for name in ("sonarr-anime", "sonarr-tv", "cleanuparr-unlinked"):
+        if name in categories:
+            print(f"category {name} exists")
+            continue
+        req(
+            "POST",
+            "/api/v2/torrents/createCategory",
+            {"category": name, "savePath": ""},
+            form=True,
+        )
+        print(f"category {name} created")
+
+    print("DONE")
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qbittorrent-configure
+  namespace: media
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qbittorrent-configure
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: docker.io/library/python:3.15.2-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/scripts/configure.py"]
+          env:
+            - name: QBITTORRENT_URL
+              value: http://qbittorrent.media.svc.cluster.local:8080
+            - name: QBITTORRENT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: qbittorrent-bootstrap
+                  key: username
+            - name: QBITTORRENT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: qbittorrent-bootstrap
+                  key: password
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: scripts
+          configMap:
+            name: qbittorrent-configure-script
