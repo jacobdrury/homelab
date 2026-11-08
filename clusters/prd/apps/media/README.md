@@ -27,7 +27,7 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 | `cleanuparr-configure.yaml` | PostSync Job: API bootstrap (connections + cleaners + Seeker) |
 | `unmanic.yaml` | Unmanic Deployment + Service + iSCSI config/cache PVCs (SQLite; NFS libraries) |
 | `unmanic-configure.yaml` | PostSync Job: libraries + keep_stream_by_language plugin via Unmanic API |
-| `recyclarr.yaml` | Recyclarr CronJob + PostSync Job: TRaSH CFs/profile → sonarr-anime only (no UI) |
+| `recyclarr.yaml` | Recyclarr CronJob + PostSync Job: TRaSH CFs/profiles → sonarr-anime + sonarr-tv (no UI) |
 | `httproutes.yaml` | Stub — *arr/qBit/Cleanuparr/Unmanic URLs owned by Authentik (`resources-media-routes.yaml`) |
 
 ## Auth
@@ -96,16 +96,30 @@ On merge to `main`, CI also adds `unmanic.lab` and the Kuma probe on `/unmanic/a
 
 ## Recyclarr
 
-No UI. Daily CronJob (`15 5 * * *`, America/Chicago) plus Argo PostSync Job run `recyclarr sync` against **sonarr-anime** only (`http://sonarr-anime.media.svc.cluster.local:8989`). API key from Homelab **`prd Homepage media API keys`** field `sonarr-anime` (same item as Homepage / Cleanuparr bootstrap).
+No UI. Daily CronJob (`15 5 * * *`, America/Chicago) plus Argo PostSync Job run `recyclarr sync` against **sonarr-anime** and **sonarr-tv**. API keys from Homelab **`prd Homepage media API keys`** fields `sonarr-anime` / `sonarr-tv` (same item as Homepage / Cleanuparr bootstrap).
 
-Base is the TRaSH anime Remux-1080p profile (`trash_id` `20e0fc959f1f1704bed501f23bdae76f`, Sonarr name `Remux-1080p - Anime`). Lab overrides in `recyclarr.yaml`:
+### sonarr-anime
+
+TRaSH anime Remux-1080p (`trash_id` `20e0fc959f1f1704bed501f23bdae76f`, Sonarr name `Remux-1080p - Anime`):
 
 | Override | Value |
 |----------|-------|
-| Uncensored CF score | `101` on `Remux-1080p - Anime` (not template default `0`) |
-| Upgrade until quality | `Bluray 1080p` group (1080p remux); **not** 2160p |
+| Uncensored CF score | `101` (not template default `0`) |
+| Upgrade until quality | `Bluray 1080p` group; **not** 2160p |
 | Upgrade until score | `10000` |
 | Min format score | `100` |
-| 2160p WEB/Remux | Allowed **above** the cutoff so Sonarr can take clearly-better UHD without hunting UHD |
+| 2160p WEB/Remux | Allowed **above** the cutoff |
+
+### sonarr-tv
+
+TRaSH WEB-1080p (`trash_id` `72dae194fc92bf828f32cde7744e51a1`, Sonarr name `TV`):
+
+| Override | Value |
+|----------|-------|
+| Upgrade until quality | `WEB 1080p`; **not** 2160p |
+| Upgrade until score | `10000` |
+| Min format score | `0` |
+| 2160p WEB/Remux | Allowed **above** the cutoff (guide disables these) |
+| Lower qualities / Bluray 1080p | Disallowed (guide stock) |
 
 Edit the ConfigMap in `recyclarr.yaml` to change policy. No Homepage, Kuma, Authentik, or DNS for this app.
