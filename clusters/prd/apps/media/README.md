@@ -24,6 +24,7 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 | `jellyfin.yaml` | Jellyfin Deployment + Service + HTTPRoute + iSCSI config |
 | `seerr.yaml` | Seerr Deployment + Service + HTTPRoute |
 | `cleanuparr.yaml` | Cleanuparr Deployment + Service + iSCSI config PVC (DB on `media-pg`) |
+| `cleanuparr-configure.yaml` | PostSync Job: API bootstrap (connections + cleaners + Seeker) |
 | `unmanic.yaml` | Unmanic Deployment + Service + iSCSI config/cache PVCs (SQLite; NFS libraries) |
 | `unmanic-configure.yaml` | PostSync Job: libraries + keep_stream_by_language plugin via Unmanic API |
 | `recyclarr.yaml` | Recyclarr CronJob + PostSync Job: TRaSH CFs/profile → sonarr-anime only (no UI) |
@@ -49,52 +50,24 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 
 3. Paste Seerr’s API key (**Settings → General**) into Homelab **`prd Homepage media API keys`** field `seerr` (placeholder until then).
 
-## Cleanuparr setup (post-deploy)
+## Cleanuparr setup
 
-Config lives in the Cleanuparr UI (SQLite on the config PVC). Open `https://cleanuparr.lab.jacobdrury.com` after Argo sync and CI OpenTofu apply (DNS + Kuma).
+UI: `https://cleanuparr.lab.jacobdrury.com` (Authentik Proxy). App DB on `media-pg`; `/config` PVC is keys/logs only.
 
-### Connections
+**First browser visit:** complete Cleanuparr’s admin wizard once, then **General → Authentication**: Disable Auth for Local Addresses **on**, Trust Forwarded Headers **off** (Authentik already gates the URL).
 
-| Integration | Host | Notes |
-|-------------|------|-------|
-| qBittorrent | `http://qbittorrent.media.svc.cluster.local:8080` | Same WebUI user/pass as Homelab **`qBittorrent`** |
-| Sonarr Anime | `http://sonarr-anime.media.svc.cluster.local:8989` | API key from Sonarr General |
-| Sonarr TV | `http://sonarr-tv.media.svc.cluster.local:8990` | API key from Sonarr General |
+**Desired app config** is applied by `cleanuparr-configure.yaml` (Argo PostSync Job). It uses ExternalSecret `cleanuparr-bootstrap` (same 1Password fields as Homepage media/qBit) and sets:
 
-In **General**, enable **Disable Auth for Local Addresses** so Authentik Proxy → Cleanuparr is not double-gated (private CIDRs include the outpost). Keep Internet Connectivity Check on so queue strikes pause during an outage.
+| Area | Setting |
+|------|---------|
+| Connections | qBit + Sonarr Anime + Sonarr TV (in-cluster DNS) |
+| General | Internet connectivity check on (`github.com`, `1.1.1.1`) |
+| Queue Cleaner | Failed-import Include patterns for non-upgrades (3 strikes); stalled/slow rules; metadata strikes |
+| Malware Blocker | Official Sonarr blacklist; ignore private |
+| Download Cleaner | Enabled; orphaned scan `/home/data/downloads` → `/home/data/downloads/orphaned` (24h min age; no auto-purge) |
+| Seeker | Replacement search on; proactive search **Sonarr Anime only** (15m interval) |
 
-### Queue Cleaner
-
-1. Enable Queue Cleaner (basic interval, e.g. every 5 minutes).
-2. **Failed imports:** Max Strikes `3`, Pattern Mode **Include**, patterns:
-   - `Not an upgrade for existing episode file`
-   - `Not a Custom Format upgrade`
-3. Stalled / slow / metadata: Max Strikes `3` (or higher), reset strikes on real progress. Prefer **Ignore Private** / careful **Delete Private** if you care about H&R.
-4. Leave messages like `manual import required`, TBA title, and title mismatch out of the Include list so those stay for hand review.
-
-### Malware Blocker
-
-Enable with the official list `https://cleanuparr.pages.dev/static/blacklist`. Ignore private torrents if you want to avoid touching private-tracker packs.
-
-### Seeker
-
-- Replacement search stays on for both Sonarrs (fires when Queue Cleaner removes something).
-- **Proactive search:** enable only on **Sonarr Anime**. Leave Sonarr TV proactive off.
-- Prefer a moderate interval (10–15+ minutes), round-robin if you later add more instances, and an active download limit so it does not pile onto a busy qBit.
-
-### Download Cleaner + orphaned files
-
-Orphaned scanning runs inside the Download Cleaner job. Enable Download Cleaner, then under qBittorrent → Orphaned Files:
-
-| Setting | Value |
-|---------|-------|
-| Scan directories | `/home/data/downloads` |
-| Orphaned directory | `/home/data/downloads/orphaned` |
-| Min file age | `24` hours (start conservative) |
-| Exclude patterns | incomplete dir / `.!qB` / `*.parts` as needed for your qBit layout |
-| Purge orphaned after | leave empty until you trust the moves |
-
-Create `/home/data/downloads/orphaned` once (same NFS share; `nobody:users`). Skip aggressive seeding-ratio rules until qBit’s own limits are understood; orphans do not require them.
+Create `/home/data/downloads/orphaned` on the NFS share if missing (`nobody:users`). Seeding-ratio rules are left unset.
 
 ### DNS and Kuma
 
