@@ -1,0 +1,268 @@
+# Idempotent Seerr API configure (PostSync).
+# Jellyfin + Sonarr anime/TV over in-cluster DNS (replaces UI wiring).
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: seerr-bootstrap
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: seerr-bootstrap
+    creationPolicy: Owner
+  data:
+    - secretKey: api-key
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: seerr
+    - secretKey: jellyfin-api-key
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: jellyfin
+    - secretKey: sonarr-anime-api-key
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: sonarr-anime
+    - secretKey: sonarr-tv-api-key
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: sonarr-tv
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: seerr-configure-script
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  configure.py: |
+    import json
+    import os
+    import time
+    import urllib.error
+    import urllib.request
+
+    B = os.environ.get("SEERR_URL", "http://seerr.media.svc.cluster.local:5055")
+    API_KEY = os.environ["SEERR_API_KEY"]
+    ENABLED_LIBS = {"Anime", "Shows"}
+
+    SONARRS = [
+        {
+            "name": "Sonarr Anime",
+            "hostname": "sonarr-anime.media.svc.cluster.local",
+            "port": 8989,
+            "apiKeyEnv": "SONARR_ANIME_API_KEY",
+            "profileName": "Remux-1080p - Anime",
+            "directory": "/home/data/anime",
+            "externalUrl": "https://sonarr.lab.jacobdrury.com",
+            "isDefault": True,
+            "animeSeriesType": "anime",
+            "useAnimeProfiles": True,
+        },
+        {
+            "name": "Sonarr TV",
+            "hostname": "sonarr-tv.media.svc.cluster.local",
+            "port": 8990,
+            "apiKeyEnv": "SONARR_TV_API_KEY",
+            "profileName": "TV",
+            "directory": "/home/data/tv",
+            "externalUrl": "https://sonarr-tv.lab.jacobdrury.com",
+            "isDefault": False,
+            "animeSeriesType": None,
+            "useAnimeProfiles": False,
+        },
+    ]
+
+    def req(method, path, data=None):
+        body = None if data is None else json.dumps(data).encode()
+        headers = {"X-Api-Key": API_KEY}
+        if data is not None:
+            headers["Content-Type"] = "application/json"
+        r = urllib.request.Request(B + path, method=method, data=body, headers=headers)
+        try:
+            with urllib.request.urlopen(r, timeout=60) as resp:
+                raw = resp.read().decode() or "{}"
+                print(f"{method} {path} -> {resp.status} {raw[:240]}")
+                return json.loads(raw) if raw.strip() else {}
+        except urllib.error.HTTPError as e:
+            err = e.read().decode()
+            print(f"{method} {path} -> {e.code} {err[:800]}")
+            raise
+
+    def sonarr_req(base, api_key, path):
+        r = urllib.request.Request(
+            base + path,
+            headers={"X-Api-Key": api_key},
+            method="GET",
+        )
+        with urllib.request.urlopen(r, timeout=60) as resp:
+            return json.loads(resp.read().decode())
+
+    def profile_id(hostname, port, api_key, name):
+        profiles = sonarr_req(
+            f"http://{hostname}:{port}",
+            api_key,
+            "/api/v3/qualityprofile",
+        )
+        match = next((p for p in profiles if p.get("name") == name), None)
+        if match is None:
+            raise SystemExit(f"quality profile {name!r} missing on {hostname}")
+        return match["id"]
+
+    for _ in range(60):
+        try:
+            req("GET", "/api/v1/status")
+            break
+        except Exception:
+            time.sleep(2)
+    else:
+        raise SystemExit("seerr not ready")
+
+    jellyfin_body = {
+        "name": "Nebula",
+        "ip": "jellyfin.media.svc.cluster.local",
+        "port": 8096,
+        "useSsl": False,
+        "urlBase": "",
+        "externalHostname": "https://jellyfin.lab.jacobdrury.com",
+        "jellyfinForgotPasswordUrl": "https://jellyfin.lab.jacobdrury.com/web/#/forgotpassword",
+        "apiKey": os.environ["JELLYFIN_API_KEY"],
+    }
+    req("POST", "/api/v1/settings/jellyfin", jellyfin_body)
+    libraries = req("POST", "/api/v1/settings/jellyfin/library/sync")
+    if not isinstance(libraries, list):
+        libraries = req("GET", "/api/v1/settings/jellyfin/library")
+    if not isinstance(libraries, list):
+        libraries = []
+    for lib in libraries:
+        want = lib.get("name") in ENABLED_LIBS
+        if bool(lib.get("enabled")) == want:
+            print(f"library {lib.get('name')} enabled={want}")
+            continue
+        req(
+            "PUT",
+            f"/api/v1/settings/jellyfin/library/{lib['id']}",
+            {"enabled": want},
+        )
+
+    existing = req("GET", "/api/v1/settings/sonarr")
+    if not isinstance(existing, list):
+        existing = []
+
+    for desired in SONARRS:
+        api_key = os.environ[desired["apiKeyEnv"]]
+        pid = profile_id(
+            desired["hostname"],
+            desired["port"],
+            api_key,
+            desired["profileName"],
+        )
+        body = {
+            "name": desired["name"],
+            "hostname": desired["hostname"],
+            "port": desired["port"],
+            "apiKey": api_key,
+            "useSsl": False,
+            "baseUrl": "",
+            "activeProfileId": pid,
+            "activeProfileName": desired["profileName"],
+            "activeDirectory": desired["directory"],
+            "tags": [],
+            "animeTags": [],
+            "is4k": False,
+            "isDefault": desired["isDefault"],
+            "enableSeasonFolders": True,
+            "externalUrl": desired["externalUrl"],
+            "syncEnabled": True,
+            "preventSearch": False,
+            "tagRequests": False,
+            "monitorNewItems": "all",
+        }
+        if desired["useAnimeProfiles"]:
+            body["animeSeriesType"] = desired["animeSeriesType"]
+            body["activeAnimeProfileId"] = pid
+            body["activeAnimeProfileName"] = desired["profileName"]
+            body["activeAnimeDirectory"] = desired["directory"]
+
+        match = next(
+            (
+                s
+                for s in existing
+                if s.get("hostname") == desired["hostname"] or s.get("name") == desired["name"]
+            ),
+            None,
+        )
+        if match is None:
+            req("POST", "/api/v1/settings/sonarr", body)
+        else:
+            body["id"] = match["id"]
+            req("PUT", f"/api/v1/settings/sonarr/{match['id']}", body)
+
+    print("DONE")
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seerr-configure
+  namespace: media
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "7"
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: seerr-configure
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: docker.io/library/python:3.15.2-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/scripts/configure.py"]
+          env:
+            - name: SEERR_URL
+              value: http://seerr.media.svc.cluster.local:5055
+            - name: SEERR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: seerr-bootstrap
+                  key: api-key
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: seerr-bootstrap
+                  key: jellyfin-api-key
+            - name: SONARR_ANIME_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: seerr-bootstrap
+                  key: sonarr-anime-api-key
+            - name: SONARR_TV_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: seerr-bootstrap
+                  key: sonarr-tv-api-key
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: scripts
+          configMap:
+            name: seerr-configure-script

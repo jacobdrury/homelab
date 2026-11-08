@@ -41,16 +41,17 @@ Cutover steps (Retain + claimRef, short downtime, `stat` check): [`clusters/prd/
 
 ## Config + wiring
 
-Configs live on iSCSI PVCs (originally copied from the arr VM). Live wiring:
+Configs live on iSCSI PVCs (originally copied from the arr VM). Steady-state wiring is owned by Argo PostSync configure Jobs under [`clusters/prd/apps/media/`](../../clusters/prd/apps/media/) (`qbittorrent-configure`, `sonarr-anime-configure`, `sonarr-tv-configure`, `prowlarr-configure`, `seerr-configure`, plus Cleanuparr / Unmanic / Recyclarr):
 
-1. qBit → Network interface **`wg0`**; WebUI port **8080**
-2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080`
-3. Prowlarr apps → `sonarr-anime` / `sonarr-tv` in-cluster Services
-4. Sonarr **indexers** → `http://prowlarr.media.svc.cluster.local:9696/…`
+1. qBit → Network interface **`wg0`**; WebUI port **8080**; categories for Sonarr + Cleanuparr
+2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080` (per-instance Job)
+3. Prowlarr apps → `sonarr-anime` / `sonarr-tv` in-cluster Services (`fullSync`)
+4. Sonarr **indexers** → synced from Prowlarr (`http://prowlarr.media.svc.cluster.local:9696/…`)
 5. Cleanuparr → both Sonarrs + qBit over in-cluster DNS; mounts parent at `/home/data` for orphan scans under `/home/data/downloads` (see [`clusters/prd/apps/media/README.md`](../../clusters/prd/apps/media/README.md) § Cleanuparr)
 6. Unmanic remuxes libraries in place at `/library/{anime,tv}` (`subPath` from the parent PVC); PostSync Job `unmanic-configure` applies libraries + `keep_stream_by_language` (remux-only, no H.265)
 7. *arr / qBit / Cleanuparr mount the parent at `/home/data` (Compose paths for root folders and downloads unchanged)
 8. Jellyfin mounts: `/anime`, `/tv` via `subPath`, plus `/config` (Compose paths preserved)
+9. Seerr → Jellyfin + both Sonarrs over in-cluster DNS (`seerr-configure`)
 
 ### Postgres (*arr + Seerr)
 
@@ -68,7 +69,7 @@ Init containers upsert `Postgres*` + `AuthenticationMethod=External` for *arr. S
 
 ### Seerr integrations
 
-Wire in the Seerr UI after deploy (see [`clusters/prd/apps/media/README.md`](../../clusters/prd/apps/media/README.md)). Use **in-cluster** Service DNS for Jellyfin + both Sonarrs so traffic skips Authentik Proxy. Prowlarr is not a Seerr integration (Sonarr owns indexers). No Radarr in this lab yet.
+`seerr-configure` applies Jellyfin + both Sonarrs over **in-cluster** Service DNS so traffic skips Authentik Proxy. Prowlarr is not a Seerr integration (Sonarr owns indexers). No Radarr in this lab yet. First browser visit still completes the Jellyfin login wizard once; API keys stay in Homelab **`prd Homepage media API keys`**.
 
 ## qBittorrent + VPN
 

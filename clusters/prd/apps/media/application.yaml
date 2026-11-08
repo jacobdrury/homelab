@@ -14,7 +14,7 @@ spec:
     targetRevision: main
     path: clusters/prd/apps/media
     directory:
-      include: '{namespace,storage,media-pg,qbittorrent,sonarr-anime,sonarr-tv,prowlarr,jellyfin,seerr,cleanuparr,cleanuparr-configure,unmanic,unmanic-configure,recyclarr}.yaml'
+      include: '{namespace,storage,media-pg,qbittorrent,qbittorrent-configure,sonarr-anime,sonarr-anime-configure,sonarr-tv,sonarr-tv-configure,prowlarr,prowlarr-configure,jellyfin,seerr,seerr-configure,cleanuparr,cleanuparr-configure,unmanic,unmanic-configure,recyclarr}.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: media
