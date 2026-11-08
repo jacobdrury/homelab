@@ -29,6 +29,7 @@ Config: [`renovate.json`](../../renovate.json) at repo root.
 ## Ops notes
 
 - Schedule: anytime (no `schedule:` preset — Renovate’s default).
+- Version bumps wait **7 days** after publish (`minimumReleaseAge` + `internalChecksFilter: strict`) before Renovate opens a PR.
 - Dependency Dashboard issue lists pending updates.
 - Digests are grouped; major platform charts stay as separate PRs for review.
 - After the first wave of PRs, tighten `packageRules` if anything is noisy.
