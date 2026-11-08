@@ -11,14 +11,16 @@ qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Je
 2. **1Password** **`prd Media Postgres`** — CNPG owner (`username` / `password`).
 3. Scarif media tree owned for NFS squash: `nobody:users` (`99:100`) — see [media.md](../../../docs/architecture/media.md).
 
-Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; indexers → `prowlarr.media.svc.cluster.local:9696`; *arr mounts `/home/data/{anime,tv,downloads}`; Jellyfin mounts `/anime` + `/tv`; Cleanuparr mounts the same downloads path for orphan scans; Unmanic mounts `/library/{anime,tv}` (RW remux).
+Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; indexers → `prowlarr.media.svc.cluster.local:9696`; *arr / qBit / Cleanuparr mount the parent NFS share at `/home/data` (subdirs `anime` / `tv` / `downloads`); Jellyfin mounts `/anime` + `/tv` via `subPath`; Cleanuparr orphan scans use `/home/data/downloads`; Unmanic mounts `/library/{anime,tv}` via `subPath` (RW remux).
+
+One parent PV keeps anime, tv, and downloads on a single filesystem so Sonarr can hardlink imports. Root folder paths stay `/home/data/anime` and `/home/data/tv` (no Sonarr DB rewrite).
 
 ## Layout
 
 | File | Role |
 |------|------|
 | `media-pg.yaml` | CNPG Cluster + per-app Databases + postgres/auth config helper |
-| `storage.yaml` | Static NFS PVs for `media/{anime,tv,downloads}` |
+| `storage.yaml` | Static NFS PV/PVC for parent share `/mnt/disks/ZXA0VZBA/media` |
 | `qbittorrent.yaml` | qBit + WG sidecar, iSCSI config |
 | `sonarr-*.yaml` / `prowlarr.yaml` | *arr Deployments |
 | `jellyfin.yaml` | Jellyfin Deployment + Service + HTTPRoute + iSCSI config |
@@ -95,9 +97,24 @@ Orphaned scanning runs inside the Download Cleaner job. Enable Download Cleaner,
 
 Create `/home/data/downloads/orphaned` once (same NFS share; `nobody:users`). Skip aggressive seeding-ratio rules until qBit’s own limits are understood; orphans do not require them.
 
+Keep **Unlinked Downloads** off until hardlinks are verified on a new Sonarr import (sibling NFS mounts used to force copies; nlink stays 1 for those older files). Orphaned Files is the disk cleanup path that matches this layout.
+
 ### DNS and Kuma
 
 On merge to `main`, GitHub Actions `moon ci :apply` updates Cloudflare app hosts from `lab.yaml` and Uptime Kuma monitors. Mac `moon run cloudflare:apply` / `uptime-kuma:apply` is break-glass only — [opentofu-ci](../../../docs/setup/opentofu-ci.md).
+
+## Hardlink cutover (sibling PVs → parent PV)
+
+Git replace `media-anime` / `media-tv` / `media-downloads` with one `media` PV/PVC. Live apply needs a short *arr / qBit / Cleanuparr / Jellyfin / Unmanic downtime while mounts swap. Data on scarif is unchanged; only the Kubernetes mount path changes.
+
+1. Scale down or pause consumers that mount the old claims (Sonarr ×2, qBit, Cleanuparr, Jellyfin, Unmanic).
+2. Delete the three old PVCs, then the three old PVs. Reclaim policy is `Retain`, so Unraid files stay. Clear leftover `claimRef` on Released PVs if you recreated names, or use the new `media` names from Git.
+3. Apply `storage.yaml` so PV `media` + PVC `media` bind (`claimRef` + `volumeName` already pair them).
+4. Roll the Deployments that mount `claimName: media` (parent at `/home/data`, or Jellyfin/Unmanic `subPath`).
+5. Smoke paths in a Sonarr pod: `ls /home/data/{anime,tv,downloads}` and confirm root folders still point at `/home/data/anime` and `/home/data/tv`.
+6. Grab a new episode (or import one already in downloads). In the Sonarr pod, `stat` the library file and the download path; both should show the same inode and `Links` ≥ 2. Older library files imported under sibling mounts remain separate copies (nlink 1); only new imports hardlink. Reclaiming that double space means re-importing later, which this cutover does not do.
+
+Details: [media.md](../../../docs/architecture/media.md).
 
 ## Unmanic
 

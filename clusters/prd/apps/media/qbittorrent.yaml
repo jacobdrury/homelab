@@ -187,11 +187,13 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
-            # Match Compose paths used in copied qBittorrent.conf
-            - name: downloads
-              mountPath: /home/data/downloads
-            - name: downloads
+            # Parent media share (downloads under /home/data/downloads).
+            - name: media
+              mountPath: /home/data
+            # Alias used by copied qBittorrent.conf
+            - name: media
               mountPath: /downloads
+              subPath: downloads
           readinessProbe:
             tcpSocket:
               port: http
@@ -214,9 +216,9 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: qbittorrent-config
-        - name: downloads
+        - name: media
           persistentVolumeClaim:
-            claimName: media-downloads
+            claimName: media
 ---
 apiVersion: v1
 kind: Service

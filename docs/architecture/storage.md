@@ -102,11 +102,11 @@ This is **not Docker-specific** — it is Unraid NFS + matching process UID/GID.
 
 | Export (today) | Use |
 |----------------|-----|
-| `/mnt/disks/ZXA0VZBA` | Jellyfin / *arr libraries via `media/` |
-| `downloads/` | qBittorrent (pool or UD as you prefer) |
+| `/mnt/disks/ZXA0VZBA` | UD root export |
+| `/mnt/disks/ZXA0VZBA/media` | Static PV `media` (`scarif-nfs-media`) — anime / tv / downloads for hardlinks |
 | `backups/` | App dumps / future backup tooling |
 
-Cluster: **NFS CSI** live — StorageClass **`scarif-nfs`** (`clusters/prd/platform/nfs-csi/`). Dynamic PVCs land under `${namespace}/${pvc}` on the export. Shared media tree (existing `media/`) can use a static PV later if apps need the root layout. **Not** for Sonarr/Postgres SQLite — use iSCSI.
+Cluster: **NFS CSI** live — StorageClass **`scarif-nfs`** (`clusters/prd/platform/nfs-csi/`). Dynamic PVCs land under `${namespace}/${pvc}` on the export. The shared media tree uses a **static** PV/PVC (`clusters/prd/apps/media/storage.yaml`) that exports the Unraid **parent** `media/` share so library + downloads are one filesystem in the pod (Sonarr hardlinks). Binding-only class: **`scarif-nfs-media`**. **Not** for Sonarr/Postgres SQLite — use iSCSI.
 
 **k8s must use the same UID model** as above — CSI mounts the export; it does not remap Unraid squash. For media Pods / charts:
 

@@ -13,7 +13,7 @@
 | Piece | Where |
 |-------|--------|
 | Pods | namespace `media` — qBit + Mullvad WG sidecar, Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, Cleanuparr, Unmanic, `media-pg` |
-| Libraries / downloads | Scarif NFS static PVs (`media/{anime,tv,downloads}`); *arr / Cleanuparr / Unmanic `PUID=99` / `PGID=100`; Jellyfin mounts libraries read-only as UID 1000 |
+| Libraries / downloads | One scarif NFS static PV for parent `/mnt/disks/ZXA0VZBA/media`; *arr / qBit / Cleanuparr mount it at `/home/data`; Jellyfin + Unmanic use `subPath` for `anime` / `tv`; writers `PUID=99` / `PGID=100`; Jellyfin UID 1000 RO |
 | Config | iSCSI PVCs (copied from arr); Jellyfin also uses `emptyDir` for `/cache`; Seerr + Cleanuparr config PVCs (Cleanuparr keys/logs only; app DB on `media-pg`); Unmanic config + remux cache on iSCSI |
 | Browser URLs (*arr / qBit / Cleanuparr / Unmanic) | Envoy → **Authentik embedded outpost** → Services ([`resources-media-routes.yaml`](../../clusters/prd/apps/authentik/resources-media-routes.yaml)) |
 | Browser URL (Jellyfin / Seerr) | Envoy → `jellyfin.media` `:8096` / `seerr.media` `:5055` |
@@ -29,7 +29,15 @@ chown -R nobody:users /mnt/disks/ZXA0VZBA/media
 chmod -R ug+rwX,o+rX /mnt/disks/ZXA0VZBA/media
 ```
 
-k8s Deployments use **`PUID=99` / `PGID=100`** (`fsGroup: 100`). Static NFS PVs mount the existing tree (not dynamic `scarif-nfs` subdirs).
+k8s Deployments use **`PUID=99` / `PGID=100`** (`fsGroup: 100`). One static NFS PV mounts the existing parent tree (not dynamic `scarif-nfs` subdirs, not three sibling PVs).
+
+### Why one parent mount
+
+Sibling NFS PVs for `media/anime`, `media/tv`, and `media/downloads` were separate filesystems inside the pod even though they sit on the same Unraid disk. Sonarr then copied on import instead of hardlinking. The parent PV exports `/mnt/disks/ZXA0VZBA/media` once; `/home/data/anime`, `/home/data/tv`, and `/home/data/downloads` share that mount. Sonarr root folders stay `/home/data/anime` and `/home/data/tv`.
+
+Leave Cleanuparr **Unlinked Downloads** off until a new import shows `nlink` ≥ 2. Orphaned Files remains the downloads cleanup job. Files imported under the old sibling mounts stay as copies; only new imports hardlink. Full re-import to reclaim space is optional and separate.
+
+Cutover steps (Retain + claimRef, short downtime, `stat` check): [`clusters/prd/apps/media/README.md`](../../clusters/prd/apps/media/README.md) § Hardlink cutover.
 
 ## Config + wiring
 
@@ -39,10 +47,10 @@ Configs live on iSCSI PVCs (originally copied from the arr VM). Live wiring:
 2. Sonarr download client → `qbittorrent.media.svc.cluster.local:8080`
 3. Prowlarr apps → `sonarr-anime` / `sonarr-tv` in-cluster Services
 4. Sonarr **indexers** → `http://prowlarr.media.svc.cluster.local:9696/…`
-5. Cleanuparr → both Sonarrs + qBit over in-cluster DNS; mounts `/home/data/downloads` for orphan scans (see [`clusters/prd/apps/media/README.md`](../../clusters/prd/apps/media/README.md) § Cleanuparr)
-6. Unmanic remuxes libraries in place at `/library/{anime,tv}`; PostSync Job `unmanic-configure` applies libraries + `keep_stream_by_language` (remux-only, no H.265)
-7. *arr mounts keep Compose paths: `/home/data/{anime,tv,downloads}`
-8. Jellyfin mounts: `/anime`, `/tv`, `/config` (Compose paths preserved)
+5. Cleanuparr → both Sonarrs + qBit over in-cluster DNS; mounts parent at `/home/data` for orphan scans under `/home/data/downloads` (see [`clusters/prd/apps/media/README.md`](../../clusters/prd/apps/media/README.md) § Cleanuparr)
+6. Unmanic remuxes libraries in place at `/library/{anime,tv}` (`subPath` from the parent PVC); PostSync Job `unmanic-configure` applies libraries + `keep_stream_by_language` (remux-only, no H.265)
+7. *arr / qBit / Cleanuparr mount the parent at `/home/data` (Compose paths for root folders and downloads unchanged)
+8. Jellyfin mounts: `/anime`, `/tv` via `subPath`, plus `/config` (Compose paths preserved)
 
 ### Postgres (*arr + Seerr)
 
