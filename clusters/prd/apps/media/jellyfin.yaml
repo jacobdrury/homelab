@@ -1,4 +1,4 @@
-# Jellyfin — config copied from arr VM; libraries on NFS media/{anime,tv}.
+# Jellyfin — config copied from arr VM; libraries via subPath on NFS media parent.
 # Lab URL: Envoy → Service (native Jellyfin auth; not Authentik).
 # Image pinned to arr's 10.11.11 (no upgrade).
 ---
@@ -63,11 +63,13 @@ spec:
               mountPath: /config
             - name: cache
               mountPath: /cache
-            - name: anime
+            - name: media
               mountPath: /anime
+              subPath: anime
               readOnly: true
-            - name: tv
+            - name: media
               mountPath: /tv
+              subPath: tv
               readOnly: true
           readinessProbe:
             httpGet:
@@ -94,12 +96,9 @@ spec:
             claimName: jellyfin-config
         - name: cache
           emptyDir: {}
-        - name: anime
+        - name: media
           persistentVolumeClaim:
-            claimName: media-anime
-        - name: tv
-          persistentVolumeClaim:
-            claimName: media-tv
+            claimName: media
 ---
 apiVersion: v1
 kind: Service

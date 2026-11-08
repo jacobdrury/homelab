@@ -1,4 +1,5 @@
-# Sonarr TV — config copied from arr VM; library on NFS media/tv.
+# Sonarr TV — config copied from arr VM; library under NFS media parent.
+# Mount parent at /home/data so tv + downloads share a filesystem (hardlinks).
 # Postgres: media-pg (sonarr_tv_main / sonarr_tv_log). Port 8990 in copied config.xml.
 ---
 apiVersion: v1
@@ -94,10 +95,9 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
-            - name: tv
-              mountPath: /home/data/tv
-            - name: downloads
-              mountPath: /home/data/downloads
+            # Parent media share: /home/data/{tv,downloads} on one filesystem.
+            - name: media
+              mountPath: /home/data
           readinessProbe:
             tcpSocket:
               port: http
@@ -113,12 +113,9 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: sonarr-tv-config
-        - name: tv
+        - name: media
           persistentVolumeClaim:
-            claimName: media-tv
-        - name: downloads
-          persistentVolumeClaim:
-            claimName: media-downloads
+            claimName: media
         - name: pg-scripts
           configMap:
             name: arr-postgres-config

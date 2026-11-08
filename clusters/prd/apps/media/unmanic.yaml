@@ -83,10 +83,12 @@ spec:
               mountPath: /config
             - name: cache
               mountPath: /tmp/unmanic
-            - name: anime
+            - name: media
               mountPath: /library/anime
-            - name: tv
+              subPath: anime
+            - name: media
               mountPath: /library/tv
+              subPath: tv
           livenessProbe:
             httpGet:
               path: /unmanic/api/v2/version/read
@@ -115,12 +117,10 @@ spec:
         - name: cache
           persistentVolumeClaim:
             claimName: unmanic-cache
-        - name: anime
+        - name: media
           persistentVolumeClaim:
-            claimName: media-anime
-        - name: tv
-          persistentVolumeClaim:
-            claimName: media-tv
+            claimName: media
+
 ---
 apiVersion: v1
 kind: Service
