@@ -8,6 +8,8 @@
   ],
   "labels": ["dependencies", "renovate"],
   "reviewers": ["jacobdrury"],
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
   "prConcurrentLimit": 0,
   "branchConcurrentLimit": 0,
   "argocd": {
