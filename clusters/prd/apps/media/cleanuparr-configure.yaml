@@ -260,20 +260,41 @@ data:
         },
     )
 
-    # Soft unlinked mode: tag only (no category move). Parent NFS hardlinks work for
-    # new imports; pre-cutover copies still show nlink=1 and will get this tag until
-    # re-imported. Do not add a seeding rule on cleanuparr-unlinked yet.
+    # Move unlinked torrents (nlink=1 under downloads) into cleanuparr-unlinked, then
+    # delete them on the next Download Cleaner run. Pre-cutover copy-imports are expected.
     req(
         "PUT",
         f"/api/unlinked-config/{qbit_id}",
         {
             "enabled": True,
             "targetCategory": "cleanuparr-unlinked",
-            "useTag": True,
+            "useTag": False,
             "ignoredRootDirs": ["/home/data/downloads"],
             "categories": ["sonarr-anime", "sonarr-tv"],
         },
     )
+
+    unlinked_rule = {
+        "name": "Unlinked downloads",
+        "categories": ["cleanuparr-unlinked"],
+        "trackerPatterns": [],
+        "tagsAny": [],
+        "tagsAll": [],
+        "privacyType": "Both",
+        "maxRatio": -1,
+        "minSeedTime": 0,
+        "maxSeedTime": 0,
+        "minSeeders": 0,
+        "maxInactiveDays": -1,
+        "deleteSourceFiles": True,
+        "action": "Delete",
+    }
+    existing_rules = req("GET", f"/api/seeding-rules/{qbit_id}") or []
+    match = next((r for r in existing_rules if r.get("name") == "Unlinked downloads"), None)
+    if match:
+        req("PUT", f"/api/seeding-rules/{match['id']}", unlinked_rule)
+    else:
+        req("POST", f"/api/seeding-rules/{qbit_id}", unlinked_rule)
 
     req(
         "PUT",
