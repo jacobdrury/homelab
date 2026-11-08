@@ -1,6 +1,6 @@
 # Media stack
 
-qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, Cleanuparr, Unmanic on Talos `prd`.
+qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, Cleanuparr, Unmanic, Recyclarr on Talos `prd`.
 *arr + Seerr DBs on shared CNPG **`media-pg`**. Download UIs via **Authentik Proxy**; Jellyfin + Seerr via Envoy → Service (native auth).
 
 **arr VM:** Compose jellyfin / *arr / qBit should stay **stopped** after cutover (configs archived on disk).
@@ -26,6 +26,7 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 | `cleanuparr.yaml` | Cleanuparr Deployment + Service + iSCSI config PVC (DB on `media-pg`) |
 | `unmanic.yaml` | Unmanic Deployment + Service + iSCSI config/cache PVCs (SQLite; NFS libraries) |
 | `unmanic-configure.yaml` | PostSync Job: libraries + keep_stream_by_language plugin via Unmanic API |
+| `recyclarr.yaml` | Recyclarr CronJob + PostSync Job: TRaSH CFs/profile → sonarr-anime only (no UI) |
 | `httproutes.yaml` | Stub — *arr/qBit/Cleanuparr/Unmanic URLs owned by Authentik (`resources-media-routes.yaml`) |
 
 ## Auth
@@ -119,3 +120,19 @@ UI: `https://unmanic.lab.jacobdrury.com` (Authentik Proxy). Config/SQLite on iSC
 ### DNS and Kuma
 
 On merge to `main`, CI also adds `unmanic.lab` and the Kuma probe on `/unmanic/api/v2/version/read`.
+
+## Recyclarr
+
+No UI. Daily CronJob (`15 5 * * *`, America/Chicago) plus Argo PostSync Job run `recyclarr sync` against **sonarr-anime** only (`http://sonarr-anime.media.svc.cluster.local:8989`). API key from Homelab **`prd Homepage media API keys`** field `sonarr-anime` (same item as Homepage / Cleanuparr bootstrap).
+
+Base is the TRaSH anime Remux-1080p profile (`trash_id` `20e0fc959f1f1704bed501f23bdae76f`, Sonarr name `Remux-1080p - Anime`). Lab overrides in `recyclarr.yaml`:
+
+| Override | Value |
+|----------|-------|
+| Uncensored CF score | `101` on `Remux-1080p - Anime` (not template default `0`) |
+| Upgrade until quality | `Bluray 1080p` group (1080p remux); **not** 2160p |
+| Upgrade until score | `10000` |
+| Min format score | `100` |
+| 2160p WEB/Remux | Allowed **above** the cutoff so Sonarr can take clearly-better UHD without hunting UHD |
+
+Edit the ConfigMap in `recyclarr.yaml` to change policy. No Homepage, Kuma, Authentik, or DNS for this app.
