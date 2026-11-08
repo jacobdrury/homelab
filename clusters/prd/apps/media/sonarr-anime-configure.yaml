@@ -129,6 +129,8 @@ data:
     host["applicationUrl"] = APP_URL
     host["authenticationMethod"] = "external"
     host["authenticationRequired"] = "disabledForLocalAddresses"
+    # Required when Authentication Required is not Enabled.
+    host["allowedHosts"] = "sonarr.lab.jacobdrury.com,sonarr-anime.media.svc.cluster.local"
     req("PUT", "/api/v3/config/host", host)
 
     mm = req("GET", "/api/v3/config/mediamanagement")
