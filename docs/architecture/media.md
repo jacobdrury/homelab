@@ -35,7 +35,7 @@ k8s Deployments use **`PUID=99` / `PGID=100`** (`fsGroup: 100`). One static NFS 
 
 Sibling NFS PVs for `media/anime`, `media/tv`, and `media/downloads` were separate filesystems inside the pod even though they sit on the same Unraid disk. Sonarr then copied on import instead of hardlinking. The parent PV exports `/mnt/disks/ZXA0VZBA/media` once; `/home/data/anime`, `/home/data/tv`, and `/home/data/downloads` share that mount. Sonarr root folders stay `/home/data/anime` and `/home/data/tv`.
 
-Leave Cleanuparr **Unlinked Downloads** off until a new import shows `nlink` ≥ 2. Orphaned Files remains the downloads cleanup job. Files imported under the old sibling mounts stay as copies; only new imports hardlink. Full re-import to reclaim space is optional and separate.
+Cleanuparr **Unlinked Downloads** is enabled via `cleanuparr-configure`: move to category `cleanuparr-unlinked`, then a seeding rule deletes those torrents and their source files. New imports hardlink (`nlink` ≥ 2) and stay. Pre-cutover copy-imports are removed on purpose. Orphaned Files remains the downloads disk cleanup job for files with no torrent.
 
 Cutover steps (Retain + claimRef, short downtime, `stat` check): [`clusters/prd/apps/media/README.md`](../../clusters/prd/apps/media/README.md) § Hardlink cutover.
 
