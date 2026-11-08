@@ -260,6 +260,21 @@ data:
         },
     )
 
+    # Soft unlinked mode: tag only (no category move). Parent NFS hardlinks work for
+    # new imports; pre-cutover copies still show nlink=1 and will get this tag until
+    # re-imported. Do not add a seeding rule on cleanuparr-unlinked yet.
+    req(
+        "PUT",
+        f"/api/unlinked-config/{qbit_id}",
+        {
+            "enabled": True,
+            "targetCategory": "cleanuparr-unlinked",
+            "useTag": True,
+            "ignoredRootDirs": ["/home/data/downloads"],
+            "categories": ["sonarr-anime", "sonarr-tv"],
+        },
+    )
+
     req(
         "PUT",
         "/api/configuration/seeker",

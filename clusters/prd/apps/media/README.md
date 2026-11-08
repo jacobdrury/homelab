@@ -67,11 +67,12 @@ UI: `https://cleanuparr.lab.jacobdrury.com` (Authentik Proxy). App DB on `media-
 | Queue Cleaner | Failed-import Include patterns for non-upgrades (3 strikes); stalled/slow rules; metadata strikes |
 | Malware Blocker | Official Sonarr blacklist; ignore private |
 | Download Cleaner | Enabled; orphaned scan `/home/data/downloads` → `/home/data/downloads/orphaned` (24h min age; no auto-purge) |
+| Unlinked Downloads | On for qBit; tag `cleanuparr-unlinked` only (`useTag`); categories `sonarr-anime` / `sonarr-tv`; ignore root `/home/data/downloads`. No seeding rule on that tag yet |
 | Seeker | Replacement search on; proactive search **Sonarr Anime only** (15m interval) |
 
 Create `/home/data/downloads/orphaned` on the NFS share if missing (`nobody:users`). Seeding-ratio rules are left unset.
 
-Keep **Unlinked Downloads** off until hardlinks are verified on a new Sonarr import (sibling NFS mounts used to force copies; nlink stays 1 for those older files). Orphaned Files is the disk cleanup path that matches this layout.
+Unlinked Downloads is soft-enabled after the parent NFS hardlink cutover. New imports hardlink (`nlink` ≥ 2). Pre-cutover copy-imports still look unlinked and will receive the tag until re-imported. Do not add a seeding rule (or category move) for `cleanuparr-unlinked` until that noise is acceptable.
 
 ### DNS and Kuma
 
