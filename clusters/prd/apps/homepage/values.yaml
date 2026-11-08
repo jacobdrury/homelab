@@ -400,6 +400,14 @@ configMaps:
           padding-bottom: 5.5rem !important;
         }
 
+        /* Homelab row is equal Tailwind cols by default; give Media more room for 2-up cards.
+           Only the Platform | Media | Lab split (exactly 3 subgroup children). */
+        @media (min-width: 1024px) {
+          #layout-groups .services-group:not(.subgroup) div:has(> .services-group.subgroup:nth-child(3 of .services-group.subgroup)):not(:has(> .services-group.subgroup:nth-child(4 of .services-group.subgroup))) {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 2.25fr) minmax(0, 1fr) !important;
+          }
+        }
+
 persistence:
   logs:
     enabled: true
