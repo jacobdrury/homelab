@@ -18,6 +18,13 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: media
+  # Allow live `kubectl scale` of Unmanic without self-heal fighting it.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: unmanic
+      jsonPointers:
+        - /spec/replicas
   syncPolicy:
     automated:
       prune: true
