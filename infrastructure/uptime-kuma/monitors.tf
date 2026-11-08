@@ -89,6 +89,13 @@ locals {
       group                 = "Media"
       accepted_status_codes = ["200"]
     }
+    unmanic = {
+      name                  = "Unmanic"
+      # Authentik skip_path_regex version/read — app liveness, not the outpost.
+      url                   = "https://unmanic.${local.zone}/unmanic/api/v2/version/read"
+      group                 = "Media"
+      accepted_status_codes = ["200"]
+    }
     homeassistant = {
       name  = "Home Assistant"
       url   = "https://homeassistant.${local.zone}/"
@@ -113,7 +120,7 @@ locals {
 
   monitor_order = {
     Platform       = ["homepage", "argocd", "authentik", "it_tools"]
-    Media          = ["jellyfin", "seerr", "qbittorrent", "mullvad", "sonarr", "sonarr_tv", "prowlarr", "cleanuparr"]
+    Media          = ["jellyfin", "seerr", "qbittorrent", "mullvad", "sonarr", "sonarr_tv", "prowlarr", "cleanuparr", "unmanic"]
     Home           = ["homeassistant"]
     Infrastructure = ["pihole", "scarif"]
   }

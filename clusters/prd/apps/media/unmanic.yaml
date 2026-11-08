@@ -1,0 +1,138 @@
+# Unmanic — library remux (strip unwanted audio/subs). No video re-encode by default.
+# UI: https://unmanic.lab.jacobdrury.com (Authentik Proxy).
+# SQLite + plugins on config PVC; remux cache on iSCSI; libraries on scarif NFS.
+# https://docs.unmanic.app/
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: unmanic-config
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: scarif-iscsi
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: unmanic-cache
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: scarif-iscsi
+  resources:
+    requests:
+      # Remux writes a full copy before replace; size for a few concurrent episodes.
+      storage: 50Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unmanic
+  namespace: media
+  labels:
+    app.kubernetes.io/name: unmanic
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unmanic
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unmanic
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      securityContext:
+        # Match NFS writers (scarif squash → nobody:users).
+        fsGroup: 100
+      containers:
+        - name: unmanic
+          image: docker.io/josh5/unmanic:0.4.1@sha256:b249cba0d77331fe015794dc06f98cc4c99c50f158cfce43575a1b4f330495a9
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PUID
+              value: "99"
+            - name: PGID
+              value: "100"
+            - name: TZ
+              value: America/Chicago
+          ports:
+            - name: http
+              containerPort: 8888
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: cache
+              mountPath: /tmp/unmanic
+            - name: anime
+              mountPath: /library/anime
+            - name: tv
+              mountPath: /library/tv
+          livenessProbe:
+            httpGet:
+              path: /unmanic/api/v2/version/read
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /unmanic/api/v2/version/read
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              # Remux is mostly I/O; headroom for ffmpeg + UI.
+              memory: 2Gi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: unmanic-config
+        - name: cache
+          persistentVolumeClaim:
+            claimName: unmanic-cache
+        - name: anime
+          persistentVolumeClaim:
+            claimName: media-anime
+        - name: tv
+          persistentVolumeClaim:
+            claimName: media-tv
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: unmanic
+  namespace: media
+  labels:
+    app.kubernetes.io/name: unmanic
+spec:
+  selector:
+    app.kubernetes.io/name: unmanic
+  ports:
+    - name: http
+      port: 8888
+      targetPort: http

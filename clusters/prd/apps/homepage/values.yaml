@@ -243,6 +243,11 @@ config:
             description: Download queue cleanup
             icon: mdi-broom
             siteMonitor: https://cleanuparr.lab.jacobdrury.com/health
+        - Unmanic:
+            href: https://unmanic.lab.jacobdrury.com
+            description: Strip extra audio/subs
+            icon: mdi-scissors-cutting
+            siteMonitor: https://unmanic.lab.jacobdrury.com/unmanic/api/v2/version/read
 
     - Home:
         - Home Assistant:

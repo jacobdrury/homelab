@@ -168,6 +168,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | qBittorrent | k8s `media` | `qbittorrent.lab` → Authentik → pod | downloads on NFS · Mullvad WG sidecar |
 | Prowlarr | k8s `media` | `prowlarr.lab` → Authentik → pod | Postgres `media-pg` |
 | Cleanuparr | k8s `media` | `cleanuparr.lab` → Authentik → pod | Postgres `cleanuparr` on `media-pg`; NFS downloads for orphan scans |
+| Unmanic | k8s `media` | `unmanic.lab` → Authentik → pod | SQLite on iSCSI; remux cache iSCSI; NFS `anime`/`tv` RW |
 | Discord bots | pc (black) VM **103** | `192.168.1.18` | **Won't migrate** — stop/delete; outbound-only legacy |
 
 ---

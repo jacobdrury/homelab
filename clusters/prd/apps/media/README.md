@@ -1,6 +1,6 @@
 # Media stack
 
-qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, Cleanuparr on Talos `prd`.
+qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, Cleanuparr, Unmanic on Talos `prd`.
 *arr + Seerr DBs on shared CNPG **`media-pg`**. Download UIs via **Authentik Proxy**; Jellyfin + Seerr via Envoy → Service (native auth).
 
 **arr VM:** Compose jellyfin / *arr / qBit should stay **stopped** after cutover (configs archived on disk).
@@ -11,7 +11,7 @@ qBittorrent (Mullvad **WG sidecar** + bind `wg0`), Sonarr anime/TV, Prowlarr, Je
 2. **1Password** **`prd Media Postgres`** — CNPG owner (`username` / `password`).
 3. Scarif media tree owned for NFS squash: `nobody:users` (`99:100`) — see [media.md](../../../docs/architecture/media.md).
 
-Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; indexers → `prowlarr.media.svc.cluster.local:9696`; *arr mounts `/home/data/{anime,tv,downloads}`; Jellyfin mounts `/anime` + `/tv`; Cleanuparr mounts the same downloads path for orphan scans.
+Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; indexers → `prowlarr.media.svc.cluster.local:9696`; *arr mounts `/home/data/{anime,tv,downloads}`; Jellyfin mounts `/anime` + `/tv`; Cleanuparr mounts the same downloads path for orphan scans; Unmanic mounts `/library/{anime,tv}` (RW remux).
 
 ## Layout
 
@@ -24,11 +24,13 @@ Live wiring: download client → `qbittorrent.media.svc.cluster.local:8080`; ind
 | `jellyfin.yaml` | Jellyfin Deployment + Service + HTTPRoute + iSCSI config |
 | `seerr.yaml` | Seerr Deployment + Service + HTTPRoute |
 | `cleanuparr.yaml` | Cleanuparr Deployment + Service + iSCSI config PVC (DB on `media-pg`) |
-| `httproutes.yaml` | Stub — *arr/qBit/Cleanuparr URLs owned by Authentik (`resources-media-routes.yaml`) |
+| `unmanic.yaml` | Unmanic Deployment + Service + iSCSI config/cache PVCs (SQLite; NFS libraries) |
+| `unmanic-configure.yaml` | PostSync Job: libraries + keep_stream_by_language plugin via Unmanic API |
+| `httproutes.yaml` | Stub — *arr/qBit/Cleanuparr/Unmanic URLs owned by Authentik (`resources-media-routes.yaml`) |
 
 ## Auth
 
-- **Download stack:** Envoy → Authentik embedded outpost → media Services. `/api` (+ Sonarr `/feed`) skipped for Homepage API keys; Cleanuparr `/health` skipped for Kuma. *arr use `AuthenticationMethod=External`; qBit bypasses auth for private CIDRs (Authentik → backend).
+- **Download stack:** Envoy → Authentik embedded outpost → media Services. `/api` (+ Sonarr `/feed`) skipped for Homepage API keys; Cleanuparr `/health` and Unmanic `/unmanic/api/v2/version/read` skipped for Kuma. *arr use `AuthenticationMethod=External`; qBit bypasses auth for private CIDRs (Authentik → backend).
 - **Jellyfin / Seerr:** Envoy → Service; Jellyfin user accounts (Seerr signs in via Jellyfin).
 
 ## Seerr setup (post-deploy)
@@ -95,4 +97,25 @@ Create `/home/data/downloads/orphaned` once (same NFS share; `nobody:users`). Sk
 
 ### DNS and Kuma
 
-On merge to `main`, GitHub Actions `moon ci :apply` updates Cloudflare (`cleanuparr.lab` from `lab.yaml`) and the Uptime Kuma `/health` monitor. Mac `moon run cloudflare:apply` / `uptime-kuma:apply` is break-glass only — [opentofu-ci](../../../docs/setup/opentofu-ci.md).
+On merge to `main`, GitHub Actions `moon ci :apply` updates Cloudflare app hosts from `lab.yaml` and Uptime Kuma monitors. Mac `moon run cloudflare:apply` / `uptime-kuma:apply` is break-glass only — [opentofu-ci](../../../docs/setup/opentofu-ci.md).
+
+## Unmanic
+
+UI: `https://unmanic.lab.jacobdrury.com` (Authentik Proxy). Config/SQLite on iSCSI; remux cache on iSCSI; libraries on scarif NFS.
+
+**Desired remux config** is applied by `unmanic-configure.yaml` (Argo PostSync Job). No UI setup for libraries/plugins. It sets:
+
+| Area | Setting |
+|------|---------|
+| Libraries | Anime → `/library/anime`, TV → `/library/tv` (scanner + inotify on; free tier = 2) |
+| Plugin | `keep_stream_by_language` from yajrendrag repo |
+| Anime keep | audio `jpn,eng` (JP default via reorder); subs `eng`; fail-safe + keep undefined |
+| TV keep | audio `eng,jpn` (EN default); subs `eng` |
+| Workers | 2 |
+| Not configured | video transcode / H.265 (leave off) |
+
+`reorder_kept` sets the file’s default **audio** disposition from the first listed language. English is usually the only remaining subtitle. For reliable auto-subs in Jellyfin, set the user preferred subtitle language to English as well. Edit `ANIME_PLUGIN_SETTINGS` / `TV_PLUGIN_SETTINGS` in the configure ConfigMap to change policy.
+
+### DNS and Kuma
+
+On merge to `main`, CI also adds `unmanic.lab` and the Kuma probe on `/unmanic/api/v2/version/read`.

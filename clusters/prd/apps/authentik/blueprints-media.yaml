@@ -1,8 +1,8 @@
-# Authentik blueprints — media stack Proxy Providers (Sonarr ×2, Prowlarr, qBittorrent, Cleanuparr).
+# Authentik blueprints — media stack Proxy Providers (Sonarr ×2, Prowlarr, qBittorrent, Cleanuparr, Unmanic).
 # Traffic: Envoy *.lab → authentik-server (embedded outpost) → media Services.
 # HTTPRoutes live in resources-media-routes.yaml (authentik namespace).
 # /api paths skipped so Homepage widgets keep working with API keys.
-# Cleanuparr /health skipped for Uptime Kuma (app liveness, not Authentik).
+# Cleanuparr /health and Unmanic /unmanic/api/v2/version/read skipped for Uptime Kuma.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -168,3 +168,33 @@ data:
           provider: !KeyOf provider-cleanuparr
           policy_engine_mode: any
           meta_launch_url: https://cleanuparr.lab.jacobdrury.com
+
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-unmanic
+        state: present
+        identifiers:
+          name: Unmanic
+        attrs:
+          name: Unmanic
+          mode: proxy
+          external_host: https://unmanic.lab.jacobdrury.com
+          internal_host: http://unmanic.media.svc.cluster.local:8888
+          internal_host_ssl_validation: false
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          access_token_validity: days=30
+          refresh_token_validity: days=90
+          skip_path_regex: |
+            ^/unmanic/api/v2/version/read/?$
+
+      - model: authentik_core.application
+        id: app-unmanic
+        state: present
+        identifiers:
+          slug: unmanic
+        attrs:
+          name: Unmanic
+          slug: unmanic
+          provider: !KeyOf provider-unmanic
+          policy_engine_mode: any
+          meta_launch_url: https://unmanic.lab.jacobdrury.com
