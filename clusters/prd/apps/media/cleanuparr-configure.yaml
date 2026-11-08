@@ -1,0 +1,370 @@
+# Idempotent Cleanuparr API configure (PostSync). Secrets from same 1Password items as Homepage.
+# Re-runs on media app sync; safe to apply repeatedly.
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: cleanuparr-bootstrap
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: cleanuparr-bootstrap
+    creationPolicy: Owner
+  data:
+    - secretKey: sonarr-anime-api-key
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: sonarr-anime
+    - secretKey: sonarr-tv-api-key
+      remoteRef:
+        key: pga43kdwm5ziscjvmu4wecr3be
+        property: sonarr-tv
+    - secretKey: qbittorrent-username
+      remoteRef:
+        key: kc62r7k7yesqbd27qx3vgcomwe
+        property: username
+    - secretKey: qbittorrent-password
+      remoteRef:
+        key: kc62r7k7yesqbd27qx3vgcomwe
+        property: password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cleanuparr-configure-script
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  configure.py: |
+    import json, os, urllib.error, urllib.request
+
+    B = os.environ.get("CLEANUPARR_URL", "http://cleanuparr.media.svc.cluster.local:11011")
+
+    def req(method, path, data=None):
+        body = None if data is None else json.dumps(data).encode()
+        headers = {"Content-Type": "application/json"} if data is not None else {}
+        r = urllib.request.Request(B + path, method=method, data=body, headers=headers)
+        try:
+            with urllib.request.urlopen(r, timeout=60) as resp:
+                raw = resp.read().decode() or "{}"
+                print(f"{method} {path} -> {resp.status} {raw[:240]}")
+                return json.loads(raw) if raw.strip() else {}
+        except urllib.error.HTTPError as e:
+            err = e.read().decode()
+            print(f"{method} {path} -> {e.code} {err[:800]}")
+            raise
+
+    # wait
+    import time
+    for _ in range(60):
+        try:
+            with urllib.request.urlopen(B + "/health", timeout=5) as resp:
+                if resp.status == 200:
+                    break
+        except Exception:
+            time.sleep(2)
+    else:
+        raise SystemExit("cleanuparr not healthy")
+
+    gen = req("GET", "/api/configuration/general")
+    gen["connectivityCheckEnabled"] = True
+    gen["connectivityCheckUrls"] = ["https://github.com", "https://1.1.1.1"]
+    req("PUT", "/api/configuration/general", gen)
+
+    clients = req("GET", "/api/configuration/download_client").get("clients") or []
+    qbit = next((c for c in clients if c.get("name") == "qBittorrent"), None)
+    qbit_body = {
+        "enabled": True,
+        "name": "qBittorrent",
+        "typeName": "qBittorrent",
+        "host": "http://qbittorrent.media.svc.cluster.local:8080",
+        "username": os.environ["QBITTORRENT_USERNAME"],
+        "password": os.environ["QBITTORRENT_PASSWORD"],
+        "urlBase": "",
+        "externalUrl": "https://qbittorrent.lab.jacobdrury.com",
+        "downloadDirectorySource": "/home/data/downloads",
+        "downloadDirectoryTarget": "/home/data/downloads",
+    }
+    if qbit:
+        req("PUT", f"/api/configuration/download_client/{qbit['id']}", qbit_body)
+        qbit_id = qbit["id"]
+    else:
+        qbit_id = req("POST", "/api/configuration/download_client", qbit_body)["id"]
+    print("qbit_id", qbit_id)
+
+    def ensure_sonarr(name, url, api_key, external):
+        cfg = req("GET", "/api/configuration/sonarr")
+        inst = next((i for i in cfg.get("instances") or [] if i.get("name") == name), None)
+        body = {
+            "enabled": True,
+            "name": name,
+            "url": url,
+            "externalUrl": external,
+            "apiKey": api_key,
+            "version": 0,
+        }
+        if inst:
+            req("PUT", f"/api/configuration/sonarr/instances/{inst['id']}", body)
+            return inst["id"]
+        return req("POST", "/api/configuration/sonarr/instances", body)["id"]
+
+    anime_id = ensure_sonarr(
+        "Sonarr Anime",
+        "http://sonarr-anime.media.svc.cluster.local:8989",
+        os.environ["SONARR_ANIME_API_KEY"],
+        "https://sonarr.lab.jacobdrury.com",
+    )
+    tv_id = ensure_sonarr(
+        "Sonarr TV",
+        "http://sonarr-tv.media.svc.cluster.local:8990",
+        os.environ["SONARR_TV_API_KEY"],
+        "https://sonarr-tv.lab.jacobdrury.com",
+    )
+    print("anime_id", anime_id, "tv_id", tv_id)
+
+    req(
+        "PUT",
+        "/api/configuration/queue_cleaner",
+        {
+            "enabled": True,
+            "cronExpression": "0 0/5 * * * ?",
+            "useAdvancedScheduling": False,
+            "ignoredDownloads": [],
+            "processNoContentId": False,
+            "downloadingMetadataMaxStrikes": 5,
+            "failedImport": {
+                "maxStrikes": 3,
+                "ignorePrivate": False,
+                "deletePrivate": False,
+                "skipIfNotFoundInClient": True,
+                "patterns": [
+                    "Not an upgrade for existing episode file",
+                    "Not a Custom Format upgrade",
+                ],
+                "patternMode": "Include",
+                "changeCategory": False,
+                "forceImport": False,
+                "forceImportMaxTries": 3,
+            },
+            "errored": {
+                "maxStrikes": 5,
+                "ignorePrivate": True,
+                "deletePrivate": False,
+                "changeCategory": False,
+            },
+        },
+    )
+
+    stalls = req("GET", "/api/queue-rules/stall")
+    if not any(r.get("name") == "Stalled any" for r in stalls):
+        req(
+            "POST",
+            "/api/queue-rules/stall",
+            {
+                "name": "Stalled any",
+                "enabled": True,
+                "maxStrikes": 5,
+                "privacyType": "Both",
+                "minCompletionPercentage": 0,
+                "maxCompletionPercentage": 100,
+                "resetStrikesOnProgress": True,
+                "minimumProgress": "1MB",
+                "deletePrivateTorrentsFromClient": False,
+                "changeCategory": False,
+            },
+        )
+
+    slows = req("GET", "/api/queue-rules/slow")
+    if not any(r.get("name") == "Slow downloads" for r in slows):
+        req(
+            "POST",
+            "/api/queue-rules/slow",
+            {
+                "name": "Slow downloads",
+                "enabled": True,
+                "maxStrikes": 5,
+                "privacyType": "Public",
+                "minCompletionPercentage": 0,
+                "maxCompletionPercentage": 100,
+                "resetStrikesOnProgress": True,
+                "minSpeed": "100KB",
+                "maxTimeHours": 8,
+                "ignoreAboveSize": None,
+                "ignoreWhileAltSpeedActive": True,
+                "deletePrivateTorrentsFromClient": False,
+                "changeCategory": False,
+            },
+        )
+
+    req(
+        "PUT",
+        "/api/configuration/malware_blocker",
+        {
+            "enabled": True,
+            "cronExpression": "0 0/5 * * * ?",
+            "useAdvancedScheduling": False,
+            "ignoredDownloads": [],
+            "ignorePrivate": True,
+            "deletePrivate": False,
+            "processNoContentId": False,
+            "deleteIfAnyFileBlocked": True,
+            "sonarr": {
+                "enabled": True,
+                "blocklistType": "Blacklist",
+                "blocklistPath": "https://cleanuparr.pages.dev/static/blacklist",
+            },
+            "radarr": {"enabled": False, "blocklistType": "Blacklist", "blocklistPath": None},
+            "lidarr": {"enabled": False, "blocklistType": "Blacklist", "blocklistPath": None},
+            "readarr": {"enabled": False, "blocklistType": "Blacklist", "blocklistPath": None},
+            "whisparr": {"enabled": False, "blocklistType": "Blacklist", "blocklistPath": None},
+            "sportarr": {"enabled": False, "blocklistType": "Blacklist", "blocklistPath": None},
+            "lazyLibrarian": {"enabled": False, "blocklistType": "Blacklist", "blocklistPath": None},
+            "chaptarr": {"enabled": False, "blocklistType": "Blacklist", "blocklistPath": None},
+        },
+    )
+
+    # DownloadCleaner PUT owns schedule only; per-client orphaned config is a separate endpoint.
+    req(
+        "PUT",
+        "/api/configuration/download_cleaner",
+        {
+            "enabled": True,
+            "cronExpression": "0 0 * * * ?",
+            "useAdvancedScheduling": False,
+            "ignoredDownloads": [],
+        },
+    )
+
+    req(
+        "PUT",
+        f"/api/orphaned-files-config/{qbit_id}",
+        {
+            "enabled": True,
+            "scanDirectories": ["/home/data/downloads"],
+            "orphanedDirectory": "/home/data/downloads/orphaned",
+            "excludePatterns": ["orphaned", "*.!qB", "*.parts", "incomplete"],
+            "minFileAgeHours": 24,
+            "purgeAfterHours": None,
+        },
+    )
+
+    req(
+        "PUT",
+        "/api/configuration/seeker",
+        {
+            "searchEnabled": True,
+            "searchInterval": 15,
+            "proactiveSearchEnabled": True,
+            "selectionStrategy": "BalancedWeighted",
+            "useRoundRobin": True,
+            "postReleaseGraceHours": 6,
+            "quietHoursEnabled": False,
+            "quietHoursStart": "23:00:00",
+            "quietHoursEnd": "07:00:00",
+            "instances": [
+                {
+                    "arrInstanceId": anime_id,
+                    "enabled": True,
+                    "skipTags": [],
+                    "includeTags": [],
+                    "activeDownloadLimit": 20,
+                    "ignoreStruckDownloads": True,
+                    "recentGrabWindowHours": 24,
+                    "restUnitsEnabled": True,
+                    "restMaxDays": 30,
+                    "minCycleTimeDays": 7,
+                    "monitoredOnly": True,
+                    "useCutoff": True,
+                    "useCustomFormatScore": True,
+                    "sonarrSearchMode": "Auto",
+                    "radarrReleaseGate": "ReleaseDate",
+                },
+                {
+                    "arrInstanceId": tv_id,
+                    "enabled": False,
+                    "skipTags": [],
+                    "includeTags": [],
+                    "activeDownloadLimit": 20,
+                    "ignoreStruckDownloads": True,
+                    "recentGrabWindowHours": 24,
+                    "restUnitsEnabled": True,
+                    "restMaxDays": 30,
+                    "minCycleTimeDays": 7,
+                    "monitoredOnly": True,
+                    "useCutoff": True,
+                    "useCustomFormatScore": True,
+                    "sonarrSearchMode": "Auto",
+                    "radarrReleaseGate": "ReleaseDate",
+                },
+            ],
+        },
+    )
+
+    print("DONE")
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cleanuparr-configure
+  namespace: media
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cleanuparr-configure
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: docker.io/library/python:3.15.2-alpine@sha256:a0f2e268f2ce8f3709611a90054ec6a8ae31f6251f5896b8648b9bb99835e30a
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/scripts/configure.py"]
+          env:
+            - name: CLEANUPARR_URL
+              value: http://cleanuparr.media.svc.cluster.local:11011
+            - name: SONARR_ANIME_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cleanuparr-bootstrap
+                  key: sonarr-anime-api-key
+            - name: SONARR_TV_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cleanuparr-bootstrap
+                  key: sonarr-tv-api-key
+            - name: QBITTORRENT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: cleanuparr-bootstrap
+                  key: qbittorrent-username
+            - name: QBITTORRENT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cleanuparr-bootstrap
+                  key: qbittorrent-password
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: scripts
+          configMap:
+            name: cleanuparr-configure-script
