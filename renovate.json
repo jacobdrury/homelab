@@ -8,8 +8,8 @@
   ],
   "labels": ["dependencies", "renovate"],
   "reviewers": ["jacobdrury"],
-  "prConcurrentLimit": 5,
-  "branchConcurrentLimit": 5,
+  "prConcurrentLimit": 0,
+  "branchConcurrentLimit": 0,
   "argocd": {
     "managerFilePatterns": ["/^clusters/.+/application\\.ya?ml$/"]
   },
