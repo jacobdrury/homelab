@@ -55,3 +55,5 @@ Details: `connect/README.md`
 
 **Never use `:latest` (or unpinned floating tags) for container images.** Pin chart `targetRevision` and image `tag` (and `digest` when the registry does not publish a pullable version tag). Keep Jobs/init containers on the same pin as the app image when they share it.
 
+**Prefer shared MariaDB or CloudNativePG over SQLite / embedded local DBs** whenever the app supports Postgres or MySQL/MariaDB. Add a `Database` on an existing domain Cluster (e.g. `media-pg`) or a dedicated CNPG Cluster / MariaDB database per [decisions](docs/decisions.md); keep a config PVC only for keys, logs, or non-DB state. SQLite is the exception when the app has no remote-DB option (e.g. Jellyfin today). Details: `docs/architecture/agents.md` (§ App databases).
+
