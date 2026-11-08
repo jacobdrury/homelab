@@ -13,11 +13,13 @@ Workflow: [`.github/workflows/tofu.yml`](../../.github/workflows/tofu.yml)
 | Event | Command |
 |-------|---------|
 | Pull request (same-repo) | `moon ci :validate :plan --downstream=none` |
-| Push to `main` | `moon ci :apply` |
+| Push to `main` | `moon ci :apply` with `MOON_BASE=$github.event.before` |
 
 `moon ci` defaults to `--downstream=direct`. Without `--downstream=none` on PRs, `:plan` would also run `:apply` (because apply depends on plan). Shared `lab.yaml` is an implicit input — changing it affects all OpenTofu projects.
 
 **Affected detection:** `moon ci :apply` only selects tasks whose **own** `inputs` match the diff (it does not treat “`:plan` would run” as enough). `:apply` therefore lists the same `*.tf` / lock / `moon.yml` inputs as `:plan` (plus gitignored `.tofu.plan`). If apply only listed `.tofu.plan`, main CI reported success with **zero** apply targets on OpenTofu-only PRs.
+
+**Push base on `main`:** On the default branch, moon’s auto base is `HEAD~1`. A rebase-and-merge (or any multi-commit push) only triggers one workflow for the tip commit, so that default would miss earlier commits in the same push (for example `lab.yaml` / `monitors.tf` behind a docs tip). The Apply step sets `MOON_BASE` to `github.event.before` and `MOON_HEAD` to `github.sha` so the full push range is compared. An all-zero `before` (new ref) falls back to moon’s normal detection.
 
 ## One-time setup (completed)
 
