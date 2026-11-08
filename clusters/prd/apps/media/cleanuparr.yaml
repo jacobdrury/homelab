@@ -1,5 +1,6 @@
 # Cleanuparr — queue/malware cleanup + orphaned downloads for Sonarr ×2 + qBit.
-# UI: https://cleanuparr.lab.jacobdrury.com (Authentik Proxy). Config is in-app (SQLite on PVC).
+# UI: https://cleanuparr.lab.jacobdrury.com (Authentik Proxy).
+# App DB on media-pg (schemas data/events/users); /config PVC keeps keys + logs only.
 # https://cleanuparr.github.io/Cleanuparr/
 ---
 apiVersion: v1
@@ -62,6 +63,24 @@ spec:
               value: "022"
             - name: TZ
               value: America/Chicago
+            - name: DATABASE_PROVIDER
+              value: postgres
+            - name: POSTGRES_HOST
+              value: media-pg-rw.media.svc.cluster.local
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: cleanuparr
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: media-pg-owner
+                  key: username
+            - name: POSTGRES_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: media-pg-owner
+                  key: password
           ports:
             - name: http
               containerPort: 11011

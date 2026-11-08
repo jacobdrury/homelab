@@ -4,7 +4,7 @@
 
 | App | Auth | Data |
 |-----|------|------|
-| qBittorrent, Sonarr ×2, Prowlarr, Cleanuparr | **Authentik Proxy** ([Sonarr guide](https://integrations.goauthentik.io/media/sonarr/)) | Shared CNPG **`media-pg`** (*arr); Cleanuparr SQLite on iSCSI; NFS libraries/downloads |
+| qBittorrent, Sonarr ×2, Prowlarr, Cleanuparr | **Authentik Proxy** ([Sonarr guide](https://integrations.goauthentik.io/media/sonarr/)) | Shared CNPG **`media-pg`** (*arr + Cleanuparr + Seerr); NFS libraries/downloads |
 | Jellyfin (`10.11.11`) | Envoy → Service (native Jellyfin accounts) | SQLite on iSCSI config PVC; NFS `/anime` + `/tv` (read-only). GPU notes: [gpu](gpu.md) |
 | Seerr (`v3.4.1`) | Envoy → Service (Jellyfin login) | CNPG DB `seerr` on **`media-pg`**; config PVC on iSCSI |
 
@@ -14,7 +14,7 @@
 |-------|--------|
 | Pods | namespace `media` — qBit + Mullvad WG sidecar, Sonarr anime/TV, Prowlarr, Jellyfin, Seerr, Cleanuparr, `media-pg` |
 | Libraries / downloads | Scarif NFS static PVs (`media/{anime,tv,downloads}`); *arr / Cleanuparr `PUID=99` / `PGID=100`; Jellyfin mounts libraries read-only as UID 1000 |
-| Config | iSCSI PVCs (copied from arr); Jellyfin also uses `emptyDir` for `/cache`; Seerr + Cleanuparr config PVCs |
+| Config | iSCSI PVCs (copied from arr); Jellyfin also uses `emptyDir` for `/cache`; Seerr + Cleanuparr config PVCs (Cleanuparr keys/logs only; app DB on `media-pg`) |
 | Browser URLs (*arr / qBit / Cleanuparr) | Envoy → **Authentik embedded outpost** → Services ([`resources-media-routes.yaml`](../../clusters/prd/apps/authentik/resources-media-routes.yaml)) |
 | Browser URL (Jellyfin / Seerr) | Envoy → `jellyfin.media` `:8096` / `seerr.media` `:5055` |
 | API / Homepage | Authentik `skip_path_regex` on `/api` (and `/feed` for Sonarr); Cleanuparr `/health` for Kuma; Jellyfin/Seerr widgets hit app APIs directly |
@@ -53,6 +53,7 @@ Shared CNPG Cluster **`media-pg`** in namespace `media` (iSCSI). 1Password **`pr
 | Sonarr TV | `sonarr_tv_main` | `sonarr_tv_log` |
 | Prowlarr | `prowlarr_main` | `prowlarr_log` |
 | Seerr | `seerr` | — |
+| Cleanuparr | `cleanuparr` (schemas `data` / `events` / `users`) | — |
 
 Init containers upsert `Postgres*` + `AuthenticationMethod=External` for *arr. Seerr uses `DB_*` env vars. qBittorrent stays on disk (no Postgres).
 

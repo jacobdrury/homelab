@@ -167,7 +167,7 @@ Enable: **Settings → NFS** + **UD → Enable NFS export** + **Share** on disk.
 | Sonarr (anime / TV) | k8s `media` | `sonarr` / `sonarr-tv`.lab → Authentik → pods | NFS libraries; Postgres `media-pg` |
 | qBittorrent | k8s `media` | `qbittorrent.lab` → Authentik → pod | downloads on NFS · Mullvad WG sidecar |
 | Prowlarr | k8s `media` | `prowlarr.lab` → Authentik → pod | Postgres `media-pg` |
-| Cleanuparr | k8s `media` | `cleanuparr.lab` → Authentik → pod | SQLite on iSCSI; NFS downloads for orphan scans |
+| Cleanuparr | k8s `media` | `cleanuparr.lab` → Authentik → pod | Postgres `cleanuparr` on `media-pg`; NFS downloads for orphan scans |
 | Discord bots | pc (black) VM **103** | `192.168.1.18` | **Won't migrate** — stop/delete; outbound-only legacy |
 
 ---
