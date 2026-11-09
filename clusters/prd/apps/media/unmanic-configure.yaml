@@ -47,6 +47,7 @@ data:
     }
 
     WORKERS = int(os.environ.get("UNMANIC_WORKERS", "2"))
+    FILE_TESTERS = int(os.environ.get("UNMANIC_FILE_TESTERS", "2"))
 
 
     def req(method, path, data=None):
@@ -183,6 +184,7 @@ data:
                 "settings": {
                     "library_path": "/library/anime",
                     "number_of_workers": WORKERS,
+                    "concurrent_file_testers": FILE_TESTERS,
                 }
             },
         )
@@ -352,8 +354,11 @@ spec:
           env:
             - name: UNMANIC_URL
               value: http://unmanic.media.svc.cluster.local:8888
+            # Temporary library backfill profile; drop back to 2/2 after the scan.
             - name: UNMANIC_WORKERS
-              value: "2"
+              value: "3"
+            - name: UNMANIC_FILE_TESTERS
+              value: "4"
           volumeMounts:
             - name: scripts
               mountPath: /scripts

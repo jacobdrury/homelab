@@ -55,6 +55,9 @@ spec:
       labels:
         app.kubernetes.io/name: unmanic
     spec:
+      # Backfill: remux on yavin so scarif only serves NFS/iSCSI (naboo is a scarif VM).
+      nodeSelector:
+        kubernetes.io/hostname: yavin
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
