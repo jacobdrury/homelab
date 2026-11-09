@@ -64,6 +64,7 @@ alloy:
         }
 
         // Path is /var/log/pods/<ns>_<pod>_<uid>/<container>/<n>.log
+        // Relabel $N groups come from regex, not raw source_labels.
         rule {
           source_labels = [
             "__meta_kubernetes_namespace",
@@ -71,9 +72,10 @@ alloy:
             "__meta_kubernetes_pod_uid",
             "__meta_kubernetes_pod_container_name",
           ]
+          separator   = "/"
+          regex       = "(.*)/(.*)/(.*)/(.*)"
           target_label = "__path__"
-          separator    = "/"
-          replacement  = "/var/log/pods/$1_$2_$3/$4/*.log"
+          replacement = "/var/log/pods/$1_$2_$3/$4/*.log"
         }
       }
 
