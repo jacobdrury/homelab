@@ -63,20 +63,17 @@ alloy:
           target_label  = "app"
         }
 
-        // Path is /var/log/pods/<ns>_<pod>_<uid>/<container>/<n>.log
-        // Relabel $N groups come from regex, not raw source_labels.
+        // CRI path: /var/log/pods/<ns>_<pod>_<uid>/<container>/<n>.log
+        // Glob * matches the <ns>_<pod>_ prefix; $N comes from regex only.
         rule {
           source_labels = [
-            "__meta_kubernetes_namespace",
-            "__meta_kubernetes_pod_name",
             "__meta_kubernetes_pod_uid",
             "__meta_kubernetes_pod_container_name",
           ]
-          separator   = "/"
-          regex       = "(.*)/(.*)/(.*)/(.*)"
+          separator    = "/"
+          regex        = "(.+)/(.+)"
           target_label = "__path__"
-          # Chart runs content through Helm tpl — escape $ so relabel groups survive.
-          replacement = "/var/log/pods/$$1_$$2_$$3/$$4/*.log"
+          replacement  = "/var/log/pods/*$1/$2/*.log"
         }
       }
 
