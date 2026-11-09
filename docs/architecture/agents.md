@@ -133,6 +133,6 @@ If you helm-applied something in a pinch, get it into Git and let Argo adopt it 
 | **2 (done)** | **`connect/`**; CSI; Connect + ESO; **Argo CD**; **Envoy** + LE; Homepage; Authentik; Kuma; shared MariaDB; per-app CNPG (no lab-wide collapse) |
 | **2b (done)** | GHA + Tailscale; Kuma L7 Ingress for API; UniFi via subnet — [opentofu-ci](../setup/opentofu-ci.md) |
 | **3 (nearly done)** | **Media + HA + Pi-hole** on k8s; only Pi-hole LXC soak left |
-| **5** | Agent RBAC, optional MCP, skills |
+| **5** | Observability (`platform/observability/`); agent RBAC, optional MCP, skills |
 
 **Non-goal:** public kube API or Unraid for agents. Agents use the **tailnet**.

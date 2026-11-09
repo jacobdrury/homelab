@@ -1,0 +1,242 @@
+# Trimmed for Talos + Cilium on yavin/naboo. Grafana uses CNPG + Authentik OIDC.
+crds:
+  enabled: true
+
+defaultRules:
+  create: true
+  rules:
+    etcd: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeControllerManager: false
+    kubeProxy: false
+
+alertmanager:
+  enabled: true
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: [alertname, namespace]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: discord
+      routes:
+        - receiver: "null"
+          matchers:
+            - alertname = "Watchdog"
+        - receiver: discord
+          continue: false
+    receivers:
+      - name: "null"
+      - name: discord
+        discord_configs:
+          - webhook_url_file: /etc/alertmanager/secrets/alertmanager-discord/webhook
+            title: '{{ template "discord.default.title" . }}'
+            message: '{{ template "discord.default.message" . }}'
+    templates:
+      - /etc/alertmanager/config/*.tmpl
+  alertmanagerSpec:
+    replicas: 1
+    retention: 120h
+    secrets:
+      - alertmanager-discord
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: scarif-iscsi
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 2Gi
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - naboo
+
+grafana:
+  enabled: true
+  adminUser: admin
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  envValueFrom:
+    GF_DATABASE_PASSWORD:
+      secretKeyRef:
+        name: observability-pg-owner
+        key: password
+    GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+      secretKeyRef:
+        name: grafana-oidc
+        key: client_secret
+  grafana.ini:
+    server:
+      root_url: https://grafana.lab.jacobdrury.com
+      domain: grafana.lab.jacobdrury.com
+    database:
+      type: postgres
+      host: observability-pg-rw.monitoring.svc:5432
+      name: grafana
+      user: grafana
+      password: $__env{GF_DATABASE_PASSWORD}
+      ssl_mode: disable
+    auth:
+      disable_login_form: false
+    auth.generic_oauth:
+      enabled: true
+      name: Authentik
+      allow_sign_up: true
+      client_id: grafana
+      client_secret: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
+      scopes: openid profile email groups
+      auth_url: https://auth.lab.jacobdrury.com/application/o/authorize/
+      token_url: https://auth.lab.jacobdrury.com/application/o/token/
+      api_url: https://auth.lab.jacobdrury.com/application/o/userinfo/
+      role_attribute_path: contains(groups[*], 'Grafana Admins') && 'Admin' || 'Viewer'
+      login_attribute_path: preferred_username
+      name_attribute_path: name
+    users:
+      auto_assign_org: true
+      auto_assign_org_role: Viewer
+  ingress:
+    enabled: false
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - naboo
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      access: proxy
+      url: http://loki.monitoring.svc:3100
+      isDefault: false
+      jsonData:
+        derivedFields:
+          - datasourceUid: tempo
+            matcherRegex: '"traceID":\s*"(\w+)"|"trace_id":\s*"(\w+)"|traceID=(\w+)'
+            name: TraceID
+            url: "$${__value.raw}"
+            urlDisplayLabel: View trace
+    - name: Tempo
+      type: tempo
+      uid: tempo
+      access: proxy
+      url: http://tempo.monitoring.svc:3200
+      isDefault: false
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: loki
+          filterByTraceID: true
+        tracesToMetrics:
+          datasourceUid: prometheus
+        serviceMap:
+          datasourceUid: prometheus
+        nodeGraph:
+          enabled: true
+        lokiSearch:
+          datasourceUid: loki
+
+# Talos / Cilium: these control-plane scrapes stay red with chart defaults.
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+kubelet:
+  enabled: true
+  serviceMonitor:
+    https: true
+    insecureSkipVerify: true
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    retention: 7d
+    retentionSize: 45GB
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: scarif-iscsi
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 50Gi
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - naboo
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      memory: 64Mi

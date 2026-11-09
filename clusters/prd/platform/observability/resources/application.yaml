@@ -1,0 +1,27 @@
+# Observability shared resources — namespace + Grafana Postgres (CNPG).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-resources
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jacobdrury/homelab.git
+    targetRevision: main
+    path: clusters/prd/platform/observability/resources
+    directory:
+      include: '{namespace,observability-pg}.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

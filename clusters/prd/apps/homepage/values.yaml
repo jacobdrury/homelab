@@ -137,6 +137,11 @@ config:
                     - outOfSync
                     - healthy
                     - degraded
+            - Grafana:
+                href: https://grafana.lab.jacobdrury.com
+                description: Metrics, logs, traces
+                icon: grafana.png
+                siteMonitor: https://grafana.lab.jacobdrury.com/api/health
             - Uptime Kuma:
                 href: https://uptime.lab.jacobdrury.com/status/default
                 description: Status monitors (Authentik proxy)

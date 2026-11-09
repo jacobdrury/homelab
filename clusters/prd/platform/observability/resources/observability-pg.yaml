@@ -1,0 +1,72 @@
+# CNPG for Grafana application DB only (Prometheus/Loki/Tempo use PVCs).
+# 1Password Homelab: "prd Observability Postgres" (username/password).
+# Service: observability-pg-rw.monitoring.svc.cluster.local:5432
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: observability-pg-owner
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipResourceHealthCheck=true
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: observability-pg-owner
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      type: kubernetes.io/basic-auth
+      data:
+        # Owner role name is fixed to match Cluster bootstrap (grafana).
+        username: grafana
+        password: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: prd Observability Postgres
+        property: password
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: observability-pg
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.6
+  enableSuperuserAccess: false
+  postgresql:
+    parameters:
+      idle_in_transaction_session_timeout: "5min"
+  bootstrap:
+    initdb:
+      database: grafana
+      owner: grafana
+      secret:
+        name: observability-pg-owner
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - naboo
+  storage:
+    size: 8Gi
+    storageClass: scarif-iscsi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
