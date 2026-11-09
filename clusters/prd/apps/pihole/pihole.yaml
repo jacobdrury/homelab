@@ -11,7 +11,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  replicas: 3
+  # Prefer one DNS pod per node; allow both on one node if the other is down.
+  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: pihole
@@ -34,6 +35,13 @@ spec:
                   matchLabels:
                     app.kubernetes.io/name: pihole
                 topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: pihole
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
