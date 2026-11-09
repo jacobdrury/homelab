@@ -1,0 +1,169 @@
+# unpoller — scrape UDM Pro Network API into Prometheus.
+# Auth: same Network Integrations API key as OpenTofu / Homepage.
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: unpoller-config
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: unpoller-config
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        up.conf: |
+          [poller]
+            debug = false
+            quiet = false
+          [prometheus]
+            disable = false
+            http_listen = "0.0.0.0:9130"
+            report_errors = false
+          [influxdb]
+            disable = true
+          [loki]
+            disable = true
+          [unifi]
+            dynamic = false
+          [[unifi.controller]]
+            url = "https://192.168.5.1"
+            api_key = "{{ .apiKey }}"
+            sites = ["all"]
+            save_sites = true
+            save_dpi = true
+            save_ids = true
+            save_events = true
+            save_alarms = true
+            save_anomalies = true
+            hash_pii = false
+            verify_ssl = false
+  data:
+    # Homelab item "Unifi API Key (opentofu-homelab)"
+    - secretKey: apiKey
+      remoteRef:
+        key: bqbnkqxcyyg6h72orwebvozdjm
+        property: credential
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unpoller
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: unpoller
+    app.kubernetes.io/part-of: observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unpoller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unpoller
+        app.kubernetes.io/part-of: observability
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - naboo
+      containers:
+        - name: unpoller
+          image: ghcr.io/unpoller/unpoller:v5.9.4@sha256:bf2ef9706159c60f81a631030fb792e5ab809d872791ee5d0029a023212b48a7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: 9130
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/unpoller/up.conf
+              subPath: up.conf
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          secret:
+            secretName: unpoller-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: unpoller
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: unpoller
+    app.kubernetes.io/part-of: observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  selector:
+    app.kubernetes.io/name: unpoller
+  ports:
+    - name: metrics
+      port: 9130
+      targetPort: metrics
+      protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: unpoller
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: unpoller
+    app.kubernetes.io/part-of: observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unpoller
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 20s
