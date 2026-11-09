@@ -17,7 +17,12 @@ LAN DNS / ad blocking on Talos `prd`. Leans: [decisions](../decisions.md) · app
 
 ## Stats (ephemeral)
 
-Query counts are per-pod / lost on restart (emptyDir). Homepage is **link-only**. Each replica runs an [eko/pihole-exporter](https://github.com/eko/pihole-exporter) sidecar scraped by Prometheus; Grafana dashboard **Pi-hole** (official exporter board, grafana.com **10176**) is provisioned from Git.
+Query counts are per-pod / lost on restart (emptyDir). Homepage is **link-only**. Each replica runs an [eko/pihole-exporter](https://github.com/eko/pihole-exporter) sidecar scraped by Prometheus. Grafana (folder **Pi-hole**):
+
+| Dashboard | Source | Scope |
+|-----------|--------|--------|
+| **Pi-hole** | eko official / grafana.com **10176** | One hostname at a time |
+| **Pi-hole UI** | grafana.com **14475** | `sum()` / `avg()` across selected pods (`PiholeDevices=2`) |
 
 ## Auth
 

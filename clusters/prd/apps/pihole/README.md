@@ -11,6 +11,7 @@ Stateless DNS / ad blocking. Parallel to LXC until DHCP cutover — [docs/archit
 | `pihole-sync` | Sidecar reconciles policy via v6 API |
 | `Service/pihole-dns` | LoadBalancer **`192.168.5.22`** :53 TCP/UDP (UniFi WAN DNS; LAN DHCP uses VLAN gateways for VPN domain routes) |
 | `Service/pihole` | ClusterIP :80 → Authentik / HTTPRoute; :9617 metrics |
-| `exporter` sidecar | eko/pihole-exporter → Prometheus; Grafana dashboard **Pi-hole** |
+| `exporter` sidecar | eko/pihole-exporter → Prometheus |
+| Grafana | **Pi-hole** (eko official, per hostname) + **Pi-hole UI** (14475, sum across pods) |
 
 Edit `configmap-policy.yaml` / `configmap-dnsmasq.yaml` in Git. Settings ConfigMap changes need a Deployment rollout.
