@@ -13,6 +13,7 @@ Metrics, logs, and traces for `prd`. GitOps under [`clusters/prd/platform/observ
 | Traces | Tempo monolithic | 3d retention, local PVC |
 | Collect | Grafana Alloy DaemonSet | Pod logs → Loki; OTLP → Tempo |
 | UniFi | unpoller | Polls UDM Pro (`192.168.5.1`) → Prometheus; Sites dashboard in Grafana |
+| Pi-hole | eko/pihole-exporter sidecar | Per-replica DNS stats → Prometheus; eko board (per host) + 14475 (aggregate) in Grafana |
 
 Still separate: **metrics-server** (Metrics API / Homepage / HPA) and **Uptime Kuma** (outside-in probes). They are not replaced.
 
