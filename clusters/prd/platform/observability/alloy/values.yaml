@@ -5,11 +5,7 @@ alloy:
   enableReporting: false
   mounts:
     varlog: true
-  extraEnv:
-    - name: HOSTNAME
-      valueFrom:
-        fieldRef:
-          fieldPath: spec.nodeName
+  # Chart already injects HOSTNAME=spec.nodeName on DaemonSets — do not duplicate.
   extraPorts:
     - name: otlp-grpc
       port: 4317
