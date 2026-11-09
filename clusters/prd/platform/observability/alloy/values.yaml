@@ -75,7 +75,8 @@ alloy:
           separator   = "/"
           regex       = "(.*)/(.*)/(.*)/(.*)"
           target_label = "__path__"
-          replacement = "/var/log/pods/$1_$2_$3/$4/*.log"
+          # Chart runs content through Helm tpl — escape $ so relabel groups survive.
+          replacement = "/var/log/pods/$$1_$$2_$$3/$$4/*.log"
         }
       }
 
