@@ -18,6 +18,7 @@ dns:
   app_hosts:
     argocd: 192.168.5.21
     auth: 192.168.5.21 # Authentik IdP
+    grafana: 192.168.5.21 # Grafana (OIDC via Authentik)
     uptime: 192.168.5.21 # Uptime Kuma (via Authentik proxy)
     jellyfin: 192.168.5.21
     qbittorrent: 192.168.5.21

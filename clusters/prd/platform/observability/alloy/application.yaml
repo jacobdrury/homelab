@@ -1,0 +1,32 @@
+# Grafana Alloy — node logs → Loki, OTLP → Tempo.
+# Chart: https://artifacthub.io/packages/helm/grafana/alloy
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+spec:
+  project: default
+  sources:
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: alloy
+      targetRevision: 1.15.0
+      helm:
+        releaseName: alloy
+        valueFiles:
+          - $values/clusters/prd/platform/observability/alloy/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

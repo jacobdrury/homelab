@@ -1,0 +1,32 @@
+# Loki — SingleBinary log store (filesystem on scarif-iscsi).
+# Chart: https://artifacthub.io/packages/helm/grafana-community/loki
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+spec:
+  project: default
+  sources:
+    - repoURL: https://grafana-community.github.io/helm-charts
+      chart: loki
+      targetRevision: 21.0.0
+      helm:
+        releaseName: loki
+        valueFiles:
+          - $values/clusters/prd/platform/observability/loki/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

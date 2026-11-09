@@ -18,7 +18,7 @@ Stack choices and where workloads live. Leans: [decisions](../decisions.md).
 | MariaDB | **Shared official MariaDB** | `platform/mariadb/` — `docker.io/library/mariadb`; many DBs; Kuma first |
 | Mesh | **Tailscale operator** | Subnet router for **`192.168.5.0/24`** on `prd`; complements split DNS |
 | DNS app | **Pi-hole** | In cluster |
-| Monitoring | **metrics-server** (Metrics API); Prometheus, Grafana (Phase 5); **Uptime Kuma** after Argo | Bootstrap debug: `connect/` + k9s + talosctl — full scrape stack deferred (yavin RAM) |
+| Monitoring | **metrics-server**; **kube-prometheus-stack** + Loki + Tempo + Alloy (`platform/observability/`); **Uptime Kuma** | Grafana OIDC; Alertmanager → Discord — [observability](observability.md) |
 
 ### Node layout
 
@@ -67,7 +67,7 @@ Machine configs live under `infrastructure/talos/prd/`; keep CP patches consiste
 | ATM10 (Minecraft) | k8s | Phase 6 — iSCSI PVC; friend access via Tailscale `.ts.net` — [games](games.md) |
 | Argo CD | k8s | bootstrap once |
 | Uptime Kuma | k8s | With/right after Homepage |
-| Prometheus / Grafana | k8s | **Phase 5** — not during single-node bootstrap |
+| Observability (Grafana / Prometheus / Loki / Tempo) | k8s | `platform/observability/` — [observability](observability.md) |
 
 Migration order: [roadmap Phase 3](../roadmap.md#phase-3--migrate-apps).
 

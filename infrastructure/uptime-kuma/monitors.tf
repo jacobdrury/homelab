@@ -25,6 +25,12 @@ locals {
       url   = "https://argocd.${local.zone}/"
       group = "Platform"
     }
+    grafana = {
+      name                  = "Grafana"
+      url                   = "https://grafana.${local.zone}/api/health"
+      group                 = "Platform"
+      accepted_status_codes = ["200"]
+    }
     authentik = {
       name  = "Authentik"
       url   = "https://auth.${local.zone}/"
@@ -119,7 +125,7 @@ locals {
   group_order = ["Platform", "Media", "Home", "Infrastructure"]
 
   monitor_order = {
-    Platform       = ["homepage", "argocd", "authentik", "it_tools"]
+    Platform       = ["homepage", "argocd", "grafana", "authentik", "it_tools"]
     Media          = ["jellyfin", "seerr", "qbittorrent", "mullvad", "sonarr", "sonarr_tv", "prowlarr", "cleanuparr", "unmanic"]
     Home           = ["homeassistant"]
     Infrastructure = ["pihole", "scarif"]

@@ -21,6 +21,7 @@ Not a day-to-day deploy path — see
 | CloudNativePG | `cloudnative-pg/` | No — Git / Argo only; prefer **shared** `Cluster` (many DBs) long-term |
 | MariaDB | `mariadb/` | No — Git / Argo only; official `library/mariadb` image; shared instance |
 | Metrics Server | `metrics-server/` | No — Git / Argo only; Metrics API for `kubectl top` / Homepage / HPA |
+| Observability | `observability/` | No — kube-prometheus-stack + Loki + Tempo + Alloy + Grafana CNPG; nested Applications |
 | Tailscale operator | `tailscale-operator/` | No — Git / Argo only; Homelab subnet router via Connector |
 | etcd backup | `etcd-backup/` | No — CronJob + Talos SA; snapshots on `scarif-iscsi` |
 

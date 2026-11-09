@@ -35,7 +35,7 @@ Media, Home Assistant, and **Pi-hole** are on `prd`. Remaining soak guest:
 
 **Won't do:** lab-wide shared CNPG collapse (keep per-app clusters: `authentik-pg`, `media-pg`, HA Postgres).
 
-**Deliberately later:** Prometheus / Grafana / Discord alert wiring — **Phase 5**. Optional anytime: array/parity ([Phase 1b](#phase-1b--array--parity-when-you-can)).
+**Deliberately later (rest of Phase 5):** agent RBAC / MCP / restore docs. Observability stack is in flight (`platform/observability/`). Optional anytime: array/parity ([Phase 1b](#phase-1b--array--parity-when-you-can)).
 
 Tools: `cd connect/prd` · `moon run connect:sync` · [tailscale README](../infrastructure/tailscale/README.md).
 
@@ -168,7 +168,7 @@ Wipe Proxmox → Talos bare metal. **Mac Mini has no guests** (evacuated to home
 - [x] **etcd snapshot cadence** — CronJob every 6h → `scarif-iscsi` PVC (keep 14)  
 - [x] Confirm GitOps + CSI + **`https://*.lab`** on LAN and away via Tailscale (Homelab via k8s Connector)  
 
-**Defer:** Prometheus / Grafana / Discord alerts → [Phase 5](#phase-5--hardening). Bootstrap troubleshooting: **`connect/`**, k9s, talosctl (no early metrics stack on 16 GB yavin).
+**Was deferred at bootstrap:** full metrics stack (yavin RAM) — now landing as `platform/observability/` in Phase 5. Bootstrap troubleshooting stayed **`connect/`**, k9s, talosctl.
 
 ### Phase 2 housekeeping — SSH & credentials
 
@@ -321,8 +321,8 @@ Target: **yavin + hoth + endor**, all Talos **control planes**, all schedule pod
 
 ## Phase 5 — Hardening
 
-- [ ] Prometheus + Grafana → Discord (full metrics; deferred from Phase 2 — yavin RAM / bootstrap used CLI tooling)  
-- [ ] Wire Uptime Kuma (already deployed post-Argo) alerts → Discord if not done earlier  
+- [ ] Observability stack live — `platform/observability/` (Prometheus / Grafana / Loki / Tempo / Alloy; Grafana OIDC; Alertmanager → Discord) — [observability](architecture/observability.md)  
+- [x] Uptime Kuma → Discord (`prd Discord Lab Alerts`)  
 - [ ] Agent workstation Tailscale + kubecontext docs / Cursor rules  
 - [ ] Agent API tokens in 1Password  
 - [ ] Optional MCP  

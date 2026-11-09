@@ -1,0 +1,97 @@
+# Grafana HTTPRoute + secrets (admin, OIDC, Discord webhook for Alertmanager).
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: grafana-admin
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: grafana-admin
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        admin-user: admin
+        admin-password: "{{ .password }}"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: prd Grafana admin
+        property: password
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: grafana-oidc
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: grafana-oidc
+    creationPolicy: Owner
+  data:
+    - secretKey: client_secret
+      remoteRef:
+        key: prd Grafana OIDC
+        property: password
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: alertmanager-discord
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: alertmanager-discord
+    creationPolicy: Owner
+  data:
+    - secretKey: webhook
+      remoteRef:
+        key: prd Discord Lab Alerts
+        property: password
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: grafana
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: lab
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - grafana.lab.jacobdrury.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: kube-prometheus-stack-grafana
+          port: 80
+          weight: 1

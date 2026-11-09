@@ -24,6 +24,7 @@ blueprints:
     - authentik-blueprint-media
     - authentik-blueprint-homeassistant
     - authentik-blueprint-pihole
+    - authentik-blueprint-grafana
 
 global:
   volumes:
@@ -73,4 +74,9 @@ worker:
       valueFrom:
         secretKeyRef:
           name: homeassistant-oidc
+          key: client_secret
+    - name: GRAFANA_OIDC_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: grafana-oidc
           key: client_secret
