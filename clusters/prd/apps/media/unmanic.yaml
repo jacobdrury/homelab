@@ -44,9 +44,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  # Parked while scarif cools down from library remux backfill I/O.
-  # Flip back to 1 when ready to resume.
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
