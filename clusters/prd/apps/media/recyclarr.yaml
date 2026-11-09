@@ -227,8 +227,6 @@ spec:
             app.kubernetes.io/name: recyclarr
         spec:
           restartPolicy: OnFailure
-          nodeSelector:
-            node-role.kubernetes.io/control-plane: ""
           tolerations:
             - key: node-role.kubernetes.io/control-plane
               operator: Exists
@@ -296,8 +294,6 @@ spec:
         app.kubernetes.io/name: recyclarr
     spec:
       restartPolicy: OnFailure
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
