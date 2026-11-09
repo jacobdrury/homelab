@@ -202,7 +202,7 @@ data:
         if match is None:
             req("POST", "/api/v1/settings/sonarr", body)
         else:
-            body["id"] = match["id"]
+            # id belongs in the path only — body field is read-only.
             req("PUT", f"/api/v1/settings/sonarr/{match['id']}", body)
 
     print("DONE")
