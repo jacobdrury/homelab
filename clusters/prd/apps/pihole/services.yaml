@@ -34,6 +34,7 @@ metadata:
   namespace: pihole
   labels:
     app.kubernetes.io/name: pihole
+    app.kubernetes.io/component: admin
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
@@ -43,5 +44,30 @@ spec:
       port: 80
       targetPort: http
       protocol: TCP
+    - name: metrics
+      port: 9617
+      targetPort: metrics
+      protocol: TCP
   selector:
     app.kubernetes.io/name: pihole
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pihole
+  namespace: pihole
+  labels:
+    app.kubernetes.io/name: pihole
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  # Only the admin ClusterIP (not pihole-dns LoadBalancer).
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pihole
+      app.kubernetes.io/component: admin
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

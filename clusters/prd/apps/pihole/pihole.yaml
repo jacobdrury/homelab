@@ -26,6 +26,8 @@ spec:
       labels:
         app.kubernetes.io/name: pihole
     spec:
+      # Service named `pihole` would inject unparseable PIHOLE_PORT into the exporter.
+      enableServiceLinks: false
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -115,6 +117,52 @@ spec:
             - name: policy
               mountPath: /config
               readOnly: true
+        # Per-pod metrics — query stats are ephemeral on emptyDir.
+        # Official exporter: https://github.com/eko/pihole-exporter
+        - name: exporter
+          image: docker.io/ekofr/pihole-exporter:v1.3.1@sha256:4233c06fcd2d62c37b9345228bc9f798b3a66d052b4955ec6a0e5b8825e20827
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PIHOLE_HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: PIHOLE_PROTOCOL
+              value: http
+            - name: PIHOLE_PORT
+              value: "80"
+            - name: PORT
+              value: "9617"
+            - name: LOG_LEVEL
+              value: info
+          ports:
+            - name: metrics
+              containerPort: 9617
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command: ["./pihole-exporter", "-healthcheck"]
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["./pihole-exporter", "-healthcheck"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
       volumes:
         - name: etc-pihole
           emptyDir: {}
