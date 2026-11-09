@@ -9,6 +9,7 @@ LGTM-style stack under one domain folder; separate Argo Applications per chart.
 | `tempo/` | Trace store (monolithic / local PVC) |
 | `kube-prometheus-stack/` | Prometheus, Alertmanager → Discord, Grafana (OIDC + Postgres) |
 | `alloy/` | DaemonSet: pod logs → Loki, OTLP → Tempo |
+| `unpoller/` | UniFi → Prometheus metrics; Grafana Sites dashboard (11311) |
 
 UI: `https://grafana.lab.jacobdrury.com` (Authentik OIDC). Prometheus / Loki / Tempo stay in-cluster only.
 

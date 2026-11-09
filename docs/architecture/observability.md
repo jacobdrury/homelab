@@ -12,6 +12,7 @@ Metrics, logs, and traces for `prd`. GitOps under [`clusters/prd/platform/observ
 | Logs | Loki SingleBinary | 7d retention, filesystem PVC |
 | Traces | Tempo monolithic | 3d retention, local PVC |
 | Collect | Grafana Alloy DaemonSet | Pod logs → Loki; OTLP → Tempo |
+| UniFi | unpoller | Polls UDM Pro (`192.168.5.1`) → Prometheus; Sites dashboard in Grafana |
 
 Still separate: **metrics-server** (Metrics API / Homepage / HPA) and **Uptime Kuma** (outside-in probes). They are not replaced.
 
@@ -20,6 +21,8 @@ flowchart LR
   Alloy[Alloy_DaemonSet] --> Loki
   Alloy --> Tempo
   KPS[kube_prometheus_stack] --> Prom[Prometheus]
+  Unpoller --> Prom
+  UDM[UDM_Pro] --> Unpoller
   Prom --> Grafana
   Loki --> Grafana
   Tempo --> Grafana
@@ -52,6 +55,11 @@ Alertmanager owns Prometheus-shaped alerts only. Uptime Kuma and app-native noti
 | `prd Grafana OIDC` | OAuth client secret |
 | `prd Grafana admin` | Grafana break-glass password |
 | `prd Discord Lab Alerts` | Alertmanager Discord webhook (shared with Kuma) |
+| `Unifi API Key (opentofu-homelab)` | unpoller (same Network Integrations key as OpenTofu / Homepage) |
+
+## UniFi
+
+unpoller runs in `monitoring`, scrapes the UDM at `https://192.168.5.1` with the existing Network Integrations API key, and exposes Prometheus metrics on `:9130`. Grafana loads the Sites overview from Git (`grafana.com` dashboard **11311**, Prometheus; not the Influx twin **10414**). Folder in Grafana: **UniFi**.
 
 ## OTLP
 
