@@ -125,8 +125,8 @@ data:
     else:
         raise SystemExit("seerr not ready")
 
+    # Omit name — Seerr treats it as read-only once Jellyfin is linked.
     jellyfin_body = {
-        "name": "Nebula",
         "ip": "jellyfin.media.svc.cluster.local",
         "port": 8096,
         "useSsl": False,
