@@ -55,8 +55,6 @@ spec:
       labels:
         app.kubernetes.io/name: unmanic
     spec:
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists

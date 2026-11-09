@@ -61,9 +61,6 @@ spec:
       labels:
         app.kubernetes.io/name: qbittorrent
     spec:
-      # naboo intentionally down — pin to CP until Phase 4 capacity.
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
