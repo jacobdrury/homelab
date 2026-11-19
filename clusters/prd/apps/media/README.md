@@ -74,7 +74,7 @@ UI: `https://cleanuparr.lab.jacobdrury.com` (Authentik Proxy). App DB on `media-
 | Download Cleaner | Enabled; orphaned scan `/home/data/downloads` → `/home/data/downloads/orphaned` (24h min age; no auto-purge) |
 | Unlinked Downloads | On for qBit; move to category `cleanuparr-unlinked`; categories `sonarr-anime` / `sonarr-tv`; ignore root `/home/data/downloads` |
 | Seeding rule | `Unlinked downloads` → category `cleanuparr-unlinked`; delete torrent + source files immediately (`maxSeedTime` 0); privacy Both |
-| Seeker | Replacement search on; proactive search **Sonarr Anime only** (15m interval) |
+| Seeker | Replacement search on; proactive search **Sonarr Anime only** (60m interval, episode mode; TV off). Wider interval + episode mode avoids anime SeasonSearch OOM hangs. |
 
 Create `/home/data/downloads/orphaned` on the NFS share if missing (`nobody:users`). Other seeding-ratio rules stay unset.
 
