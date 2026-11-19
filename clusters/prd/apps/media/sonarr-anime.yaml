@@ -97,16 +97,37 @@ spec:
             - name: media
               mountPath: /home/data
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /ping
               port: http
-            initialDelaySeconds: 20
+              httpHeaders:
+                # AllowedHosts rejects the pod IP Host kubelet would send.
+                - name: Host
+                  value: localhost
+            initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # Anime SeasonSearch can OOM the process without exiting; HTTP then hangs
+          # while RSS keeps logging. Restart when /ping stops answering.
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: localhost
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
           resources:
             requests:
               cpu: 25m
-              memory: 512Mi
+              memory: 1Gi
             limits:
-              memory: 2Gi
+              # 2Gi OOMs during Cleanuparr-driven anime SeasonSearch (aliases × indexers).
+              memory: 4Gi
       volumes:
         - name: config
           persistentVolumeClaim:

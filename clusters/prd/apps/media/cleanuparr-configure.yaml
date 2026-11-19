@@ -296,12 +296,15 @@ data:
     else:
         req("POST", f"/api/seeding-rules/{qbit_id}", unlinked_rule)
 
+    # Anime SeasonSearch is memory-heavy (aliases × indexers). 15m proactive cadence
+    # stacked SeasonSearch until Sonarr OOM'd and hung HTTP; prefer episode searches
+    # and a wider interval so peak heap stays under the 4Gi limit.
     req(
         "PUT",
         "/api/configuration/seeker",
         {
             "searchEnabled": True,
-            "searchInterval": 15,
+            "searchInterval": 60,
             "proactiveSearchEnabled": True,
             "selectionStrategy": "BalancedWeighted",
             "useRoundRobin": True,
@@ -315,7 +318,7 @@ data:
                     "enabled": True,
                     "skipTags": [],
                     "includeTags": [],
-                    "activeDownloadLimit": 20,
+                    "activeDownloadLimit": 10,
                     "ignoreStruckDownloads": True,
                     "recentGrabWindowHours": 24,
                     "restUnitsEnabled": True,
@@ -324,7 +327,7 @@ data:
                     "monitoredOnly": True,
                     "useCutoff": True,
                     "useCustomFormatScore": True,
-                    "sonarrSearchMode": "Auto",
+                    "sonarrSearchMode": "Episode",
                     "radarrReleaseGate": "ReleaseDate",
                 },
                 {
