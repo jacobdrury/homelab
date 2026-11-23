@@ -1,0 +1,33 @@
+# Restate operator — CRDs + controller for RestateCluster / RestateDeployment.
+# Chart: oci://ghcr.io/restatedev/restate-operator-helm (public GHCR).
+# App clusters (e.g. shelf-restate) live in the owning app repos, not here.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: restate-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  sources:
+    - repoURL: ghcr.io/restatedev
+      chart: restate-operator-helm
+      targetRevision: 3.2.1
+      helm:
+        releaseName: restate-operator
+        valueFiles:
+          - $values/clusters/prd/platform/restate-operator/values.yaml
+    - repoURL: https://github.com/jacobdrury/homelab.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: restate-operator
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -21,3 +21,36 @@ spec:
       remoteRef:
         key: prd Argo CD OIDC
         property: password
+---
+# Argo repository credential for the private jacobdrury/shelf repo (apps/shelf).
+# Homelab 1Password item: "prd Shelf Argo Deploy Key" (SSH key), added to the
+# shelf repo as a read-only deploy key named "argocd-homelab (read-only)".
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: repo-shelf
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    name: repo-shelf
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      data:
+        type: git
+        url: git@github.com:jacobdrury/shelf.git
+        sshPrivateKey: "{{ .sshPrivateKey }}"
+  data:
+    - secretKey: sshPrivateKey
+      remoteRef:
+        key: prd Shelf Argo Deploy Key
+        property: private key

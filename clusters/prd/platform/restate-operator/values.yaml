@@ -1,0 +1,9 @@
+# Restate operator — installCrds bundles restate-operator-crds (templated; upgrades apply).
+installCrds: true
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 256Mi

@@ -1,0 +1,29 @@
+# Shelf — thin Argo Application. App manifests live in jacobdrury/shelf (infra/deploy).
+# Homelab owns: Restate operator, Authentik Proxy + HTTPRoute, DNS, Homepage, Kuma.
+# Shelf owns: RestateCluster shelf-restate, RestateDeployment shelf-api, web, shelf-pg + ESO.
+# Private repo: SSH deploy key via ExternalSecret repo-shelf (platform/argocd/resources.yaml).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shelf
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:jacobdrury/shelf.git
+    targetRevision: main
+    path: infra/deploy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: shelf
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      # Restate CRDs land with platform/restate-operator; skip dry-run until they exist.
+      - SkipDryRunOnMissingResource=true
