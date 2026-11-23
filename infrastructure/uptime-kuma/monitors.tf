@@ -48,6 +48,13 @@ locals {
       group                 = "Platform"
       accepted_status_codes = ["200"]
     }
+    shelf_restate = {
+      name                  = "Shelf Restate"
+      # Authentik skip_path_regex ^/health$ — Restate admin liveness, not the outpost.
+      url                   = "https://shelf-restate.${local.zone}/health"
+      group                 = "Platform"
+      accepted_status_codes = ["200"]
+    }
     jellyfin = {
       name  = "Jellyfin"
       url   = "https://jellyfin.${local.zone}/"
@@ -132,7 +139,7 @@ locals {
   group_order = ["Platform", "Media", "Home", "Infrastructure"]
 
   monitor_order = {
-    Platform       = ["homepage", "argocd", "grafana", "authentik", "it_tools", "shelf"]
+    Platform       = ["homepage", "argocd", "grafana", "authentik", "it_tools", "shelf", "shelf_restate"]
     Media          = ["jellyfin", "seerr", "qbittorrent", "mullvad", "sonarr", "sonarr_tv", "prowlarr", "cleanuparr", "unmanic"]
     Home           = ["homeassistant"]
     Infrastructure = ["pihole", "scarif"]

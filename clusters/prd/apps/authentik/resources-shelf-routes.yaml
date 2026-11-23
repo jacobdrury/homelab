@@ -1,4 +1,5 @@
-# Shelf lab hostname → Authentik embedded outpost (Proxy Provider in blueprints-shelf.yaml).
+# Shelf + Shelf Restate lab hostnames → Authentik embedded outpost
+# (Proxy Providers in blueprints-shelf.yaml).
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -16,6 +17,34 @@ spec:
       sectionName: https
   hostnames:
     - shelf.lab.jacobdrury.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: authentik-server
+          port: 80
+          weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: shelf-restate
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: lab
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - shelf-restate.lab.jacobdrury.com
   rules:
     - matches:
         - path:

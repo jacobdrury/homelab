@@ -183,6 +183,11 @@ config:
                 description: Manga / manhwa shelf
                 icon: mdi-bookshelf
                 siteMonitor: https://shelf.lab.jacobdrury.com/health
+            - Shelf Restate:
+                href: https://shelf-restate.lab.jacobdrury.com
+                description: Restate admin / UI
+                icon: mdi-state-machine
+                siteMonitor: https://shelf-restate.lab.jacobdrury.com/health
         - Media:
             - Jellyfin:
                 href: https://jellyfin.lab.jacobdrury.com
