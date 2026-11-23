@@ -69,3 +69,4 @@ data:
             - !Find [authentik_providers_proxy.proxyprovider, [name, Unmanic]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, Pi-hole]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, Shelf]]
+            - !Find [authentik_providers_proxy.proxyprovider, [name, Shelf Restate]]

@@ -1,6 +1,7 @@
-# Authentik blueprint — Shelf Proxy Provider.
+# Authentik blueprint — Shelf + Shelf Restate Proxy Providers.
 # Traffic: Envoy shelf.lab → authentik-server (embedded outpost) → shelf-web Service.
-# /health skipped for Uptime Kuma (plain "ok" from Astro).
+#          Envoy shelf-restate.lab → outpost → restate.shelf :9070 (admin/UI).
+# /health skipped for Uptime Kuma on both.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -44,6 +45,36 @@ data:
           policy_engine_mode: any
           meta_launch_url: https://shelf.lab.jacobdrury.com
 
+      - model: authentik_providers_proxy.proxyprovider
+        id: provider-shelf-restate
+        state: present
+        identifiers:
+          name: Shelf Restate
+        attrs:
+          name: Shelf Restate
+          mode: proxy
+          external_host: https://shelf-restate.lab.jacobdrury.com
+          internal_host: http://restate.shelf.svc.cluster.local:9070
+          internal_host_ssl_validation: false
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          access_token_validity: days=30
+          refresh_token_validity: days=90
+          skip_path_regex: |
+            ^/health$
+
+      - model: authentik_core.application
+        id: app-shelf-restate
+        state: present
+        identifiers:
+          slug: shelf-restate
+        attrs:
+          name: Shelf Restate
+          slug: shelf-restate
+          provider: !KeyOf provider-shelf-restate
+          policy_engine_mode: any
+          meta_launch_url: https://shelf-restate.lab.jacobdrury.com
+
       - model: authentik_outposts.outpost
         id: outpost-embedded
         state: present
@@ -61,3 +92,4 @@ data:
             - !Find [authentik_providers_proxy.proxyprovider, [name, Unmanic]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, Pi-hole]]
             - !Find [authentik_providers_proxy.proxyprovider, [name, Shelf]]
+            - !Find [authentik_providers_proxy.proxyprovider, [name, Shelf Restate]]
