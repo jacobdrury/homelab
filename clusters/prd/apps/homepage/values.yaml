@@ -178,6 +178,11 @@ config:
                 description: Developer utilities
                 icon: it-tools.png
                 siteMonitor: https://it-tools.lab.jacobdrury.com
+            - Shelf:
+                href: https://shelf.lab.jacobdrury.com
+                description: Manga / manhwa shelf
+                icon: mdi-bookshelf
+                siteMonitor: https://shelf.lab.jacobdrury.com/health
         - Media:
             - Jellyfin:
                 href: https://jellyfin.lab.jacobdrury.com

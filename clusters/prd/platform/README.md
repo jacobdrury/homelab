@@ -19,6 +19,7 @@ Not a day-to-day deploy path — see
 | cert-manager | `cert-manager/` | No — Git / Argo only |
 | Envoy Gateway | `envoy-gateway/` | No — Git / Argo only |
 | CloudNativePG | `cloudnative-pg/` | No — Git / Argo only; prefer **shared** `Cluster` (many DBs) long-term |
+| Restate operator | `restate-operator/` | No — Git / Argo only; OCI chart; CRDs for RestateCluster / RestateDeployment |
 | MariaDB | `mariadb/` | No — Git / Argo only; official `library/mariadb` image; shared instance |
 | Metrics Server | `metrics-server/` | No — Git / Argo only; Metrics API for `kubectl top` / Homepage / HPA |
 | Observability | `observability/` | No — kube-prometheus-stack + Loki + Tempo + Alloy + Grafana CNPG; nested Applications |
