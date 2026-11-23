@@ -34,6 +34,8 @@ App SSO: **`prd Argo CD OIDC`** (password = OAuth client secret) is shared by Au
 
 Databases: **`prd MariaDB`** (`mariadb-root-password` / `mariadb-password`; `mariadb-replication-password` unused legacy field); per-app items like **`prd Uptime Kuma MariaDB`** (username, password, database); **`prd Shelf Postgres`** (username/password for CNPG `shelf-pg` owner; ESO in the shelf repo).
 
+Shelf (private repo): **`prd Shelf Argo Deploy Key`** (SSH key, read-only deploy key on `jacobdrury/shelf`; ESO `argocd/repo-shelf` gives Argo repo access) and **`prd Shelf GHCR`** (`username` + `password` = classic PAT with only `read:packages`; ESO `shelf/ghcr-pull` in the shelf repo gives the image pull secret).
+
 Homepage widgets: **`prd Homepage media API keys`** (jellyfin / sonarr-anime / sonarr-tv / prowlarr / seerr); **`prd Homepage Authentik API token`**; **`Unifi API Key (opentofu-homelab)`** (shared with OpenTofu); **`qBittorrent`** (WebUI username/password); **`prd Discord Lab Alerts`** (Discord webhook for Uptime Kuma + Alertmanager; same channel as Sonarr); observability: **`prd Observability Postgres`**, **`prd Grafana OIDC`**, **`prd Grafana admin`** — [observability](observability.md); plus existing Argo/Unraid items. Pi-hole Homepage tile is **link-only** (no widget).
 
 ## Host shell access (SSH / sudo)
