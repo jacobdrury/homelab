@@ -1,6 +1,6 @@
 # Authentik blueprint — Shelf + Shelf Restate Proxy Providers.
 # Traffic: Envoy shelf.lab → authentik-server (embedded outpost) → shelf-web Service.
-#          Envoy shelf-restate.lab → outpost → restate Service :9070 (admin/UI).
+#          Envoy shelf-restate.lab → outpost → restate.shelf :9070 (admin/UI).
 # /health skipped for Uptime Kuma on both.
 apiVersion: v1
 kind: ConfigMap
@@ -54,7 +54,7 @@ data:
           name: Shelf Restate
           mode: proxy
           external_host: https://shelf-restate.lab.jacobdrury.com
-          internal_host: http://restate.shelf-restate.svc.cluster.local:9070
+          internal_host: http://restate.shelf.svc.cluster.local:9070
           internal_host_ssl_validation: false
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
