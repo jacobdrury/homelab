@@ -41,7 +41,7 @@ networks:
   # Primary WAN (UniFi "Internet 1") — WAN DNS → Pi-hole; LAN DHCP uses each VLAN gateway.
   wan_primary:
     unifi_name: Internet 1
-    unifi_id: 62e83ed5dfd87906d68f64e1
+    unifi_id: 5fc36c69-776a-4e0a-a9c5-8e5229c662a4
 
   # Primary trusted LAN (UniFi native / VLAN 1). Proxmox, clients; DHCP DNS → gateway → Pi-hole.
   drury:
@@ -52,7 +52,7 @@ networks:
     dhcp:
       start: 192.168.1.6
       stop: 192.168.1.254
-    unifi_id: 62e83ed5dfd87906d68f64e3 # import into infrastructure/unifi
+    unifi_id: 0089b21e-6cbe-4819-9bc5-828ceecaa588 # import into infrastructure/unifi
 
   iot:
     unifi_name: Drury - IoT
@@ -62,7 +62,7 @@ networks:
     dhcp:
       start: 192.168.2.6
       stop: 192.168.2.254
-    unifi_id: 62f46882a72f49373da0410f
+    unifi_id: 75d177bb-8715-466c-94d3-577eb7d0e411
 
   guest:
     unifi_name: Drury - Guest
@@ -72,7 +72,7 @@ networks:
     dhcp:
       start: 192.168.3.6
       stop: 192.168.3.254
-    unifi_id: 62f46a0ca72f49373da04170
+    unifi_id: 4b4ee79a-efb6-4179-a58c-e6f4d9b55467
 
   camera:
     unifi_name: Drury - Camera
@@ -82,7 +82,7 @@ networks:
     dhcp:
       start: 192.168.4.6
       stop: 192.168.4.254
-    unifi_id: 63ed4c46f2c44b350d4ff31b
+    unifi_id: 8be9c37e-0ad7-4bd5-82c3-1bc4fdbb6abd
 
   # Isolated homelab VLAN (UniFi VLAN 5). Talos CPs, Unraid, cluster workloads.
   homelab:
@@ -94,7 +94,7 @@ networks:
       # Leave .10–.22 for static infra (scarif, Talos, Envoy .21, Pi-hole DNS .22).
       start: 192.168.5.50
       stop: 192.168.5.254
-    unifi_id: 6a9391bffbf2c016aea02b37
+    unifi_id: a4ee7f8d-25cd-4325-9aac-89a7834cafd9
     # Infra A records on this VLAN — Cloudflare grey-cloud in infrastructure/cloudflare/.
     hosts:
       scarif:
