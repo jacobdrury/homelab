@@ -120,7 +120,7 @@ spec:
         # Per-pod metrics — query stats are ephemeral on emptyDir.
         # Official exporter: https://github.com/eko/pihole-exporter
         - name: exporter
-          image: docker.io/ekofr/pihole-exporter:v1.3.1@sha256:4233c06fcd2d62c37b9345228bc9f798b3a66d052b4955ec6a0e5b8825e20827
+          image: docker.io/ekofr/pihole-exporter:v1.4.0@sha256:bd849cd5e0f7f89bf38943d7988c5facfd603d9813c4c089fcff8ed121f718bb
           imagePullPolicy: IfNotPresent
           env:
             - name: PIHOLE_HOSTNAME
